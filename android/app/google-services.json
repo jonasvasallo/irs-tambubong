@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "718420727642",
+    "project_id": "irs-capstone",
+    "storage_bucket": "irs-capstone.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:718420727642:android:2d0f97d3626d31b9b24563",
+        "android_client_info": {
+          "package_name": "com.example.irs_capstone"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9fgO5eWLJk9WsItUPKVAHz1Z8YwNZKFY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
