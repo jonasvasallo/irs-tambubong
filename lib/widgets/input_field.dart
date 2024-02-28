@@ -7,6 +7,8 @@ class InputField extends StatefulWidget {
   final String? label;
   final TextEditingController controller;
   final String? Function(String?)? validator;
+  final Icon? prefixIcon;
+  final void Function()? onTap;
   const InputField({
     Key? key,
     required this.placeholder,
@@ -14,6 +16,8 @@ class InputField extends StatefulWidget {
     this.label,
     required this.controller,
     this.validator,
+    this.prefixIcon,
+    this.onTap,
   }) : super(key: key);
 
   @override
@@ -21,6 +25,21 @@ class InputField extends StatefulWidget {
 }
 
 class _InputFieldState extends State<InputField> {
+  Future<void> _selectDate() async {
+    DateTime? _picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1920),
+      lastDate: DateTime.now(),
+    );
+
+    if (_picked != null) {
+      setState(() {
+        widget.controller.text = _picked.toString().split(" ")[0];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -50,6 +69,7 @@ class _InputFieldState extends State<InputField> {
             ),
             cursorHeight: 16,
             decoration: InputDecoration(
+              prefixIcon: widget.prefixIcon,
               hintText: widget.placeholder,
               contentPadding: EdgeInsets.all(8),
               border: OutlineInputBorder(
@@ -72,6 +92,12 @@ class _InputFieldState extends State<InputField> {
             keyboardType: (widget.inputType == "email")
                 ? TextInputType.emailAddress
                 : TextInputType.text,
+            readOnly: (widget.inputType == 'date') ? true : false,
+            onTap: () {
+              if (widget.inputType == 'date') {
+                _selectDate();
+              }
+            },
           ),
         ],
       ),

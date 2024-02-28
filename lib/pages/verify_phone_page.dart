@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irs_capstone/constants.dart';
-import 'package:irs_capstone/utilities.dart';
+import 'package:irs_capstone/core/utilities.dart';
 import 'package:irs_capstone/widgets/input_button.dart';
 
 class VerifyPhonePage extends StatefulWidget {
@@ -123,146 +123,148 @@ class _VerifyPhonePageState extends State<VerifyPhonePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 205,
-                height: 205,
-                color: Colors.grey,
-              ),
-              SizedBox(
-                height: 32,
-              ),
-              Text(
-                "Phone Verification",
-                style: TextStyle(
-                  color: majorText,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 205,
+                  height: 205,
+                  color: Colors.grey,
                 ),
-              ),
-              SizedBox(
-                height: 8,
-              ),
-              Column(
-                children: [
-                  Text(
-                    "Please enter the verification code sent to",
-                    style: CustomTextStyle.regular_minor,
-                  ),
-                  Text(
-                    widget.phoneNumber,
-                    style: TextStyle(
-                        color: majorText,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16),
-                  ),
-                ],
-              ),
-              SizedBox(
-                height: 32,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  VerifyField(
-                    controller: firstNum,
-                    focusNode: _firstFocusNode,
-                  ),
-                  VerifyField(
-                    controller: secondNum,
-                  ),
-                  VerifyField(
-                    controller: thirdNum,
-                  ),
-                  VerifyField(
-                    controller: fourthNum,
-                  ),
-                  VerifyField(
-                    controller: fifthNum,
-                  ),
-                  VerifyField(
-                    controller: sixthNum,
-                  ),
-                ],
-              ),
-              SizedBox(
-                height: 64,
-              ),
-              Text(
-                "Didn't receive the code?",
-                style: CustomTextStyle.regular_minor,
-              ),
-              TextButton(
-                onPressed: isResendButtonEnabled ? resentOTP : null,
-                child: Text(
-                  "RESEND CODE",
+                SizedBox(
+                  height: 32,
+                ),
+                Text(
+                  "Phone Verification",
                   style: TextStyle(
-                    color: isResendButtonEnabled ? accentColor : Colors.grey,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                    color: majorText,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-              Text(
-                timeLeft,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: minorText,
+                SizedBox(
+                  height: 8,
                 ),
-              ),
-              SizedBox(
-                height: 34,
-              ),
-              InputButton(
-                  label: "VERIFY",
-                  function: () async {
-                    try {
-                      String codeSMS = firstNum.text.toString() +
-                          secondNum.text.toString() +
-                          thirdNum.text.toString() +
-                          fourthNum.text.toString() +
-                          fifthNum.text.toString() +
-                          sixthNum.text.toString();
-                      PhoneAuthCredential credential =
-                          PhoneAuthProvider.credential(
-                        verificationId: widget.verificationId,
-                        smsCode: codeSMS,
-                      );
-                      User? emailPasswordUser =
-                          FirebaseAuth.instance.currentUser;
+                Column(
+                  children: [
+                    Text(
+                      "Please enter the verification code sent to",
+                      style: CustomTextStyle.regular_minor,
+                    ),
+                    Text(
+                      widget.phoneNumber,
+                      style: TextStyle(
+                          color: majorText,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16),
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: 32,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    VerifyField(
+                      controller: firstNum,
+                      focusNode: _firstFocusNode,
+                    ),
+                    VerifyField(
+                      controller: secondNum,
+                    ),
+                    VerifyField(
+                      controller: thirdNum,
+                    ),
+                    VerifyField(
+                      controller: fourthNum,
+                    ),
+                    VerifyField(
+                      controller: fifthNum,
+                    ),
+                    VerifyField(
+                      controller: sixthNum,
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: 64,
+                ),
+                Text(
+                  "Didn't receive the code?",
+                  style: CustomTextStyle.regular_minor,
+                ),
+                TextButton(
+                  onPressed: isResendButtonEnabled ? resentOTP : null,
+                  child: Text(
+                    "RESEND CODE",
+                    style: TextStyle(
+                      color: isResendButtonEnabled ? accentColor : Colors.grey,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Text(
+                  timeLeft,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: minorText,
+                  ),
+                ),
+                SizedBox(
+                  height: 34,
+                ),
+                InputButton(
+                    label: "VERIFY",
+                    function: () async {
+                      try {
+                        String codeSMS = firstNum.text.toString() +
+                            secondNum.text.toString() +
+                            thirdNum.text.toString() +
+                            fourthNum.text.toString() +
+                            fifthNum.text.toString() +
+                            sixthNum.text.toString();
+                        PhoneAuthCredential credential =
+                            PhoneAuthProvider.credential(
+                          verificationId: widget.verificationId,
+                          smsCode: codeSMS,
+                        );
+                        User? emailPasswordUser =
+                            FirebaseAuth.instance.currentUser;
 
-                      if (emailPasswordUser != null) {
-                        // Link the email/password user with the phone number credential
-                        UserCredential result = await emailPasswordUser
-                            .linkWithCredential(credential);
+                        if (emailPasswordUser != null) {
+                          // Link the email/password user with the phone number credential
+                          UserCredential result = await emailPasswordUser
+                              .linkWithCredential(credential);
 
-                        // Check if the linking was successful
-                        if (result.user != null) {
-                          // Update the 'verified' field in the user's document in Firestore
-                          await FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(result.user!.uid)
-                              .update({'verified': true});
+                          // Check if the linking was successful
+                          if (result.user != null) {
+                            // Update the 'verified' field in the user's document in Firestore
+                            await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(result.user!.uid)
+                                .update({'verified': true});
 
-                          // Navigate to the home screen or any other destination
-                          context.go('/home');
-                        } else {
-                          print('Linking failed: User is null');
-                          // Handle failed linking, show an error message, etc.
+                            // Navigate to the home screen or any other destination
+                            context.go('/home');
+                          } else {
+                            print('Linking failed: User is null');
+                            // Handle failed linking, show an error message, etc.
+                          }
                         }
+                      } catch (ex) {
+                        print(ex);
                       }
-                    } catch (ex) {
-                      print(ex);
-                    }
-                  },
-                  large: true),
-            ],
+                    },
+                    large: true),
+              ],
+            ),
           ),
         ),
       ),

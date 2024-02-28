@@ -5,7 +5,7 @@ import 'package:irs_capstone/pages/home_page.dart';
 import 'package:irs_capstone/pages/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:irs_capstone/firebase_options.dart';
-import 'package:irs_capstone/utilities.dart';
+import 'package:irs_capstone/core/utilities.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

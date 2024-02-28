@@ -35,7 +35,8 @@ class _NavigationMenuState extends State<NavigationMenu> {
         },
         destinations: [
           NavigationDestination(icon: Icon(Icons.home), label: "Home"),
-          NavigationDestination(icon: Icon(Icons.shopping_cart), label: "Cart"),
+          NavigationDestination(
+              icon: Icon(Icons.shopping_cart), label: "Reports"),
           NavigationDestination(
               icon: Icon(Icons.notifications), label: "Notifications"),
           NavigationDestination(icon: Icon(Icons.person), label: "Profile"),

@@ -3,26 +3,29 @@ import 'package:go_router/go_router.dart';
 import 'package:irs_capstone/navigation_menu.dart';
 import 'package:irs_capstone/pages/home_page.dart';
 import 'package:irs_capstone/pages/login_page.dart';
+import 'package:irs_capstone/pages/profile/update_profile_page.dart';
+import 'package:irs_capstone/pages/profile/verify_change_page.dart';
 import 'package:irs_capstone/pages/signup_page.dart';
 import 'package:irs_capstone/pages/verify_phone_page.dart';
+import 'package:irs_capstone/pages/profile/profile_page.dart';
 
 class AppRouter {
   AppRouter._();
 
-  static String initR = "/auth/login";
+  static String initR = "/login";
 
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
   static final _rootNavigatorHome =
       GlobalKey<NavigatorState>(debugLabel: "shellHome");
-  static final _rootNavigatorCart =
-      GlobalKey<NavigatorState>(debugLabel: "shellCart");
-  static final _rootNavigatorNotif =
-      GlobalKey<NavigatorState>(debugLabel: "shellNotif");
+  static final _rootNavigatorReports =
+      GlobalKey<NavigatorState>(debugLabel: "shellReports");
+  static final _rootNavigatorNotifications =
+      GlobalKey<NavigatorState>(debugLabel: "shellNotifications");
   static final _rootNavigatorProfile =
       GlobalKey<NavigatorState>(debugLabel: "shellProfile");
 
   static GoRouter router = GoRouter(
-    initialLocation: "/login",
+    initialLocation: initR,
     routes: [
       GoRoute(
         path: '/login',
@@ -45,7 +48,58 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/home',
-                builder: (context, state) => HomePage(),
+                builder: (context, state) => HomePage(
+                  key: state.pageKey,
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _rootNavigatorReports,
+            routes: [
+              GoRoute(
+                path: '/reports',
+                builder: (context, state) => Scaffold(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _rootNavigatorNotifications,
+            routes: [
+              GoRoute(
+                path: '/notifications',
+                builder: (context, state) => Scaffold(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _rootNavigatorProfile,
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => ProfilePage(),
+                routes: [
+                  GoRoute(
+                    path: 'update',
+                    builder: (context, state) => UpdateProfilePage(),
+                    routes: [
+                      GoRoute(
+                        path: 'change-auth/:type',
+                        builder: (context, state) => VerifyChangePage(
+                            type: state.pathParameters["type"]!),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: '/profile/:reload', // Parameterized route
+                builder: (context, state) {
+                  final String reloadParam =
+                      state.pathParameters['reload'] ?? '';
+                  final bool reload = reloadParam.toLowerCase() == 'true';
+                  return ProfilePage(reload: reload);
+                },
               ),
             ],
           ),

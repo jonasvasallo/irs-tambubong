@@ -5,7 +5,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irs_capstone/constants.dart';
-import 'package:irs_capstone/utilities.dart';
+import 'package:irs_capstone/core/input_validator.dart';
+import 'package:irs_capstone/core/utilities.dart';
 import 'package:irs_capstone/widgets/input_button.dart';
 import 'package:irs_capstone/widgets/input_field.dart';
 
@@ -21,6 +22,8 @@ class _SignupPageState extends State<SignupPage> {
   final _firstNameController = TextEditingController();
   final _middleNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final _genderController = TextEditingController();
+  final _birthdayController = TextEditingController();
   final _addressHouseController = TextEditingController();
   final _addressStreetController = TextEditingController();
   final _contactNoController = TextEditingController();
@@ -54,14 +57,14 @@ class _SignupPageState extends State<SignupPage> {
       bool phoneNumberExists =
           await checkPhoneNumberExists(_contactNoController.text.trim());
 
-      if (phoneNumberExists) {
-        Utilities.showSnackBar(
-          'This phone number is already associated with another account',
-          Colors.red,
-        );
-        Navigator.of(context).pop(); // Dismiss loading indicator
-        return;
-      }
+      // if (phoneNumberExists) {
+      //   Utilities.showSnackBar(
+      //     'This phone number is already associated with another account',
+      //     Colors.red,
+      //   );
+      //   Navigator.of(context).pop(); // Dismiss loading indicator
+      //   return;
+      // }
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailAddressController.text.trim(),
@@ -75,6 +78,8 @@ class _SignupPageState extends State<SignupPage> {
         _firstNameController.text.trim(),
         _middleNameController.text.trim(),
         _lastNameController.text.trim(),
+        _genderController.text.trim(),
+        _birthdayController.text.trim(),
         _addressHouseController.text.trim(),
         _addressStreetController.text.trim(),
         _contactNoController.text.trim(),
@@ -113,6 +118,8 @@ class _SignupPageState extends State<SignupPage> {
       String firstName,
       String middleName,
       String lastName,
+      String gender,
+      String birthday,
       String addressHouse,
       String addressStreet,
       String contactNo,
@@ -121,10 +128,15 @@ class _SignupPageState extends State<SignupPage> {
       'first_name': firstName,
       'middle_name': middleName,
       'last_name': lastName,
+      'gender': gender,
+      'birthday': birthday,
       'address_house': addressHouse,
       'address_street': addressStreet,
       'contact_no': contactNo,
       'email': emailAddress,
+      'deactivation': false,
+      'lastLogin': FieldValue.serverTimestamp(),
+      'user_type': 'resident',
       'verified': false,
     });
   }
@@ -134,6 +146,8 @@ class _SignupPageState extends State<SignupPage> {
     _firstNameController.dispose();
     _middleNameController.dispose();
     _lastNameController.dispose();
+    _genderController.dispose();
+    _birthdayController.dispose();
     _addressHouseController.dispose();
     _addressStreetController.dispose();
     _contactNoController.dispose();
@@ -200,6 +214,31 @@ class _SignupPageState extends State<SignupPage> {
                     label: "Last Name",
                     controller: _lastNameController,
                     validator: requiredValidator,
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InputField(
+                          inputType: "text",
+                          placeholder: "Male or Female",
+                          label: "Gender",
+                          controller: _genderController,
+                          validator: InputValidator.requiredValidator,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 8,
+                      ),
+                      Expanded(
+                        child: InputField(
+                          inputType: "date",
+                          placeholder: "Birth Day",
+                          label: "Birthday",
+                          controller: _birthdayController,
+                          validator: InputValidator.requiredValidator,
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(
                     height: 16,
