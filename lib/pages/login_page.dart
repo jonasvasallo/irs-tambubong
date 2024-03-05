@@ -37,32 +37,59 @@ class _LoginPageState extends State<LoginPage> {
 
       UserModel model = new UserModel();
 
-      await UserModel.getUserById(model.uId);
-
-      if (await model.deleteInactiveUser(model.uId)) {
-        Utilities.showSnackBar(
-          "Your account was deactivated. Please register a new one.",
-          Colors.red,
-        );
-        return;
-      } else {}
-
-      // Sign-in was successful, now listen for authentication state changes
-      _authSubscription =
-          FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-        if (user == null) {
-          // User is signed out
-          print('User is signed out');
-        } else {
-          await model.loginTimestamp(model.uId);
-          // User is signed in
-          print('User is signed in');
-          print('User UID: ${user.uid}');
-
-          context.go('/home');
-          // Here, you can proceed with actions to be taken after successful sign-in
+      Map<String, dynamic>? details = await UserModel.getUserById(model.uId);
+      print(details);
+      if (details != null) {
+        var disabled = details['disabled'] ?? false;
+        if (disabled) {
+          Utilities.showSnackBar("Your account has been disabled", Colors.red);
+          Navigator.of(context).pop();
+          FirebaseAuth.instance.signOut();
+          return;
         }
-      });
+        if (details['sms_verified'] == false) {
+          await FirebaseAuth.instance.verifyPhoneNumber(
+            verificationCompleted: (PhoneAuthCredential credential) async {},
+            verificationFailed: (FirebaseAuthException ex) {
+              print(ex);
+            },
+            codeSent: (String verificationId, int? resendToken) async {
+              context.go(
+                '/verify/${verificationId}/${details['contact_no']}',
+              );
+              return;
+            },
+            codeAutoRetrievalTimeout: (String verificationId) {},
+            phoneNumber: details['contact_no'],
+          );
+        } else {
+          if (await model.deleteInactiveUser(model.uId)) {
+            Utilities.showSnackBar(
+              "Your account was deactivated. Please register a new one.",
+              Colors.red,
+            );
+            return;
+          } else {}
+
+          // Sign-in was successful, now listen for authentication state changes
+          _authSubscription = FirebaseAuth.instance
+              .authStateChanges()
+              .listen((User? user) async {
+            if (user == null) {
+              // User is signed out
+              print('User is signed out');
+            } else {
+              await model.loginTimestamp(model.uId);
+              // User is signed in
+              print('User is signed in');
+              print('User UID: ${user.uid}');
+
+              context.go('/home');
+              // Here, you can proceed with actions to be taken after successful sign-in
+            }
+          });
+        }
+      }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'INVALID_LOGIN_CREDENTIALS') {
         Utilities.showSnackBar('Invalid Login Credentials', Colors.red);
@@ -73,7 +100,7 @@ class _LoginPageState extends State<LoginPage> {
         Utilities.showSnackBar(
             'No user has been found with this credentials', Colors.red);
       } else {
-        Utilities.showSnackBar('Unexpected Error has occured', Colors.red);
+        Utilities.showSnackBar('${e.message}', Colors.red);
       }
       // Handle sign-in errors
       print('Sign-in failed: $e');
@@ -97,9 +124,9 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           children: [
             Container(
-              child: Text("test"),
-              decoration: BoxDecoration(
-                color: Colors.grey,
+              child: Image.asset(
+                "assets/map.png",
+                fit: BoxFit.cover,
               ),
               height: 278,
               width: double.infinity,
@@ -121,7 +148,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(
-                      height: 49,
+                      height: 24,
                     ),
                     Text(
                       "Sign in to your account",
@@ -154,7 +181,9 @@ class _LoginPageState extends State<LoginPage> {
                       validator: InputValidator.requiredValidator,
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        context.go('/forgot-password');
+                      },
                       child: Text(
                         "Forgot password?",
                         style: TextStyle(
@@ -194,7 +223,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(
-                      height: 40,
+                      height: 24,
                     ),
                   ],
                 ),

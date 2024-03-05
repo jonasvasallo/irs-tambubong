@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
+import "package:irs_capstone/constants.dart";
 
 class NavigationMenu extends StatefulWidget {
   const NavigationMenu({Key? key, required this.navigationShell})
@@ -22,6 +23,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
         child: widget.navigationShell,
       ),
       bottomNavigationBar: NavigationBar(
+        indicatorColor: Color.fromARGB(255, 95, 238, 92),
         backgroundColor: Colors.white,
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         height: 80,
@@ -34,12 +36,38 @@ class _NavigationMenuState extends State<NavigationMenu> {
           goToBranch(nav_index);
         },
         destinations: [
-          NavigationDestination(icon: Icon(Icons.home), label: "Home"),
           NavigationDestination(
-              icon: Icon(Icons.shopping_cart), label: "Reports"),
+              icon: Icon(
+                Icons.home,
+                color: majorText,
+              ),
+              label: "Home"),
           NavigationDestination(
-              icon: Icon(Icons.notifications), label: "Notifications"),
-          NavigationDestination(icon: Icon(Icons.person), label: "Profile"),
+            icon: Icon(
+              Icons.notifications_active,
+              color: majorText,
+            ),
+            label: "Reports",
+          ),
+          NavigationDestination(
+            icon: Icon(
+              Icons.sos_rounded,
+              color: Colors.red,
+            ),
+            label: "SOS",
+          ),
+          NavigationDestination(
+              icon: Icon(
+                Icons.campaign_rounded,
+                color: majorText,
+              ),
+              label: "News"),
+          NavigationDestination(
+              icon: Icon(
+                Icons.person,
+                color: majorText,
+              ),
+              label: "Profile"),
         ],
       ),
     );

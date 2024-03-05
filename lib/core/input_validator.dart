@@ -35,7 +35,6 @@ class InputValidator {
   static checkFormValidity(formKey, context) {
     final isValid = formKey.currentState!.validate();
     if (!isValid) {
-      Navigator.of(context).pop();
       return;
     }
   }

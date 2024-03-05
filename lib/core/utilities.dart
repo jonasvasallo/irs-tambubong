@@ -19,14 +19,19 @@ class Utilities {
       ..showSnackBar(snackBar);
   }
 
-  static showLoadingIndicator(context) {
+  static BuildContext showLoadingIndicator(context) {
+    BuildContext dialogContext = context;
     showDialog(
-      context: context,
-      builder: (context) => Center(
-        child: CircularProgressIndicator(
-          color: accentColor,
-        ),
-      ),
-    );
+        context: context,
+        builder: (dialogcontext) {
+          dialogContext = dialogcontext;
+          return Center(
+            child: CircularProgressIndicator(
+              color: accentColor,
+            ),
+          );
+        });
+
+    return dialogContext;
   }
 }

@@ -7,8 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irs_capstone/constants.dart';
+import 'package:irs_capstone/core/input_validator.dart';
 import 'package:irs_capstone/core/utilities.dart';
+import 'package:irs_capstone/models/user_model.dart';
 import 'package:irs_capstone/widgets/input_button.dart';
+import 'package:irs_capstone/widgets/input_field.dart';
 
 class VerifyPhonePage extends StatefulWidget {
   final String verificationId;
@@ -22,6 +25,7 @@ class VerifyPhonePage extends StatefulWidget {
 }
 
 class _VerifyPhonePageState extends State<VerifyPhonePage> {
+  final _phoneNoController = TextEditingController();
   TextEditingController firstNum = TextEditingController();
   TextEditingController secondNum = TextEditingController();
   TextEditingController thirdNum = TextEditingController();
@@ -31,6 +35,8 @@ class _VerifyPhonePageState extends State<VerifyPhonePage> {
 
   final _firstFocusNode = FocusNode();
 
+  final formKey = GlobalKey<FormState>();
+
   late bool isResendButtonEnabled;
   late Timer resendTimer;
 
@@ -38,38 +44,42 @@ class _VerifyPhonePageState extends State<VerifyPhonePage> {
   int secondsLeft = 0;
   String timeLeft = "";
 
-  void startTimer() {
-    Timer.periodic(Duration(seconds: 1), (timer) {
-      setState(() {
-        if (secondsLeft == 0 && minutesLeft == 0) {
-          timer.cancel();
-        }
-        if (secondsLeft > 0) {
-          secondsLeft--;
-        } else {
-          minutesLeft--;
-          secondsLeft = 59;
-        }
-        String strMinutes = minutesLeft.toString();
-        String strSeconds = secondsLeft.toString();
+  String phoneNumbah = "";
 
-        if (strMinutes.length < 2) {
-          strMinutes = "0$strMinutes";
-        }
-        if (strSeconds.length < 2) {
-          strSeconds = "0$strSeconds";
-        }
-        timeLeft = "$strMinutes:$strSeconds";
-      });
-    });
-  }
+  String verifId = "";
+
+  // void startTimer() {
+  //  Timer.periodic(Duration(seconds: 1), (timer) {
+  //     setState(() {
+  //       if (secondsLeft == 0 && minutesLeft == 0) {
+  //         timer.cancel();
+  //       }
+  //       if (secondsLeft > 0) {
+  //         secondsLeft--;
+  //       } else {
+  //         minutesLeft--;
+  //         secondsLeft = 59;
+  //       }
+  //       String strMinutes = minutesLeft.toString();
+  //       String strSeconds = secondsLeft.toString();
+
+  //       if (strMinutes.length < 2) {
+  //         strMinutes = "0$strMinutes";
+  //       }
+  //       if (strSeconds.length < 2) {
+  //         strSeconds = "0$strSeconds";
+  //       }
+  //       timeLeft = "$strMinutes:$strSeconds";
+  //     });
+  //   });
+  // }
 
   Future resentOTP() async {
     if (!isResendButtonEnabled) {
       return;
     }
 
-    startTimer();
+    // startTimer();
     setState(() {
       isResendButtonEnabled = false;
     });
@@ -80,10 +90,11 @@ class _VerifyPhonePageState extends State<VerifyPhonePage> {
         print(ex);
       },
       codeSent: (String verificationId, int? resendToken) async {
+        verifId = verificationId;
         Utilities.showSnackBar("SMS sent successfully", Colors.green);
       },
       codeAutoRetrievalTimeout: (String verificationId) {},
-      phoneNumber: widget.phoneNumber,
+      phoneNumber: phoneNumbah,
     );
 
     resendTimer = Timer(Duration(minutes: 5), () {
@@ -97,14 +108,12 @@ class _VerifyPhonePageState extends State<VerifyPhonePage> {
   void initState() {
     super.initState();
 
+    phoneNumbah = widget.phoneNumber;
+    verifId = widget.verificationId;
+
     _firstFocusNode.requestFocus();
 
     isResendButtonEnabled = true;
-    resendTimer = Timer(Duration(minutes: 5), () {
-      setState(() {
-        isResendButtonEnabled = true;
-      });
-    });
   }
 
   @override
@@ -123,147 +132,237 @@ class _VerifyPhonePageState extends State<VerifyPhonePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  width: 205,
-                  height: 205,
-                  color: Colors.grey,
-                ),
-                SizedBox(
-                  height: 32,
-                ),
-                Text(
-                  "Phone Verification",
-                  style: TextStyle(
-                    color: majorText,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 205,
+                    height: 205,
+                    child: Image.asset(
+                      "assets/otp_verify.png",
+                      fit: BoxFit.contain,
+                    ),
                   ),
-                ),
-                SizedBox(
-                  height: 8,
-                ),
-                Column(
-                  children: [
-                    Text(
-                      "Please enter the verification code sent to",
-                      style: CustomTextStyle.regular_minor,
-                    ),
-                    Text(
-                      widget.phoneNumber,
-                      style: TextStyle(
-                          color: majorText,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 32,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    VerifyField(
-                      controller: firstNum,
-                      focusNode: _firstFocusNode,
-                    ),
-                    VerifyField(
-                      controller: secondNum,
-                    ),
-                    VerifyField(
-                      controller: thirdNum,
-                    ),
-                    VerifyField(
-                      controller: fourthNum,
-                    ),
-                    VerifyField(
-                      controller: fifthNum,
-                    ),
-                    VerifyField(
-                      controller: sixthNum,
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 64,
-                ),
-                Text(
-                  "Didn't receive the code?",
-                  style: CustomTextStyle.regular_minor,
-                ),
-                TextButton(
-                  onPressed: isResendButtonEnabled ? resentOTP : null,
-                  child: Text(
-                    "RESEND CODE",
+                  SizedBox(
+                    height: 32,
+                  ),
+                  Text(
+                    "Phone Verification",
                     style: TextStyle(
-                      color: isResendButtonEnabled ? accentColor : Colors.grey,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
+                      color: majorText,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                Text(
-                  timeLeft,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: minorText,
+                  SizedBox(
+                    height: 8,
                   ),
-                ),
-                SizedBox(
-                  height: 34,
-                ),
-                InputButton(
-                    label: "VERIFY",
-                    function: () async {
-                      try {
-                        String codeSMS = firstNum.text.toString() +
-                            secondNum.text.toString() +
-                            thirdNum.text.toString() +
-                            fourthNum.text.toString() +
-                            fifthNum.text.toString() +
-                            sixthNum.text.toString();
-                        PhoneAuthCredential credential =
-                            PhoneAuthProvider.credential(
-                          verificationId: widget.verificationId,
-                          smsCode: codeSMS,
-                        );
-                        User? emailPasswordUser =
-                            FirebaseAuth.instance.currentUser;
+                  Column(
+                    children: [
+                      Text(
+                        "Please enter the verification code sent to",
+                        style: CustomTextStyle.regular_minor,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            phoneNumbah,
+                            style: TextStyle(
+                                color: majorText,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16),
+                          ),
+                          TextButton(
+                              onPressed: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  builder: (context) {
+                                    return Form(
+                                      key: formKey,
+                                      child: Padding(
+                                        padding: EdgeInsets.all(16),
+                                        child: Column(children: [
+                                          InputField(
+                                            placeholder: "+63 9XX-XXX-XXXX",
+                                            inputType: "phone",
+                                            controller: _phoneNoController,
+                                            label: "Change Phone Number",
+                                            validator:
+                                                InputValidator.phoneValidator,
+                                          ),
+                                          InputButton(
+                                              label: "Update",
+                                              function: () async {
+                                                try {
+                                                  final isValid = formKey
+                                                      .currentState!
+                                                      .validate();
+                                                  if (!isValid) {
+                                                    return;
+                                                  }
 
-                        if (emailPasswordUser != null) {
-                          // Link the email/password user with the phone number credential
-                          UserCredential result = await emailPasswordUser
-                              .linkWithCredential(credential);
+                                                  UserModel model =
+                                                      new UserModel();
 
-                          // Check if the linking was successful
-                          if (result.user != null) {
-                            // Update the 'verified' field in the user's document in Firestore
-                            await FirebaseFirestore.instance
-                                .collection('users')
-                                .doc(result.user!.uid)
-                                .update({'verified': true});
+                                                  setState(() {
+                                                    phoneNumbah =
+                                                        _phoneNoController.text
+                                                            .trim();
+                                                  });
+                                                  await model.users
+                                                      .doc(model.uId)
+                                                      .update({
+                                                    'contact_no':
+                                                        _phoneNoController.text
+                                                            .trim(),
+                                                  });
+                                                } catch (ex) {
+                                                  Utilities.showSnackBar(
+                                                      "$ex", Colors.red);
+                                                }
+                                                Navigator.of(context).pop();
+                                              },
+                                              large: false),
+                                        ]),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              child: Text(
+                                "Change",
+                                style: TextStyle(
+                                  color: accentColor,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                ),
+                              ))
+                        ],
+                      )
+                    ],
+                  ),
+                  SizedBox(
+                    height: 32,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      VerifyField(
+                        controller: firstNum,
+                        focusNode: _firstFocusNode,
+                      ),
+                      VerifyField(
+                        controller: secondNum,
+                      ),
+                      VerifyField(
+                        controller: thirdNum,
+                      ),
+                      VerifyField(
+                        controller: fourthNum,
+                      ),
+                      VerifyField(
+                        controller: fifthNum,
+                      ),
+                      VerifyField(
+                        controller: sixthNum,
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 64,
+                  ),
+                  Text(
+                    "Didn't receive the code?",
+                    style: CustomTextStyle.regular_minor,
+                  ),
+                  TextButton(
+                    onPressed: isResendButtonEnabled ? resentOTP : null,
+                    child: Text(
+                      "RESEND CODE",
+                      style: TextStyle(
+                        color:
+                            isResendButtonEnabled ? accentColor : Colors.grey,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    timeLeft,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: minorText,
+                    ),
+                  ),
+                  SizedBox(
+                    height: 34,
+                  ),
+                  InputButton(
+                      label: "VERIFY",
+                      function: () async {
+                        resendTimer.cancel();
+                        try {
+                          String codeSMS = firstNum.text.toString() +
+                              secondNum.text.toString() +
+                              thirdNum.text.toString() +
+                              fourthNum.text.toString() +
+                              fifthNum.text.toString() +
+                              sixthNum.text.toString();
+                          PhoneAuthCredential credential =
+                              PhoneAuthProvider.credential(
+                            verificationId: verifId,
+                            smsCode: codeSMS,
+                          );
+                          User? emailPasswordUser =
+                              FirebaseAuth.instance.currentUser;
 
-                            // Navigate to the home screen or any other destination
-                            context.go('/home');
+                          if (emailPasswordUser != null) {
+                            // Link the email/password user with the phone number credential
+                            UserCredential result = await emailPasswordUser
+                                .linkWithCredential(credential);
+
+                            // Check if the linking was successful
+                            if (result.user != null) {
+                              // Update the 'verified' field in the user's document in Firestore
+                              await FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(result.user!.uid)
+                                  .update({
+                                'verified': false,
+                                'contact_no': phoneNumbah,
+                                'sms_verified': true,
+                              });
+
+                              // Navigate to the home screen or any other destination
+                              context.go('/home');
+                            } else {
+                              print('Linking failed: User is null');
+                              // Handle failed linking, show an error message, etc.
+                            }
+                          }
+                        } on FirebaseAuthException catch (ex) {
+                          print(ex);
+                          if (ex.code == 'invalid-verification-code') {
+                            Utilities.showSnackBar("Wrong Code", Colors.red);
+                          } else if (ex.code == 'session-expired') {
+                            Utilities.showSnackBar(
+                                "The SMS code has expired. Please re-send the verification code to try again",
+                                Colors.red);
                           } else {
-                            print('Linking failed: User is null');
-                            // Handle failed linking, show an error message, etc.
+                            Utilities.showSnackBar("${ex.message}", Colors.red);
                           }
                         }
-                      } catch (ex) {
-                        print(ex);
-                      }
-                    },
-                    large: true),
-              ],
+                      },
+                      large: true),
+                ],
+              ),
             ),
           ),
         ),

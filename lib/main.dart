@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:irs_capstone/app_router.dart';
-import 'package:irs_capstone/pages/home_page.dart';
+import 'package:irs_capstone/constants.dart';
+import 'package:irs_capstone/pages/home/home_page.dart';
 import 'package:irs_capstone/pages/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:irs_capstone/firebase_options.dart';
@@ -25,11 +26,28 @@ class MyApp extends StatelessWidget {
       scaffoldMessengerKey: Utilities.messengerKey,
       routerConfig: AppRouter.router,
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'Tambubong IRS',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.light(primary: accentColor),
         useMaterial3: true,
+        buttonTheme: ButtonThemeData(
+          buttonColor: accentColor,
+        ),
+        primaryColorLight: accentColor,
+        primaryColor: accentColor,
+        brightness: Brightness.light,
+        appBarTheme: AppBarTheme(
+          elevation: 0,
+          backgroundColor: Colors.white,
+          centerTitle: true,
+          titleTextStyle: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: majorText,
+          ),
+        ),
       ),
+
       // home: StreamBuilder<User?>(
       //   stream: FirebaseAuth.instance.authStateChanges(),
       //   builder: (context, snapshot) {

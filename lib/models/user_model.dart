@@ -39,6 +39,7 @@ class UserModel {
     String birthday,
     String address_house,
     String address_street,
+    String profile_path,
   ) {
     return users.doc(docID).update({
       'first_name': first_name,
@@ -48,6 +49,7 @@ class UserModel {
       'birthday': birthday,
       'address_house': address_house,
       'address_street': address_street,
+      'profile_path': profile_path,
     });
   }
 

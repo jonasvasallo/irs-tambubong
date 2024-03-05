@@ -30,8 +30,9 @@ class _VerifyChangePageState extends State<VerifyChangePage> {
   String _verificationId = "";
 
   final formKey = GlobalKey<FormState>();
-
+  final phoneNoKey = GlobalKey<FormState>();
   void changeEmail() async {
+    InputValidator.checkFormValidity(formKey, context);
     try {
       UserModel model = new UserModel();
       await model.changeEmail(
@@ -41,8 +42,9 @@ class _VerifyChangePageState extends State<VerifyChangePage> {
       );
       Utilities.showSnackBar("Successfully Updated Email", Colors.green);
       context.go('/profile/true');
-    } catch (ex) {
+    } on FirebaseAuthException catch (ex) {
       print(ex);
+      Utilities.showSnackBar("${ex.message}", Colors.red);
     }
   }
 
@@ -83,8 +85,9 @@ class _VerifyChangePageState extends State<VerifyChangePage> {
         // Handle case where verification ID or SMS code is missing
         print("Verification ID or SMS code is missing");
       }
-    } catch (ex) {
+    } on FirebaseAuthException catch (ex) {
       print(ex);
+      Utilities.showSnackBar("${ex.message}", Colors.red);
     }
   }
 
@@ -142,13 +145,16 @@ class _VerifyChangePageState extends State<VerifyChangePage> {
                     children: [
                       Row(
                         children: [
-                          Expanded(
-                            child: InputField(
-                              placeholder: "+63 9XX-XXX-XXXX",
-                              inputType: "phone",
-                              controller: _phoneNoController,
-                              label: "New Phone Number",
-                              validator: InputValidator.phoneValidator,
+                          Form(
+                            key: phoneNoKey,
+                            child: Expanded(
+                              child: InputField(
+                                placeholder: "+63 9XX-XXX-XXXX",
+                                inputType: "phone",
+                                controller: _phoneNoController,
+                                label: "New Phone Number",
+                                validator: InputValidator.phoneValidator,
+                              ),
                             ),
                           ),
                           SizedBox(
@@ -158,8 +164,13 @@ class _VerifyChangePageState extends State<VerifyChangePage> {
                             child: InputButton(
                               label: "SEND SMS",
                               function: () async {
+                                InputValidator.checkFormValidity(
+                                    phoneNoKey, context);
                                 if (_phoneNoController.text.length < 16) {
                                   print('phone no is less than 16 characters');
+                                  Utilities.showSnackBar(
+                                      "Phone Number format is incorrect",
+                                      Colors.red);
                                   return;
                                 }
                                 User? user = FirebaseAuth.instance.currentUser;
@@ -208,6 +219,7 @@ class _VerifyChangePageState extends State<VerifyChangePage> {
                       InputButton(
                         label: "UPDATE PHONE NUMBER",
                         function: () {
+                          InputValidator.checkFormValidity(formKey, context);
                           changePhone();
                         },
                         large: false,

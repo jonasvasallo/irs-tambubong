@@ -1,8 +1,16 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irs_capstone/navigation_menu.dart';
-import 'package:irs_capstone/pages/home_page.dart';
+import 'package:irs_capstone/pages/forgot_password_page.dart';
+import 'package:irs_capstone/pages/home/home_page.dart';
+import 'package:irs_capstone/pages/home/incident_details_page.dart';
+import 'package:irs_capstone/pages/home/witness_page.dart';
 import 'package:irs_capstone/pages/login_page.dart';
+import 'package:irs_capstone/pages/profile/change_email_page.dart';
+import 'package:irs_capstone/pages/profile/change_password_page.dart';
+import 'package:irs_capstone/pages/profile/change_phone_page.dart';
 import 'package:irs_capstone/pages/profile/update_profile_page.dart';
 import 'package:irs_capstone/pages/profile/verify_change_page.dart';
 import 'package:irs_capstone/pages/signup_page.dart';
@@ -12,19 +20,32 @@ import 'package:irs_capstone/pages/profile/profile_page.dart';
 class AppRouter {
   AppRouter._();
 
-  static String initR = "/login";
+  static String initR = "/home";
 
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
   static final _rootNavigatorHome =
       GlobalKey<NavigatorState>(debugLabel: "shellHome");
   static final _rootNavigatorReports =
       GlobalKey<NavigatorState>(debugLabel: "shellReports");
+  static final _rootNavigatorSOS =
+      GlobalKey<NavigatorState>(debugLabel: "shellSOS");
   static final _rootNavigatorNotifications =
       GlobalKey<NavigatorState>(debugLabel: "shellNotifications");
   static final _rootNavigatorProfile =
       GlobalKey<NavigatorState>(debugLabel: "shellProfile");
 
   static GoRouter router = GoRouter(
+    redirect: (context, state) async {
+      final FirebaseAuth _auth = FirebaseAuth.instance;
+      final currentUser = _auth.currentUser;
+
+      if (currentUser == null &&
+          state.uri.path != '/login' &&
+          state.uri.path != '/signup' &&
+          state.uri.path != '/forgot-password') {
+        return '/login';
+      }
+    },
     initialLocation: initR,
     routes: [
       GoRoute(
@@ -34,6 +55,10 @@ class AppRouter {
       GoRoute(
         path: '/signup',
         builder: (context, state) => SignupPage(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => ForgotPasswordPage(),
       ),
       GoRoute(
         path: '/verify/:verificationId/:phoneNumber',
@@ -51,6 +76,20 @@ class AppRouter {
                 builder: (context, state) => HomePage(
                   key: state.pageKey,
                 ),
+                routes: [
+                  GoRoute(
+                    path: 'incident/:id',
+                    builder: (context, state) => IncidentDetailsPage(
+                        id: state.pathParameters['id'] ?? ''),
+                    routes: [
+                      GoRoute(
+                        path: 'witness/:id',
+                        builder: (context, state) =>
+                            WitnessPage(id: state.pathParameters['id'] ?? ''),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
@@ -60,6 +99,19 @@ class AppRouter {
               GoRoute(
                 path: '/reports',
                 builder: (context, state) => Scaffold(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _rootNavigatorSOS,
+            routes: [
+              GoRoute(
+                path: '/sos',
+                builder: (context, state) => Scaffold(
+                  body: Center(
+                    child: Text("SOS"),
+                  ),
+                ),
               ),
             ],
           ),
@@ -84,11 +136,24 @@ class AppRouter {
                     builder: (context, state) => UpdateProfilePage(),
                     routes: [
                       GoRoute(
+                        path: 'email/:email',
+                        builder: (context, state) => ChangeEmailPage(
+                            email: state.pathParameters['email']!),
+                      ),
+                      GoRoute(
+                        path: 'phone',
+                        builder: (context, state) => ChangePhonePage(),
+                      ),
+                      GoRoute(
                         path: 'change-auth/:type',
                         builder: (context, state) => VerifyChangePage(
                             type: state.pathParameters["type"]!),
                       ),
                     ],
+                  ),
+                  GoRoute(
+                    path: 'change-password',
+                    builder: (context, state) => ChangePasswordPage(),
                   ),
                 ],
               ),

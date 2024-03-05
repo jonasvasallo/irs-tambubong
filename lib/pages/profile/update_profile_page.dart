@@ -1,5 +1,10 @@
+import 'dart:io';
+
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:irs_capstone/constants.dart';
 import 'package:irs_capstone/core/input_validator.dart';
 import 'package:irs_capstone/core/utilities.dart';
 import 'package:irs_capstone/models/user_model.dart';
@@ -13,6 +18,8 @@ class UpdateProfilePage extends StatefulWidget {
   State<UpdateProfilePage> createState() => _UpdateProfilePageState();
 }
 
+List<String> sex_options = ["Male", "Female"];
+
 class _UpdateProfilePageState extends State<UpdateProfilePage> {
   UserModel model = new UserModel();
   final formKey = GlobalKey<FormState>();
@@ -25,6 +32,30 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
   final _addressStreetController = TextEditingController();
   final _contactNoController = TextEditingController();
   final _emailAddressController = TextEditingController();
+  String profile_path = "https://i.stack.imgur.com/l60Hf.png";
+
+  File? selectedImage;
+
+  Image imageShown = Image.network(
+    "https://i.stack.imgur.com/l60Hf.png",
+    fit: BoxFit.cover,
+  );
+
+  String currentOption = sex_options[0];
+
+  Future _pickImageFromGallery() async {
+    final returnedImage =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (returnedImage == null) return;
+
+    setState(() {
+      selectedImage = File(returnedImage.path);
+      imageShown = Image.file(
+        selectedImage!,
+        fit: BoxFit.cover,
+      );
+    });
+  }
 
   void fetchDetails() async {
     Map<String, dynamic>? userDetails = await UserModel.getUserById(model.uId);
@@ -35,37 +66,72 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
         _middleNameController.text = userDetails['middle_name'] ?? '';
         _lastNameController.text = userDetails['last_name'] ?? '';
         _genderController.text = userDetails['gender'] ?? '';
+        currentOption = userDetails['gender'] ?? '';
         _birthdayController.text = userDetails['birthday'] ?? '';
         _addressHouseController.text = userDetails['address_house'] ?? '';
         _addressStreetController.text = userDetails['address_street'] ?? '';
         _contactNoController.text = userDetails['contact_no'] ?? '';
         _emailAddressController.text = userDetails['email'] ?? '';
+        profile_path = userDetails['profile_path'] ??
+            'https://i.stack.imgur.com/l60Hf.png';
+        imageShown = Image.network(
+          profile_path,
+          fit: BoxFit.cover,
+        );
       });
     } else {
       print('User details not found');
     }
   }
 
-  void updateDetails() {
+  void updateDetails() async {
+    InputValidator.checkFormValidity(formKey, context);
+    BuildContext dialogContext = context;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        dialogContext = context;
+        return Center(
+          child: CircularProgressIndicator(
+            color: accentColor,
+          ),
+        );
+      },
+    );
     try {
-      InputValidator.checkFormValidity(formKey, context);
+      var urlDownload = profile_path;
 
-      model.updateUserDetails(
+      if (selectedImage != null) {
+        final path = '/user/profile_pic/${selectedImage!.path.split('/').last}';
+
+        final ref = FirebaseStorage.instance.ref().child(path);
+        UploadTask? uploadTask = ref.putFile(selectedImage!);
+
+        final snapshot = await uploadTask!.whenComplete(() => null);
+
+        urlDownload = await snapshot.ref.getDownloadURL();
+      }
+
+      await model.updateUserDetails(
         model.uId,
         _firstNameController.text.trim(),
         _middleNameController.text.trim(),
         _lastNameController.text.trim(),
-        _genderController.text.trim(),
+        currentOption,
         _birthdayController.text.trim(),
         _addressHouseController.text.trim(),
         _addressStreetController.text.trim(),
+        urlDownload,
       );
 
       Utilities.showSnackBar("Successfully Updated Details", Colors.green);
     } catch (ex) {
       Utilities.showSnackBar("$ex", Colors.red);
+    } finally {
+      Navigator.pop(dialogContext);
+      context.go('/profile/true');
     }
-    context.go('/profile/true');
   }
 
   @override
@@ -108,6 +174,32 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
             key: formKey,
             child: Column(
               children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 150,
+                      height: 150,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(150),
+                        child: imageShown,
+                      ),
+                    ),
+                    Center(
+                      child: IconButton(
+                        onPressed: () {
+                          print("open picture");
+                          _pickImageFromGallery();
+                        },
+                        icon: Icon(
+                          Icons.photo,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 Row(
                   children: [
                     Expanded(
@@ -130,7 +222,6 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                         inputType: "text",
                         label: "Middle Name",
                         controller: _middleNameController,
-                        validator: InputValidator.requiredValidator,
                       ),
                     ),
                   ],
@@ -145,14 +236,41 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                 Row(
                   children: [
                     Expanded(
-                      child: InputField(
-                        inputType: "text",
-                        placeholder: "Male or Female",
-                        label: "Gender",
-                        controller: _genderController,
-                        validator: InputValidator.requiredValidator,
-                      ),
-                    ),
+                        child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Sex",
+                          style: CustomTextStyle.regular,
+                        ),
+                        ListTile(
+                          contentPadding: EdgeInsets.all(4),
+                          title: const Text("Male"),
+                          leading: Radio(
+                            value: sex_options[0],
+                            groupValue: currentOption,
+                            onChanged: (value) {
+                              setState(() {
+                                currentOption = value.toString();
+                              });
+                            },
+                          ),
+                        ),
+                        ListTile(
+                          contentPadding: EdgeInsets.all(4),
+                          title: const Text("Female"),
+                          leading: Radio(
+                            value: sex_options[1],
+                            groupValue: currentOption,
+                            onChanged: (value) {
+                              setState(() {
+                                currentOption = value.toString();
+                              });
+                            },
+                          ),
+                        )
+                      ],
+                    )),
                     SizedBox(
                       width: 8,
                     ),
@@ -203,7 +321,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                     Text(_contactNoController.text.trim()),
                     TextButton(
                       onPressed: () {
-                        context.go('/profile/update/change-auth/phone');
+                        context.go('/profile/update/phone');
                       },
                       child: Text("Change"),
                     ),
@@ -214,7 +332,8 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                     Text(_emailAddressController.text.trim()),
                     TextButton(
                       onPressed: () {
-                        context.go('/profile/update/change-auth/email');
+                        context.go(
+                            '/profile/update/email/${_emailAddressController.text}');
                       },
                       child: Text("Change"),
                     ),

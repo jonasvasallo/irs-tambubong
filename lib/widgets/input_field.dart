@@ -26,11 +26,14 @@ class InputField extends StatefulWidget {
 
 class _InputFieldState extends State<InputField> {
   Future<void> _selectDate() async {
+    DateTime currentDate = DateTime.now();
+    DateTime eighteenYearsAgo =
+        DateTime(currentDate.year - 16, currentDate.month, currentDate.day);
     DateTime? _picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1920),
-      lastDate: DateTime.now(),
+      initialDate: eighteenYearsAgo,
+      firstDate: DateTime(1900),
+      lastDate: eighteenYearsAgo,
     );
 
     if (_picked != null) {
@@ -59,6 +62,8 @@ class _InputFieldState extends State<InputField> {
             height: 4,
           ),
           TextFormField(
+            minLines: (widget.inputType == "message") ? 5 : 1,
+            maxLines: (widget.inputType == "message") ? 5 : 1,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             validator: widget.validator,
             controller: widget.controller,

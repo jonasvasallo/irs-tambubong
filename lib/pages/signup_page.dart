@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:irs_capstone/constants.dart';
 import 'package:irs_capstone/core/input_validator.dart';
 import 'package:irs_capstone/core/utilities.dart';
@@ -16,6 +20,8 @@ class SignupPage extends StatefulWidget {
   @override
   State<SignupPage> createState() => _SignupPageState();
 }
+
+List<String> sex_options = ["Male", "Female"];
 
 class _SignupPageState extends State<SignupPage> {
   /* Text Controllers */
@@ -33,8 +39,53 @@ class _SignupPageState extends State<SignupPage> {
 
   final formKey = GlobalKey<FormState>();
 
+  File? selectedImage;
+
+  Image imageShown = Image.network(
+    "https://i.pinimg.com/originals/2e/60/07/2e60079f1e36b5c7681f0996a79e8af4.jpg",
+    fit: BoxFit.contain,
+  );
+
+  Future _pickImageFromGallery() async {
+    final returnedImage =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (returnedImage == null) return;
+    setState(() {
+      selectedImage = File(returnedImage!.path);
+      imageShown = Image.file(
+        selectedImage!,
+        fit: BoxFit.cover,
+      );
+    });
+  }
+
+  Future<String> uploadImageToFirebase() async {
+    try {
+      if (selectedImage != null) {
+        final path =
+            'user_verifications/${selectedImage!.path.split('/').last}';
+
+        final ref = FirebaseStorage.instance.ref().child(path);
+        UploadTask? uploadTask = ref.putFile(selectedImage!);
+
+        final snapshot = await uploadTask!.whenComplete(() => null);
+
+        var urlDownload = await snapshot.ref.getDownloadURL();
+        return urlDownload;
+      }
+      print("selectedImage is null");
+      return '';
+    } catch (ex) {
+      Utilities.showSnackBar(
+          "Error uploading file to firebase $ex", Colors.red);
+    }
+    return '';
+  }
+
   final String? Function(String?)? requiredValidator = (value) =>
       (value != null && value.length <= 0) ? 'This field is required' : null;
+
+  String currentOption = sex_options[0];
 
   Future<bool> checkPhoneNumberExists(String phoneNumber) async {
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
@@ -46,16 +97,22 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Future signUp() async {
+    if (selectedImage == null) {
+      Utilities.showSnackBar("Please upload your ID first", Colors.red);
+      return;
+    }
     Utilities.showLoadingIndicator(context);
     final isValid = formKey.currentState!.validate();
     if (!isValid) {
       Navigator.of(context).pop();
       return;
     }
+
     try {
       /* Handles case where given phone number is already in the system */
       bool phoneNumberExists =
           await checkPhoneNumberExists(_contactNoController.text.trim());
+      var photoUrl = await uploadImageToFirebase();
 
       // if (phoneNumberExists) {
       //   Utilities.showSnackBar(
@@ -78,12 +135,13 @@ class _SignupPageState extends State<SignupPage> {
         _firstNameController.text.trim(),
         _middleNameController.text.trim(),
         _lastNameController.text.trim(),
-        _genderController.text.trim(),
+        currentOption,
         _birthdayController.text.trim(),
         _addressHouseController.text.trim(),
         _addressStreetController.text.trim(),
         _contactNoController.text.trim(),
         _emailAddressController.text.trim(),
+        photoUrl,
       );
 
       await FirebaseAuth.instance.verifyPhoneNumber(
@@ -114,16 +172,18 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Future addUserDetails(
-      String userId,
-      String firstName,
-      String middleName,
-      String lastName,
-      String gender,
-      String birthday,
-      String addressHouse,
-      String addressStreet,
-      String contactNo,
-      String emailAddress) async {
+    String userId,
+    String firstName,
+    String middleName,
+    String lastName,
+    String gender,
+    String birthday,
+    String addressHouse,
+    String addressStreet,
+    String contactNo,
+    String emailAddress,
+    String verification_photo,
+  ) async {
     await FirebaseFirestore.instance.collection('users').doc(userId).set({
       'first_name': firstName,
       'middle_name': middleName,
@@ -138,6 +198,9 @@ class _SignupPageState extends State<SignupPage> {
       'lastLogin': FieldValue.serverTimestamp(),
       'user_type': 'resident',
       'verified': false,
+      'sms_verified': false,
+      'profile_path': "https://i.stack.imgur.com/l60Hf.png",
+      'verification_photo': verification_photo,
     });
   }
 
@@ -203,7 +266,6 @@ class _SignupPageState extends State<SignupPage> {
                           inputType: "text",
                           label: "Middle Name",
                           controller: _middleNameController,
-                          validator: requiredValidator,
                         ),
                       ),
                     ],
@@ -216,16 +278,44 @@ class _SignupPageState extends State<SignupPage> {
                     validator: requiredValidator,
                   ),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: InputField(
-                          inputType: "text",
-                          placeholder: "Male or Female",
-                          label: "Gender",
-                          controller: _genderController,
-                          validator: InputValidator.requiredValidator,
-                        ),
-                      ),
+                          child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Sex",
+                            style: CustomTextStyle.regular,
+                          ),
+                          ListTile(
+                            contentPadding: EdgeInsets.all(4),
+                            title: const Text("Male"),
+                            leading: Radio(
+                              value: sex_options[0],
+                              groupValue: currentOption,
+                              onChanged: (value) {
+                                setState(() {
+                                  currentOption = value.toString();
+                                });
+                              },
+                            ),
+                          ),
+                          ListTile(
+                            contentPadding: EdgeInsets.all(4),
+                            title: const Text("Female"),
+                            leading: Radio(
+                              value: sex_options[1],
+                              groupValue: currentOption,
+                              onChanged: (value) {
+                                setState(() {
+                                  currentOption = value.toString();
+                                });
+                              },
+                            ),
+                          )
+                        ],
+                      )),
                       SizedBox(
                         width: 8,
                       ),
@@ -271,6 +361,46 @@ class _SignupPageState extends State<SignupPage> {
                   SizedBox(
                     height: 16,
                   ),
+                  Text(
+                    "In order to verify you are a legitimate resident, please upload a photo of any ID that matches the address you have provided",
+                    style: CustomTextStyle.regular_minor,
+                  ),
+                  OutlinedButton(
+                    onPressed: () {
+                      _pickImageFromGallery();
+                    },
+                    child: IntrinsicWidth(
+                      child: Row(
+                        children: [
+                          Icon(Icons.add),
+                          Text("Attach Photo"),
+                        ],
+                      ),
+                    ),
+                    style: ButtonStyle(
+                      padding: MaterialStatePropertyAll(
+                        EdgeInsets.only(
+                          top: 8,
+                          bottom: 8,
+                          left: 16,
+                          right: 16,
+                        ),
+                      ),
+                      side: MaterialStatePropertyAll(
+                        BorderSide(color: accentColor, width: 1),
+                      ),
+                    ),
+                  ),
+                  (selectedImage != null)
+                      ? Container(
+                          width: 393,
+                          height: 150,
+                          child: Image.file(
+                            selectedImage!,
+                            fit: BoxFit.contain,
+                          ),
+                        )
+                      : SizedBox(),
                   InputField(
                     placeholder: "e.g. +63 9XX-XXX-XXXX",
                     inputType: "number",

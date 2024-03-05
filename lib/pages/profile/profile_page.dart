@@ -22,6 +22,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String address = "";
   String contact_no = "";
   String email = "";
+  String profile_path = "https://i.stack.imgur.com/l60Hf.png";
 
   void deactiveAccount() async {}
 
@@ -39,6 +40,8 @@ class _ProfilePageState extends State<ProfilePage> {
             "${userDetails['address_house'] ?? ''}, ${userDetails['address_street'] ?? ''}, Tambubong, San Rafael, Bulacan";
         contact_no = userDetails['contact_no'] ?? '';
         email = userDetails['email'] ?? '';
+        profile_path = userDetails['profile_path'] ??
+            "https://i.stack.imgur.com/l60Hf.png";
       });
     } else {
       print('User details not found');
@@ -66,7 +69,16 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(full_name),
+        actions: [
+          TextButton(
+            onPressed: () {
+              FirebaseAuth.instance.signOut();
+
+              context.go('/login');
+            },
+            child: Icon(Icons.logout),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -74,12 +86,15 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(150),
-                child: Container(
-                  width: 150,
-                  height: 150,
-                  color: accentColor,
+              Container(
+                width: 150,
+                height: 150,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(150),
+                  child: Image.network(
+                    profile_path,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
               SizedBox(
@@ -142,37 +157,43 @@ class _ProfilePageState extends State<ProfilePage> {
                 large: false,
               ),
               InputButton(
-                label: "Deactive Account",
-                function: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: Text("Deactivate Account"),
-                        content: Text(
-                            "Are you sure you want to deactivate your account? To activate again, login in 30 days before permanent deletion."),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop(); // Dismiss dialog
-                            },
-                            child: Text("Cancel"),
-                          ),
-                          TextButton(
-                            onPressed: () async {
-                              model.accountDeactivate(model.uId, true);
-                              FirebaseAuth.instance.signOut();
-                              context.go('/login');
-                            },
-                            child: Text("Deactivate"),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-                large: false,
-              ),
+                  label: "Change Password",
+                  function: () {
+                    context.go('/profile/change-password');
+                  },
+                  large: false),
+              // InputButton(
+              //   label: "Deactive Account",
+              //   function: () {
+              //     showDialog(
+              //       context: context,
+              //       builder: (context) {
+              //         return AlertDialog(
+              //           title: Text("Deactivate Account"),
+              //           content: Text(
+              //               "Are you sure you want to deactivate your account? To activate again, login in 30 days before permanent deletion."),
+              //           actions: [
+              //             TextButton(
+              //               onPressed: () {
+              //                 Navigator.of(context).pop(); // Dismiss dialog
+              //               },
+              //               child: Text("Cancel"),
+              //             ),
+              //             TextButton(
+              //               onPressed: () async {
+              //                 model.accountDeactivate(model.uId, true);
+              //                 FirebaseAuth.instance.signOut();
+              //                 context.go('/login');
+              //               },
+              //               child: Text("Deactivate"),
+              //             ),
+              //           ],
+              //         );
+              //       },
+              //     );
+              //   },
+              //   large: false,
+              // ),
             ],
           ),
         ),

@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 
-const accentColor = Color(0xFF625BDD);
+const accentColor = Color.fromARGB(255, 29, 192, 27);
 const tintColor = Color(0xFFFFDA93);
 const majorText = Color(0xFF37353B);
 const minorText = Color(0xFFA2A2A2);
