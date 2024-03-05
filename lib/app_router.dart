@@ -8,12 +8,15 @@ import 'package:irs_capstone/pages/home/home_page.dart';
 import 'package:irs_capstone/pages/home/incident_details_page.dart';
 import 'package:irs_capstone/pages/home/witness_page.dart';
 import 'package:irs_capstone/pages/login_page.dart';
+import 'package:irs_capstone/pages/news/news_page.dart';
 import 'package:irs_capstone/pages/profile/change_email_page.dart';
 import 'package:irs_capstone/pages/profile/change_password_page.dart';
 import 'package:irs_capstone/pages/profile/change_phone_page.dart';
 import 'package:irs_capstone/pages/profile/update_profile_page.dart';
 import 'package:irs_capstone/pages/profile/verify_change_page.dart';
 import 'package:irs_capstone/pages/signup_page.dart';
+import 'package:irs_capstone/pages/sos/ongoing_sos_page.dart';
+import 'package:irs_capstone/pages/sos/sos_page.dart';
 import 'package:irs_capstone/pages/verify_phone_page.dart';
 import 'package:irs_capstone/pages/profile/profile_page.dart';
 
@@ -29,8 +32,8 @@ class AppRouter {
       GlobalKey<NavigatorState>(debugLabel: "shellReports");
   static final _rootNavigatorSOS =
       GlobalKey<NavigatorState>(debugLabel: "shellSOS");
-  static final _rootNavigatorNotifications =
-      GlobalKey<NavigatorState>(debugLabel: "shellNotifications");
+  static final _rootNavigatorNews =
+      GlobalKey<NavigatorState>(debugLabel: "shellNews");
   static final _rootNavigatorProfile =
       GlobalKey<NavigatorState>(debugLabel: "shellProfile");
 
@@ -107,20 +110,24 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/sos',
-                builder: (context, state) => Scaffold(
-                  body: Center(
-                    child: Text("SOS"),
+                builder: (context, state) => SosPage(),
+                routes: [
+                  GoRoute(
+                    path: 'ongoing/:id',
+                    builder: (context, state) => OngoingSosPage(
+                      id: state.pathParameters['id'] ?? '',
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
           StatefulShellBranch(
-            navigatorKey: _rootNavigatorNotifications,
+            navigatorKey: _rootNavigatorNews,
             routes: [
               GoRoute(
-                path: '/notifications',
-                builder: (context, state) => Scaffold(),
+                path: '/news',
+                builder: (context, state) => NewsPage(),
               ),
             ],
           ),

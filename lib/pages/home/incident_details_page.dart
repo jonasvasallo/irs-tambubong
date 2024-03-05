@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:irs_capstone/constants.dart';
 import 'package:irs_capstone/widgets/input_button.dart';
@@ -79,6 +80,22 @@ class _IncidentDetailsPageState extends State<IncidentDetailsPage> {
         .map((snapshot) => snapshot.docs.isNotEmpty);
   }
 
+  int calculateAge(String birthdateString) {
+    DateTime birthdate = DateTime.parse(birthdateString.replaceAll('/', '-'));
+
+    DateTime currentDate = DateTime.now();
+
+    int age = currentDate.year - birthdate.year;
+
+    if (currentDate.month < birthdate.month ||
+        (currentDate.month == birthdate.month &&
+            currentDate.day < birthdate.day)) {
+      age--;
+    }
+
+    return age;
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -100,11 +117,6 @@ class _IncidentDetailsPageState extends State<IncidentDetailsPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
-              height: 200,
-              color: majorText,
-            ),
             Padding(
               padding: EdgeInsets.all(16),
               child: FutureBuilder(
@@ -141,6 +153,33 @@ class _IncidentDetailsPageState extends State<IncidentDetailsPage> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Container(
+                            width: double.infinity,
+                            height: 200,
+                            color: majorText,
+                            child: GoogleMap(
+                              initialCameraPosition: CameraPosition(
+                                target: LatLng(
+                                    incidentDetails['coordinates']['latitude'],
+                                    incidentDetails['coordinates']
+                                        ['longitude']),
+                                zoom: 18,
+                              ),
+                              circles: Set.from([
+                                Circle(
+                                  circleId: CircleId("customCircle"),
+                                  center: LatLng(
+                                      incidentDetails['coordinates']
+                                          ['latitude'],
+                                      incidentDetails['coordinates']
+                                          ['longitude']),
+                                  radius: 5,
+                                  fillColor: Color.fromARGB(98, 255, 0, 0),
+                                  strokeColor: Color.fromARGB(255, 255, 0, 0),
+                                ),
+                              ]),
+                            ),
+                          ),
                           Text(myDate),
                           Text(
                             incidentDetails['title'],
@@ -173,17 +212,28 @@ class _IncidentDetailsPageState extends State<IncidentDetailsPage> {
                               SizedBox(
                                 width: 8,
                               ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(incidentDetails['user_details']
-                                      ['gender']),
-                                  Text(incidentDetails['user_details']
-                                          ['user_type']
-                                      .toString()
-                                      .toUpperCase()),
-                                ],
-                              ),
+                              (incidentDetails['user_details']['user_type'] ==
+                                      'resident')
+                                  ? Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(incidentDetails['user_details']
+                                            ['gender']),
+                                        Text(
+                                            "${calculateAge(incidentDetails['user_details']['birthday'])} years old"),
+                                      ],
+                                    )
+                                  : Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(incidentDetails['user_details']
+                                            ['first_name']),
+                                        Text(
+                                            "${incidentDetails['user_details']['user_type'].toString().toUpperCase()}"),
+                                      ],
+                                    ),
                             ],
                           ),
                           SizedBox(
