@@ -117,179 +117,286 @@ class _IncidentDetailsPageState extends State<IncidentDetailsPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: FutureBuilder(
-                  future: getIncidentDetails(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      Map<String, dynamic> incidentDetails = snapshot.data!;
+            FutureBuilder(
+              future: getIncidentDetails(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  Map<String, dynamic> incidentDetails = snapshot.data!;
 
-                      String myDate = "test";
+                  String myDate = "test";
 
-                      if (incidentDetails['timestamp'] != null) {
-                        Timestamp t = incidentDetails['timestamp'] as Timestamp;
-                        DateTime date = t.toDate();
-                        myDate = DateFormat('MM/dd hh:mm').format(date);
-                      }
+                  if (incidentDetails['timestamp'] != null) {
+                    Timestamp t = incidentDetails['timestamp'] as Timestamp;
+                    DateTime date = t.toDate();
+                    myDate =
+                        DateFormat('EEEE, MMMM dd, y hh:mm a').format(date);
+                  }
 
-                      List<Widget> media_attachments = [];
+                  List<Widget> media_attachments = [];
 
-                      for (var media in incidentDetails['media_attachments']) {
-                        final mediaWidget = Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Container(
-                            width: 300,
-                            height: 150,
-                            color: Colors.grey,
-                            child: Image.network(
-                              media,
-                              fit: BoxFit.cover,
+                  for (var media in incidentDetails['media_attachments']) {
+                    final mediaWidget = Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        width: 300,
+                        height: 150,
+                        color: Colors.grey,
+                        child: Image.network(
+                          media,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    );
+                    media_attachments.add(mediaWidget);
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        height: 200,
+                        color: majorText,
+                        child: GoogleMap(
+                          initialCameraPosition: CameraPosition(
+                            target: LatLng(
+                                incidentDetails['coordinates']['latitude'],
+                                incidentDetails['coordinates']['longitude']),
+                            zoom: 18,
+                          ),
+                          circles: Set.from([
+                            Circle(
+                              circleId: CircleId("customCircle"),
+                              center: LatLng(
+                                  incidentDetails['coordinates']['latitude'],
+                                  incidentDetails['coordinates']['longitude']),
+                              radius: 5,
+                              fillColor: Color.fromARGB(98, 255, 0, 0),
+                              strokeColor: Color.fromARGB(255, 255, 0, 0),
                             ),
-                          ),
-                        );
-                        media_attachments.add(mediaWidget);
-                      }
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: double.infinity,
-                            height: 200,
-                            color: majorText,
-                            child: GoogleMap(
-                              initialCameraPosition: CameraPosition(
-                                target: LatLng(
-                                    incidentDetails['coordinates']['latitude'],
-                                    incidentDetails['coordinates']
-                                        ['longitude']),
-                                zoom: 18,
-                              ),
-                              circles: Set.from([
-                                Circle(
-                                  circleId: CircleId("customCircle"),
-                                  center: LatLng(
-                                      incidentDetails['coordinates']
-                                          ['latitude'],
-                                      incidentDetails['coordinates']
-                                          ['longitude']),
-                                  radius: 5,
-                                  fillColor: Color.fromARGB(98, 255, 0, 0),
-                                  strokeColor: Color.fromARGB(255, 255, 0, 0),
-                                ),
-                              ]),
+                          ]),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(myDate),
+                            Text(
+                              incidentDetails['title'],
+                              style: CustomTextStyle.heading,
                             ),
-                          ),
-                          Text(myDate),
-                          Text(
-                            incidentDetails['title'],
-                            style: CustomTextStyle.heading,
-                          ),
-                          Text(
-                            incidentDetails['location_address'],
-                            style: CustomTextStyle.regular_minor,
-                          ),
-                          SizedBox(
-                            height: 16,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
+                            Text(
+                              incidentDetails['location_address'],
+                              style: CustomTextStyle.regular_minor,
+                            ),
+                            SizedBox(
+                              height: 16,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(48),
+                                      color: majorText),
+                                  child: ClipRRect(
                                     borderRadius: BorderRadius.circular(48),
-                                    color: majorText),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(48),
-                                  child: Image.network(
-                                    "https://i.stack.imgur.com/l60Hf.png",
-                                    fit: BoxFit.cover,
+                                    child: Image.network(
+                                      "https://i.stack.imgur.com/l60Hf.png",
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              SizedBox(
-                                width: 8,
-                              ),
-                              (incidentDetails['user_details']['user_type'] ==
-                                      'resident')
-                                  ? Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(incidentDetails['user_details']
-                                            ['gender']),
-                                        Text(
-                                            "${calculateAge(incidentDetails['user_details']['birthday'])} years old"),
-                                      ],
-                                    )
-                                  : Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(incidentDetails['user_details']
-                                            ['first_name']),
-                                        Text(
-                                            "${incidentDetails['user_details']['user_type'].toString().toUpperCase()}"),
-                                      ],
-                                    ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: 16,
-                          ),
-                          Text(
-                            incidentDetails['details'],
-                            style: CustomTextStyle.regular,
-                          ),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: media_attachments,
-                            ),
-                          ),
-                          StreamBuilder<bool>(
-                            stream: getUserWitnessedStream(
-                                FirebaseAuth.instance.currentUser!.uid,
-                                widget.id),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.active) {
-                                bool userWitnessed = snapshot.data ?? false;
-
-                                return (userWitnessed)
-                                    ? Center(
-                                        child: Text(
-                                          "You have provided your information to this incident. Thanks for your support.",
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: accentColor,
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 16,
-                                          ),
-                                        ),
+                                SizedBox(
+                                  width: 8,
+                                ),
+                                (incidentDetails['user_details']['user_type'] ==
+                                        'resident')
+                                    ? Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(incidentDetails['user_details']
+                                              ['gender']),
+                                          Text(
+                                              "${calculateAge(incidentDetails['user_details']['birthday'])} years old"),
+                                        ],
                                       )
-                                    : InputButton(
-                                        label: "I WITNESSED THIS",
-                                        function: () {
-                                          context.go(
-                                              "/home/incident/${widget.id}/witness/${widget.id}");
-                                        },
-                                        large: true);
-                              } else {
-                                return CircularProgressIndicator();
-                              }
-                            },
-                          ),
-                        ],
-                      );
-                    } else {
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-                  }),
+                                    : Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(incidentDetails['user_details']
+                                              ['first_name']),
+                                          Text(
+                                              "${incidentDetails['user_details']['user_type'].toString().toUpperCase()}"),
+                                        ],
+                                      ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 16,
+                            ),
+                            Text(
+                              incidentDetails['details'],
+                              style: CustomTextStyle.regular,
+                            ),
+                            SizedBox(
+                              height: 16,
+                            ),
+                            Container(
+                              width: MediaQuery.of(context).size.width - 32,
+                              height: 150,
+                              decoration: BoxDecoration(
+                                border:
+                                    Border.all(color: accentColor, width: 2),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: StreamBuilder(
+                                stream: FirebaseFirestore.instance
+                                    .collection('incidents')
+                                    .doc(widget.id)
+                                    .collection('live_status')
+                                    .orderBy('timestamp', descending: true)
+                                    .snapshots(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return Center(
+                                      child: CircularProgressIndicator(),
+                                    );
+                                  }
+                                  if (!snapshot.hasData ||
+                                      snapshot.data!.docs.isEmpty) {
+                                    return Center(
+                                      child: Text("No status yet..."),
+                                    );
+                                  }
+                                  if (snapshot.hasError) {
+                                    return Center(
+                                      child: Text("${snapshot.error}"),
+                                    );
+                                  }
+
+                                  List<Widget> statusWidgets = [];
+
+                                  final statuses = snapshot.data!.docs;
+
+                                  for (var status in statuses) {
+                                    String myDate = "Error fetching date";
+                                    if (status['timestamp'] != null) {
+                                      Timestamp t =
+                                          status['timestamp'] as Timestamp;
+                                      DateTime date = t.toDate();
+                                      myDate = DateFormat('MM/dd hh:mm a')
+                                          .format(date);
+                                    }
+
+                                    statusWidgets.add(
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            myDate,
+                                          ),
+                                          SizedBox(
+                                            width: 16,
+                                          ),
+                                          Flexible(
+                                            child: Text(
+                                              status['status_content'],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    statusWidgets.add(
+                                      SizedBox(
+                                        height: 16,
+                                      ),
+                                    );
+                                  }
+
+                                  return SingleChildScrollView(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(
+                                        children: statusWidgets,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            SizedBox(
+                              height: 16,
+                            ),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: media_attachments,
+                              ),
+                            ),
+                            (incidentDetails['reported_by'] !=
+                                    FirebaseAuth.instance.currentUser?.uid)
+                                ? StreamBuilder<bool>(
+                                    stream: getUserWitnessedStream(
+                                        FirebaseAuth.instance.currentUser!.uid,
+                                        widget.id),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.active) {
+                                        bool userWitnessed =
+                                            snapshot.data ?? false;
+
+                                        return (userWitnessed)
+                                            ? Center(
+                                                child: Text(
+                                                  "You have provided your information to this incident. Thanks for your support.",
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    color: accentColor,
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              )
+                                            : InputButton(
+                                                label: "I WITNESSED THIS",
+                                                function: () {
+                                                  context.go(
+                                                      "/home/incident/${widget.id}/witness/${widget.id}");
+                                                },
+                                                large: true);
+                                      } else {
+                                        return CircularProgressIndicator();
+                                      }
+                                    },
+                                  )
+                                : InputButton(
+                                    label: "OPEN CHATROOM",
+                                    function: () {
+                                      context.go(
+                                        '/home/incident/${widget.id}/chatroom/${widget.id}',
+                                      );
+                                    },
+                                    large: true,
+                                  ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+              },
             )
           ],
         ),

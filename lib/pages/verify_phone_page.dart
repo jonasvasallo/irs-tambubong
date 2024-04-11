@@ -38,7 +38,6 @@ class _VerifyPhonePageState extends State<VerifyPhonePage> {
   final formKey = GlobalKey<FormState>();
 
   late bool isResendButtonEnabled;
-  late Timer resendTimer;
 
   int minutesLeft = 5;
   int secondsLeft = 0;
@@ -96,12 +95,6 @@ class _VerifyPhonePageState extends State<VerifyPhonePage> {
       codeAutoRetrievalTimeout: (String verificationId) {},
       phoneNumber: phoneNumbah,
     );
-
-    resendTimer = Timer(Duration(minutes: 5), () {
-      setState(() {
-        isResendButtonEnabled = true;
-      });
-    });
   }
 
   @override
@@ -110,6 +103,8 @@ class _VerifyPhonePageState extends State<VerifyPhonePage> {
 
     phoneNumbah = widget.phoneNumber;
     verifId = widget.verificationId;
+
+    print("$verifId $phoneNumbah");
 
     _firstFocusNode.requestFocus();
 
@@ -125,7 +120,6 @@ class _VerifyPhonePageState extends State<VerifyPhonePage> {
     fourthNum.dispose();
     fifthNum.dispose();
     sixthNum.dispose();
-    resendTimer.cancel();
     super.dispose();
   }
 
@@ -283,12 +277,11 @@ class _VerifyPhonePageState extends State<VerifyPhonePage> {
                     style: CustomTextStyle.regular_minor,
                   ),
                   TextButton(
-                    onPressed: isResendButtonEnabled ? resentOTP : null,
+                    onPressed: resentOTP,
                     child: Text(
                       "RESEND CODE",
                       style: TextStyle(
-                        color:
-                            isResendButtonEnabled ? accentColor : Colors.grey,
+                        color: accentColor,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
@@ -307,7 +300,6 @@ class _VerifyPhonePageState extends State<VerifyPhonePage> {
                   InputButton(
                       label: "VERIFY",
                       function: () async {
-                        resendTimer.cancel();
                         try {
                           String codeSMS = firstNum.text.toString() +
                               secondNum.text.toString() +

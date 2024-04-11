@@ -18,6 +18,26 @@ class _HomePageState extends State<HomePage> {
 
   final LatLng _center = const LatLng(14.9690824, 120.9244701);
 
+  List<LatLng> polygonPoints = [
+    LatLng(14.969637, 120.917670),
+    LatLng(14.964579, 120.921189),
+    LatLng(14.967647, 120.927970),
+    LatLng(14.961635, 120.930717),
+    LatLng(14.962464, 120.932905),
+    LatLng(14.967108, 120.931918),
+    LatLng(14.971430, 120.932714),
+    LatLng(14.972561, 120.932388),
+    LatLng(14.973032, 120.933756),
+    LatLng(14.978738, 120.931606),
+    LatLng(14.974131, 120.925472),
+    LatLng(14.974780, 120.924209),
+    LatLng(14.973415, 120.923533),
+    LatLng(14.974256, 120.922145),
+    LatLng(14.969767, 120.919456),
+    LatLng(14.970210, 120.918637),
+    LatLng(14.969637, 120.917670),
+  ];
+
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
@@ -25,111 +45,57 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text("Incidents"),
-        ),
-        body: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: SingleChildScrollView(
-              child: StreamBuilder(
-                stream: FirebaseFirestore.instance
-                    .collection('incidents')
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  List<Widget> incidentsList = [];
-                  if (!snapshot.hasData) {
-                    return Text("No Data");
-                  }
-                  final incidents = snapshot.data?.docs.toList();
-                  for (var incident in incidents!) {
-                    String myDate = "test";
-
-                    if (incident['timestamp'] != null) {
-                      Timestamp t = incident['timestamp'] as Timestamp;
-                      DateTime date = t.toDate();
-                      myDate = DateFormat('MM/dd hh:mm').format(date);
-                    }
-                    final incidentWidget = IncidentContainer(
-                      id: incident.id,
-                      title: incident['title'],
-                      details: incident['details'],
-                      date: myDate,
-                    );
-                    incidentsList.add(incidentWidget);
-                  }
-                  return Column(
-                    children: incidentsList,
-                  );
-                },
-              ),
-            ),
-          ),
-        ));
-  }
-}
-
-class IncidentContainer extends StatelessWidget {
-  final String id;
-  final String title;
-  final String details;
-  final String date;
-  const IncidentContainer(
-      {Key? key,
-      required this.title,
-      required this.details,
-      required this.date,
-      required this.id})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        context.go('/home/incident/${id}');
-      },
-      child: Padding(
-        padding: const EdgeInsets.only(top: 8, bottom: 8),
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Color.fromARGB(255, 248, 246, 246),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: minorText, width: 1),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      flex: 3,
-                      child: Text(
-                        title,
-                        overflow: TextOverflow.ellipsis,
-                        style: CustomTextStyle.subheading,
-                      ),
-                    ),
-                    Text(
-                      date,
-                      overflow: TextOverflow.ellipsis,
-                      style: CustomTextStyle.regular,
-                    ),
-                  ],
-                ),
-                Text(
-                  details,
-                  overflow: TextOverflow.ellipsis,
-                  style: CustomTextStyle.regular_minor,
-                ),
-              ],
-            ),
-          ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          context.go('/home/add-incident');
+        },
+        backgroundColor: accentColor,
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
         ),
       ),
+      body: StreamBuilder(
+          stream:
+              FirebaseFirestore.instance.collection('incidents').snapshots(),
+          builder: (context, snapshot) {
+            Set<Marker> incidentsList = {};
+            if (!snapshot.hasData) {
+              return Text("No Data");
+            }
+            final incidents = snapshot.data?.docs.toList();
+            for (var incident in incidents!) {
+              final incidentWidget = Marker(
+                markerId: MarkerId(incident.id),
+                icon: BitmapDescriptor.defaultMarker,
+                position: LatLng(
+                  incident['coordinates']['latitude'],
+                  incident['coordinates']['longitude'],
+                ),
+                onTap: () {
+                  context.go('/home/incident/${incident.id}');
+                },
+              );
+              incidentsList.add(incidentWidget);
+            }
+
+            return GoogleMap(
+              myLocationButtonEnabled: false,
+              initialCameraPosition: CameraPosition(
+                target: LatLng(14.970254, 120.925633),
+                zoom: 15,
+              ),
+              polygons: {
+                Polygon(
+                  polygonId: PolygonId("1"),
+                  points: polygonPoints,
+                  fillColor: Color(0xFF006491).withOpacity(0.2),
+                  strokeWidth: 2,
+                )
+              },
+              markers: incidentsList,
+            );
+          }),
     );
   }
 }

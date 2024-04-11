@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:irs_capstone/constants.dart';
 import 'package:irs_capstone/models/user_model.dart';
 import 'package:irs_capstone/widgets/input_button.dart';
+import 'package:irs_capstone/widgets/profile_button.dart';
 
 class ProfilePage extends StatefulWidget {
   final bool? reload;
@@ -33,7 +34,7 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         userType = userDetails['user_type'] ?? '';
         full_name =
-            "${userDetails['first_name'] ?? ''} ${userDetails['middle_name'] ?? ''} ${userDetails['last_name'] ?? ''}";
+            "${userDetails['first_name'] ?? ''} ${userDetails['middle_name'][0] ?? ''}. ${userDetails['last_name'] ?? ''}";
         gender = userDetails['gender'] ?? '';
         birthday = userDetails['birthday'] ?? '';
         address =
@@ -69,16 +70,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: [
-          TextButton(
-            onPressed: () {
-              FirebaseAuth.instance.signOut();
-
-              context.go('/login');
-            },
-            child: Icon(Icons.logout),
-          ),
-        ],
+        title: Text("Account"),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -86,82 +78,79 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 150,
-                height: 150,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(150),
-                  child: Image.network(
-                    profile_path,
-                    fit: BoxFit.cover,
-                  ),
+              GestureDetector(
+                onTap: () => context.go('/profile/update'),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(150),
+                        child: Image.network(
+                          profile_path,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 8,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Hi, ${full_name}",
+                          style: CustomTextStyle.subheading,
+                        ),
+                        Text(
+                          contact_no,
+                          style: CustomTextStyle.regular_minor,
+                        ),
+                        Text(
+                          email,
+                          style: CustomTextStyle.regular_minor,
+                        ),
+                      ],
+                    )
+                  ],
                 ),
               ),
               SizedBox(
                 height: 16,
               ),
-              Text(
-                userType.toUpperCase(),
-                style: CustomTextStyle.subheading,
-              ),
-              SizedBox(
-                height: 16,
-              ),
-              ListView(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                children: [
-                  ListTile(
-                    leading: Icon(
-                      Icons.person,
-                    ),
-                    title: Text(full_name),
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.male,
-                    ),
-                    title: Text(gender),
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.celebration,
-                    ),
-                    title: Text(birthday),
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.location_city,
-                    ),
-                    title: Text(address),
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.phone_iphone,
-                    ),
-                    title: Text(contact_no),
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.email,
-                    ),
-                    title: Text(email),
-                  ),
-                ],
-              ),
-              InputButton(
-                label: "Edit Profile",
-                function: () {
-                  context.go('/profile/update');
+              ProfileButton(
+                name: "Change Password",
+                icon: Icon(Icons.lock_open_outlined),
+                iconColor: Colors.white,
+                action: () {
+                  context.go('/profile/change-password');
                 },
-                large: false,
               ),
-              InputButton(
-                  label: "Change Password",
-                  function: () {
-                    context.go('/profile/change-password');
-                  },
-                  large: false),
+              ProfileButton(
+                name: "My Incidents",
+                icon: Icon(Icons.history_outlined),
+                iconColor: Colors.white,
+                action: () {},
+              ),
+              ProfileButton(
+                name: "File a Complaint",
+                icon: Icon(Icons.report_outlined),
+                iconColor: Colors.white,
+                action: () {},
+              ),
+              ProfileButton(
+                name: "Logout",
+                icon: Icon(Icons.logout_outlined),
+                iconColor: Colors.white,
+                action: () {
+                  FirebaseAuth.instance.signOut();
+
+                  context.go('/login');
+                },
+              ),
+
               // InputButton(
               //   label: "Deactive Account",
               //   function: () {

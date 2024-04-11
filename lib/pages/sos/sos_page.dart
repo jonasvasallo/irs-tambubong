@@ -62,6 +62,7 @@ class _SosPageState extends State<SosPage> {
         'user_id': FirebaseAuth.instance.currentUser?.uid,
         'status': "Active",
         'timestamp': FieldValue.serverTimestamp(),
+        'responders': [],
         'location': {
           'latitude': latitude,
           'longitude': longitude,
@@ -124,12 +125,38 @@ class _SosPageState extends State<SosPage> {
                   child: InputButton(
                     label: "Report Emegency",
                     function: () {
-                      _getCurrentLocation().then((value) {
-                        lat = "${value.latitude}";
-                        long = "${value.longitude}";
-                        addSOS(value.latitude, value.longitude);
-                        print("happening");
-                      });
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text("SOS Confirmation"),
+                            content: Text(
+                              "Are you sure you want to use this feature? \n\nNote: Illegitimate calls to government units are punishable by law under Presidential Decree No. 1727.",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: Text("Cancel"),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+
+                                  _getCurrentLocation().then((value) {
+                                    lat = "${value.latitude}";
+                                    long = "${value.longitude}";
+                                    addSOS(value.latitude, value.longitude);
+                                    print("happening");
+                                  });
+                                },
+                                child: Text("Yes"),
+                              ),
+                            ],
+                          );
+                        },
+                      );
                     },
                     large: true,
                   ),

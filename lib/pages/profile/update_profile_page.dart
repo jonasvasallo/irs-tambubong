@@ -159,7 +159,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Update Profile"),
+        title: Text("Personal Information"),
         leading: TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Icon(

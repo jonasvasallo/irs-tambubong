@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irs_capstone/navigation_menu.dart';
 import 'package:irs_capstone/pages/forgot_password_page.dart';
+import 'package:irs_capstone/pages/home/add_incident_page.dart';
 import 'package:irs_capstone/pages/home/home_page.dart';
+import 'package:irs_capstone/pages/home/incident_chatroom_page.dart';
 import 'package:irs_capstone/pages/home/incident_details_page.dart';
 import 'package:irs_capstone/pages/home/witness_page.dart';
 import 'package:irs_capstone/pages/login_page.dart';
@@ -14,6 +16,7 @@ import 'package:irs_capstone/pages/profile/change_password_page.dart';
 import 'package:irs_capstone/pages/profile/change_phone_page.dart';
 import 'package:irs_capstone/pages/profile/update_profile_page.dart';
 import 'package:irs_capstone/pages/profile/verify_change_page.dart';
+import 'package:irs_capstone/pages/reports/reports_page.dart';
 import 'package:irs_capstone/pages/signup_page.dart';
 import 'package:irs_capstone/pages/sos/ongoing_sos_page.dart';
 import 'package:irs_capstone/pages/sos/sos_page.dart';
@@ -81,10 +84,19 @@ class AppRouter {
                 ),
                 routes: [
                   GoRoute(
+                    path: 'add-incident',
+                    builder: (context, state) => AddIncidentPage(),
+                  ),
+                  GoRoute(
                     path: 'incident/:id',
                     builder: (context, state) => IncidentDetailsPage(
                         id: state.pathParameters['id'] ?? ''),
                     routes: [
+                      GoRoute(
+                        path: 'chatroom/:id',
+                        builder: (context, state) => IncidentChatroomPage(
+                            id: state.pathParameters['id'] ?? ''),
+                      ),
                       GoRoute(
                         path: 'witness/:id',
                         builder: (context, state) =>
@@ -101,7 +113,7 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/reports',
-                builder: (context, state) => Scaffold(),
+                builder: (context, state) => ReportsPage(),
               ),
             ],
           ),
