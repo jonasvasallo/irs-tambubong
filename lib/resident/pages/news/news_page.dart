@@ -125,6 +125,7 @@ class NewsContainer extends StatelessWidget {
               height: 8,
             ),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Flexible(
                   flex: 2,

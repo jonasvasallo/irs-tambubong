@@ -189,23 +189,23 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
 
   Future<List<String>> _uploadMultipleFiles(String itemName) async {
     List<String> imageUrls = [];
-    String imageUrl = "";
     try {
       for (var i = 0; i < imageCounts; i++) {
-        UploadTask uploadTask;
-
+        print("uploading $i");
         Reference ref = FirebaseStorage.instance
             .ref()
             .child('incident_attachments/${itemName}_$i');
 
         final metadata = SettableMetadata(contentType: 'image/jpeg');
+        UploadTask uploadTask = ref.putData(pickedImagesInBytes[i], metadata);
 
-        uploadTask = ref.putData(pickedImagesInBytes[i], metadata);
-        await uploadTask.whenComplete(() => null);
-        imageUrl = await ref.getDownloadURL();
+        // Wait for the upload task to complete
+        TaskSnapshot snapshot = await uploadTask;
+
+        // Get the download URL
+        String imageUrl = await snapshot.ref.getDownloadURL();
         imageUrls.add(imageUrl);
       }
-
       return imageUrls;
     } catch (ex) {
       print('Error uploading image to Firestore: $ex');
@@ -214,7 +214,7 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
   }
 
   void checkLocation(LatLng pointLatLng) async {
-    setState(() async {
+    setState(() {
       isInSelectedArea = map_tool.PolygonUtil.containsLocation(
         map_tool.LatLng(pointLatLng.latitude, pointLatLng.longitude),
         polygonPoints

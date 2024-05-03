@@ -48,6 +48,11 @@ dependencies:
   file_picker: ^8.0.0+1
   maps_toolkit: ^3.0.0
   geocoding: ^3.0.0
+  flutter_phone_direct_caller: ^2.1.1
+  sliding_up_panel: ^2.0.0+1
+  url_launcher: ^6.2.4
+  location: ^5.0.3
+  flutter_polyline_points: ^2.0.0
 
 dev_dependencies:
   flutter_test:

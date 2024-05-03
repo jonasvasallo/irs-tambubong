@@ -23,7 +23,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
         child: widget.navigationShell,
       ),
       bottomNavigationBar: NavigationBar(
-        indicatorColor: Color.fromARGB(255, 95, 238, 92),
+        indicatorColor: Color(0xFF4FADC0),
         backgroundColor: Colors.white,
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         height: 80,

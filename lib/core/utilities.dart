@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:irs_capstone/constants.dart';
 
 class Utilities {
@@ -33,5 +35,11 @@ class Utilities {
         });
 
     return dialogContext;
+  }
+
+  static String convertDate(dynamic daters) {
+    Timestamp t = daters as Timestamp;
+    DateTime date = t.toDate();
+    return DateFormat('MMMM dd - hh:mm a').format(date);
   }
 }

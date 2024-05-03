@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:irs_capstone/app_router.dart';
 import 'package:irs_capstone/constants.dart';
 import 'package:irs_capstone/core/input_validator.dart';
 import 'package:irs_capstone/core/utilities.dart';
@@ -17,6 +19,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  bool _isMounted = false;
   final formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -80,12 +83,32 @@ class _LoginPageState extends State<LoginPage> {
               print('User is signed out');
             } else {
               await model.loginTimestamp(model.uId);
-              // User is signed in
-              print('User is signed in');
-              print('User UID: ${user.uid}');
+              print("working 1");
+              DocumentSnapshot documentSnapshot = await FirebaseFirestore
+                  .instance
+                  .collection('users')
+                  .doc(FirebaseAuth.instance.currentUser?.uid)
+                  .get();
+              print("working 2");
+              if (documentSnapshot.exists) {
+                Map<String, dynamic> userDetails =
+                    documentSnapshot.data() as Map<String, dynamic>;
+                print("working 3");
 
-              context.go('/home');
-              // Here, you can proceed with actions to be taken after successful sign-in
+                if (_isMounted) {
+                  print("working 4");
+                  if (userDetails['user_type'] == 'resident') {
+                    print("working 5");
+                    AppRouter.initR = "/home";
+                    context.go('/home');
+                  } else {
+                    AppRouter.initR = "/tanod_home";
+                    context.go('/tanod_home');
+                  }
+                }
+              } else {
+                Utilities.showSnackBar("User not in collection", Colors.red);
+              }
             }
           });
         }
@@ -114,7 +137,15 @@ class _LoginPageState extends State<LoginPage> {
     _emailController.dispose();
     _passwordController.dispose();
     _authSubscription?.cancel();
+    _isMounted = false;
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _isMounted = true;
   }
 
   @override

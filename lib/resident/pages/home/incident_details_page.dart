@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:irs_capstone/constants.dart';
+import 'package:irs_capstone/core/utilities.dart';
 import 'package:irs_capstone/widgets/input_button.dart';
 
 class IncidentDetailsPage extends StatefulWidget {
@@ -94,6 +95,19 @@ class _IncidentDetailsPageState extends State<IncidentDetailsPage> {
     }
 
     return age;
+  }
+
+  void deleteIncident() async {
+    try {
+      FirebaseFirestore.instance
+          .collection('incidents')
+          .doc(widget.id)
+          .delete();
+      Utilities.showSnackBar("Successfully deleted incident", Colors.green);
+      Navigator.of(context).pop();
+    } catch (ex) {
+      Utilities.showSnackBar("${ex}", Colors.red);
+    }
   }
 
   @override
@@ -386,6 +400,51 @@ class _IncidentDetailsPageState extends State<IncidentDetailsPage> {
                                     },
                                     large: true,
                                   ),
+                            (incidentDetails['reported_by'] ==
+                                    FirebaseAuth.instance.currentUser?.uid)
+                                ? Align(
+                                    alignment: Alignment.center,
+                                    child: TextButton(
+                                        onPressed: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return AlertDialog(
+                                                title: Text("Delete Incident"),
+                                                content: Text(
+                                                    "Are you sure you want to delete this incident? This action cannot be reversed."),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                    child: Text("Cancel"),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      print("delete incident");
+                                                      deleteIncident();
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                    child: Text("Yes"),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        },
+                                        child: Text(
+                                          "Delete Incident",
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        )),
+                                  )
+                                : SizedBox(),
                           ],
                         ),
                       ),

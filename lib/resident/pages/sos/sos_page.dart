@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irs_capstone/constants.dart';
 import 'package:irs_capstone/core/utilities.dart';
+import 'package:irs_capstone/models/user_model.dart';
 import 'package:irs_capstone/widgets/input_button.dart';
 
 class SosPage extends StatefulWidget {
@@ -75,6 +76,16 @@ class _SosPageState extends State<SosPage> {
     }
   }
 
+  Future<bool> checkIfVerified() async {
+    Map<String, dynamic>? userDetails =
+        await UserModel.getUserById(FirebaseAuth.instance.currentUser!.uid);
+    if (userDetails == null) {
+      return false;
+    }
+
+    return userDetails['verified'];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,46 +131,77 @@ class _SosPageState extends State<SosPage> {
                   height: 16,
                 ),
                 Text(locationMessage),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: InputButton(
-                    label: "Report Emegency",
-                    function: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Text("SOS Confirmation"),
-                            content: Text(
-                              "Are you sure you want to use this feature? \n\nNote: Illegitimate calls to government units are punishable by law under Presidential Decree No. 1727.",
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: Text("Cancel"),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-
-                                  _getCurrentLocation().then((value) {
-                                    lat = "${value.latitude}";
-                                    long = "${value.longitude}";
-                                    addSOS(value.latitude, value.longitude);
-                                    print("happening");
-                                  });
-                                },
-                                child: Text("Yes"),
-                              ),
-                            ],
-                          );
-                        },
+                StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Text('Error ${snapshot.error}');
+                    }
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                        child: CircularProgressIndicator(),
                       );
-                    },
-                    large: true,
-                  ),
+                    }
+                    Map<String, dynamic>? userData = snapshot.data?.data();
+                    bool isVerified = userData?['verified'] ?? false;
+                    if (isVerified) {
+                      return Align(
+                        alignment: Alignment.bottomCenter,
+                        child: InputButton(
+                          label: "Report Emegency",
+                          function: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Text("SOS Confirmation"),
+                                  content: Text(
+                                    "Are you sure you want to use this feature? \n\nNote: Illegitimate calls to government units are punishable by law under Presidential Decree No. 1727.",
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text("Cancel"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+
+                                        _getCurrentLocation().then((value) {
+                                          lat = "${value.latitude}";
+                                          long = "${value.longitude}";
+                                          addSOS(
+                                              value.latitude, value.longitude);
+                                          print("happening");
+                                        });
+                                      },
+                                      child: Text("Yes"),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          large: true,
+                        ),
+                      );
+                    } else {
+                      return Text(
+                        "Your account must be verified in order to use this feature",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      );
+                    }
+                  },
                 ),
               ],
             ),

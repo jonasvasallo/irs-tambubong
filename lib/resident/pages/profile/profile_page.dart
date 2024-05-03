@@ -34,7 +34,7 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         userType = userDetails['user_type'] ?? '';
         full_name =
-            "${userDetails['first_name'] ?? ''} ${userDetails['middle_name'][0] ?? ''}. ${userDetails['last_name'] ?? ''}";
+            "${userDetails['first_name'] ?? ''} ${(userDetails['middle_name'].toString().isNotEmpty) ? userDetails['middle_name'][0] : ''} ${userDetails['last_name'] ?? ''}";
         gender = userDetails['gender'] ?? '';
         birthday = userDetails['birthday'] ?? '';
         address =
@@ -132,13 +132,17 @@ class _ProfilePageState extends State<ProfilePage> {
                 name: "My Incidents",
                 icon: Icon(Icons.history_outlined),
                 iconColor: Colors.white,
-                action: () {},
+                action: () {
+                  context.go('/profile/incidents');
+                },
               ),
               ProfileButton(
                 name: "File a Complaint",
                 icon: Icon(Icons.report_outlined),
                 iconColor: Colors.white,
-                action: () {},
+                action: () {
+                  context.go('/profile/complaint');
+                },
               ),
               ProfileButton(
                 name: "Logout",

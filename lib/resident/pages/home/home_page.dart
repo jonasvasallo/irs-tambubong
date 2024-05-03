@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:irs_capstone/app_router.dart';
 import 'package:irs_capstone/constants.dart';
 
 class HomePage extends StatefulWidget {
@@ -40,6 +41,33 @@ class _HomePageState extends State<HomePage> {
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    checkUserType();
+  }
+
+  void checkUserType() async {
+    DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser?.uid)
+        .get();
+
+    if (documentSnapshot.exists) {
+      Map<String, dynamic> userDetails =
+          documentSnapshot.data() as Map<String, dynamic>;
+
+      if (userDetails['user_type'] == 'resident') {
+        AppRouter.initR = "/home";
+      } else {
+        AppRouter.initR = "/tanod_home";
+        context.go('/tanod_home');
+      }
+    }
   }
 
   @override

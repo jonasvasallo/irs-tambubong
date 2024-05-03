@@ -3,25 +3,36 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irs_capstone/navigation_menu.dart';
-import 'package:irs_capstone/pages/forgot_password_page.dart';
-import 'package:irs_capstone/pages/home/add_incident_page.dart';
-import 'package:irs_capstone/pages/home/home_page.dart';
-import 'package:irs_capstone/pages/home/incident_chatroom_page.dart';
-import 'package:irs_capstone/pages/home/incident_details_page.dart';
-import 'package:irs_capstone/pages/home/witness_page.dart';
-import 'package:irs_capstone/pages/login_page.dart';
-import 'package:irs_capstone/pages/news/news_page.dart';
-import 'package:irs_capstone/pages/profile/change_email_page.dart';
-import 'package:irs_capstone/pages/profile/change_password_page.dart';
-import 'package:irs_capstone/pages/profile/change_phone_page.dart';
-import 'package:irs_capstone/pages/profile/update_profile_page.dart';
-import 'package:irs_capstone/pages/profile/verify_change_page.dart';
-import 'package:irs_capstone/pages/reports/reports_page.dart';
-import 'package:irs_capstone/pages/signup_page.dart';
-import 'package:irs_capstone/pages/sos/ongoing_sos_page.dart';
-import 'package:irs_capstone/pages/sos/sos_page.dart';
-import 'package:irs_capstone/pages/verify_phone_page.dart';
-import 'package:irs_capstone/pages/profile/profile_page.dart';
+import 'package:irs_capstone/resident/pages/forgot_password_page.dart';
+import 'package:irs_capstone/resident/pages/home/add_incident_page.dart';
+import 'package:irs_capstone/resident/pages/home/home_page.dart';
+import 'package:irs_capstone/resident/pages/home/incident_chatroom_page.dart';
+import 'package:irs_capstone/resident/pages/home/incident_details_page.dart';
+import 'package:irs_capstone/tanod/pages/profile/tanod_change_email_page.dart';
+import 'package:irs_capstone/tanod/pages/profile/tanod_change_phone_page.dart';
+import 'package:irs_capstone/tanod/pages/profile/tanod_update_profile_page.dart';
+import 'package:irs_capstone/resident/pages/home/witness_page.dart';
+import 'package:irs_capstone/resident/pages/login_page.dart';
+import 'package:irs_capstone/resident/pages/news/news_page.dart';
+import 'package:irs_capstone/resident/pages/profile/complaint/complaint_page.dart';
+import 'package:irs_capstone/resident/pages/profile/complaint/known_complaint_page.dart';
+import 'package:irs_capstone/resident/pages/profile/complaint/unknown_complaint_page.dart';
+import 'package:irs_capstone/resident/pages/profile/update_profile/change_email_page.dart';
+import 'package:irs_capstone/resident/pages/profile/update_profile/change_password_page.dart';
+import 'package:irs_capstone/resident/pages/profile/update_profile/change_phone_page.dart';
+import 'package:irs_capstone/resident/pages/profile/update_profile/update_profile_page.dart';
+import 'package:irs_capstone/resident/pages/profile/incidents/user_incidents_page.dart';
+import 'package:irs_capstone/resident/pages/profile/update_profile/verify_change_page.dart';
+import 'package:irs_capstone/resident/pages/reports/reports_page.dart';
+import 'package:irs_capstone/resident/pages/signup_page.dart';
+import 'package:irs_capstone/resident/pages/sos/ongoing_sos_page.dart';
+import 'package:irs_capstone/resident/pages/sos/sos_page.dart';
+import 'package:irs_capstone/resident/pages/verify_phone_page.dart';
+import 'package:irs_capstone/resident/pages/profile/profile_page.dart';
+import 'package:irs_capstone/tanod/pages/tanod_home_page.dart';
+import 'package:irs_capstone/tanod/pages/tanod_incident_details_page.dart';
+import 'package:irs_capstone/tanod/pages/tanod_profile_page.dart';
+import 'package:irs_capstone/tanod/pages/tanod_respond_page.dart';
 
 class AppRouter {
   AppRouter._();
@@ -40,7 +51,11 @@ class AppRouter {
   static final _rootNavigatorProfile =
       GlobalKey<NavigatorState>(debugLabel: "shellProfile");
 
+  static final _rootNavigatorTanodHome =
+      GlobalKey<NavigatorState>(debugLabel: "shellTanodHome");
+
   static GoRouter router = GoRouter(
+    navigatorKey: _rootNavigatorKey,
     redirect: (context, state) async {
       final FirebaseAuth _auth = FirebaseAuth.instance;
       final currentUser = _auth.currentUser;
@@ -71,6 +86,88 @@ class AppRouter {
         builder: (context, state) => VerifyPhonePage(
             verificationId: state.pathParameters["verificationId"]!,
             phoneNumber: state.pathParameters["phoneNumber"]!),
+      ),
+      StatefulShellRoute.indexedStack(
+        branches: <StatefulShellBranch>[
+          StatefulShellBranch(
+            navigatorKey: _rootNavigatorTanodHome,
+            routes: [
+              GoRoute(
+                path: '/tanod_home',
+                name: "Tanod Home",
+                builder: (context, state) => TanodHomePage(),
+                routes: [
+                  GoRoute(
+                    path: 'profile',
+                    builder: (context, state) => TanodProfilePage(),
+                    routes: [
+                      GoRoute(
+                        path: 'update',
+                        builder: (context, state) => TanodUpdateProfilePage(),
+                        routes: [
+                          GoRoute(
+                            path: 'email/:email',
+                            builder: (context, state) => TanodChangeEmailPage(
+                                email: state.pathParameters['email']!),
+                          ),
+                          GoRoute(
+                            path: 'phone',
+                            builder: (context, state) => TanodChangePhonePage(),
+                          ),
+                          GoRoute(
+                            path: 'change-auth/:type',
+                            builder: (context, state) => VerifyChangePage(
+                                type: state.pathParameters["type"]!),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'incident-details/:id',
+                    name: "Tanod Incident Details",
+                    builder: (context, state) => TanodIncidentDetailsPage(
+                      id: state.pathParameters['id']!,
+                    ),
+                    routes: [
+                      GoRoute(
+                        path: 'incident-chatroom/:id',
+                        builder: (context, state) => IncidentChatroomPage(
+                          id: state.pathParameters['id']!,
+                        ),
+                      ),
+                      GoRoute(
+                          path: 'respond/:id/:latitude/:longitude',
+                          builder: (context, state) => TanodRespondPage(
+                                id: state.pathParameters['id']!,
+                                latitude: double.parse(
+                                        state.pathParameters['latitude']!)
+                                    .toDouble(),
+                                longitude: double.parse(
+                                        state.pathParameters['longitude']!)
+                                    .toDouble(),
+                              ),
+                          routes: [
+                            GoRoute(
+                              path: 'chatroom/:id',
+                              builder: (context, state) => IncidentChatroomPage(
+                                  id: state.pathParameters['id']!),
+                            ),
+                          ]),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+        builder: (context, state, navigationShell) => Scaffold(
+          body: SizedBox(
+            height: double.infinity,
+            width: double.infinity,
+            child: navigationShell,
+          ),
+        ),
       ),
       StatefulShellRoute.indexedStack(
         branches: <StatefulShellBranch>[
@@ -112,9 +209,27 @@ class AppRouter {
             navigatorKey: _rootNavigatorReports,
             routes: [
               GoRoute(
-                path: '/reports',
-                builder: (context, state) => ReportsPage(),
-              ),
+                  path: '/reports',
+                  builder: (context, state) => ReportsPage(),
+                  routes: [
+                    GoRoute(
+                      path: 'incident/:id',
+                      builder: (context, state) => IncidentDetailsPage(
+                          id: state.pathParameters['id'] ?? ''),
+                      routes: [
+                        GoRoute(
+                          path: 'chatroom/:id',
+                          builder: (context, state) => IncidentChatroomPage(
+                              id: state.pathParameters['id'] ?? ''),
+                        ),
+                        GoRoute(
+                          path: 'witness/:id',
+                          builder: (context, state) =>
+                              WitnessPage(id: state.pathParameters['id'] ?? ''),
+                        ),
+                      ],
+                    ),
+                  ]),
             ],
           ),
           StatefulShellBranch(
@@ -174,6 +289,23 @@ class AppRouter {
                     path: 'change-password',
                     builder: (context, state) => ChangePasswordPage(),
                   ),
+                  GoRoute(
+                    path: 'incidents',
+                    builder: (context, state) => UserIncidentsPage(),
+                  ),
+                  GoRoute(
+                      path: 'complaint',
+                      builder: (context, state) => ComplaintPage(),
+                      routes: [
+                        GoRoute(
+                          path: 'known',
+                          builder: (context, state) => KnownComplaintPage(),
+                        ),
+                        GoRoute(
+                          path: 'unknown',
+                          builder: (context, state) => UnknownComplaintPage(),
+                        ),
+                      ]),
                 ],
               ),
               GoRoute(

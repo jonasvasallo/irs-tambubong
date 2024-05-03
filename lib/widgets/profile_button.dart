@@ -18,37 +18,40 @@ class ProfileButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: action,
-      child: Container(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: iconColor,
-                    borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8, bottom: 8),
+        child: Container(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: iconColor,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: icon,
+                    ),
                   ),
-                  child: Center(
-                    child: icon,
+                  Text(
+                    name,
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: majorText),
                   ),
-                ),
-                Text(
-                  name,
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: majorText),
-                ),
-              ],
-            ),
-            Icon(
-              Icons.chevron_right,
-              color: accentColor,
-            ),
-          ],
+                ],
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: accentColor,
+              ),
+            ],
+          ),
         ),
       ),
     );
