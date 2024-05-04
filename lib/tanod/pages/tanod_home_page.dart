@@ -59,7 +59,9 @@ class _TanodHomePageState extends State<TanodHomePage> {
             ListTile(
               leading: Icon(Icons.history),
               title: Text("Response History"),
-              onTap: () {},
+              onTap: () {
+                context.go('/tanod_home/response-history');
+              },
             ),
             ListTile(
               leading: Icon(Icons.dangerous_outlined),

@@ -1,15 +1,22 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:irs_capstone/constants.dart';
 import 'package:irs_capstone/core/utilities.dart';
+import 'package:irs_capstone/models/incident_model.dart';
 import 'package:irs_capstone/widgets/input_button.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:location/location.dart' as loc;
@@ -31,138 +38,82 @@ class TanodRespondPage extends StatefulWidget {
 }
 
 class _TanodRespondPageState extends State<TanodRespondPage> {
-  /*
-  final Completer<GoogleMapController?> _controller = Completer();
-  Map<PolylineId, Polyline> polylines = {};
-  PolylinePoints polylinePoints = PolylinePoints();
-  loc.Location location = loc.Location();
-  Marker? sourcePosition, destinationPosition;
-  loc.LocationData? _currentPosition;
-  LatLng curLocation = LatLng(14.9690824, 120.9244701);
-  StreamSubscription<loc.LocationData>? locationSubscription;
+  File? selectedImage;
+  Image imageShown = Image.network(
+    "https://i.stack.imgur.com/l60Hf.png",
+    fit: BoxFit.cover,
+  );
+  Future _pickImageFromGallery() async {
+    final returnedImage =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (returnedImage == null) return;
 
-  addMarker() {
     setState(() {
-      sourcePosition = Marker(
-        markerId: MarkerId('source'),
-        position: curLocation,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-      );
-      destinationPosition = Marker(
-        markerId: MarkerId('destination'),
-        position: LatLng(widget.latitude, widget.longitude),
-        icon: BitmapDescriptor.defaultMarker,
+      selectedImage = File(returnedImage.path);
+      imageShown = Image.file(
+        selectedImage!,
+        fit: BoxFit.cover,
       );
     });
   }
 
-  getNavigation() async {
-    try {
-      bool _serviceEnabled;
-      loc.PermissionStatus _permissionGranted;
-      final GoogleMapController? controller = await _controller.future;
-      location.changeSettings(accuracy: loc.LocationAccuracy.high);
-      _serviceEnabled = await location.serviceEnabled();
-
-      if (!_serviceEnabled) {
-        _serviceEnabled = await location.requestService();
-        if (!_serviceEnabled) {
-          return;
-        }
-      }
-
-      _permissionGranted = await location.hasPermission();
-      if (_permissionGranted == loc.PermissionStatus.denied) {
-        _permissionGranted = await location.requestPermission();
-        if (_permissionGranted != loc.PermissionStatus.granted) {
-          return;
-        }
-      }
-
-      if (_permissionGranted == loc.PermissionStatus.granted) {
-        print('permissionn working');
-        _currentPosition = await location.getLocation();
-        curLocation =
-            LatLng(_currentPosition!.latitude!, _currentPosition!.longitude!);
-        locationSubscription = location.onLocationChanged
-            .listen((loc.LocationData currentLocation) {
-          controller?.animateCamera(
-            CameraUpdate.newCameraPosition(
-              CameraPosition(
-                target: LatLng(
-                    currentLocation.latitude!, currentLocation.longitude!),
-                zoom: 16,
-              ),
+  endResponse() async {
+    if (selectedImage == null) {
+      Utilities.showSnackBar("You must attach a photo first", Colors.red);
+      return;
+    }
+    BuildContext dialogContext = context;
+    showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (dialogcontext) {
+          dialogContext = dialogcontext;
+          return Center(
+            child: CircularProgressIndicator(
+              color: accentColor,
             ),
           );
-          if (mounted) {
-            controller?.showMarkerInfoWindow(
-                MarkerId(sourcePosition!.markerId.value));
-            setState(() {
-              curLocation =
-                  LatLng(currentLocation.latitude!, currentLocation.longitude!);
-              sourcePosition = Marker(
-                markerId: MarkerId(currentLocation.toString()),
-                icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueAzure),
-                position: LatLng(
-                    currentLocation.latitude!, currentLocation.longitude!),
-                infoWindow: InfoWindow(),
-                onTap: () {
-                  print("marker tapped");
-                },
-              );
-            });
-            getDirections(LatLng(widget.latitude, widget.longitude));
-          }
         });
+    try {
+      var urlDownload = "";
+
+      if (selectedImage != null) {
+        final path =
+            '/incident-attachments/response-proof/${selectedImage!.path.split('/').last}';
+
+        final ref = FirebaseStorage.instance.ref().child(path);
+        UploadTask? uploadTask = ref.putFile(selectedImage!);
+
+        final snapshot = await uploadTask!.whenComplete(() => null);
+
+        urlDownload = await snapshot.ref.getDownloadURL();
       }
-    } catch (err) {
-      print(err);
-    }
-  }
 
-  getDirections(LatLng dst) async {
-    List<LatLng> polylineCoordinates = [];
-    List<dynamic> points = [];
-
-    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-        '',
-        PointLatLng(curLocation.latitude, curLocation.longitude),
-        PointLatLng(dst.latitude, dst.longitude),
-        travelMode: TravelMode.driving);
-    if (result.points.isNotEmpty) {
-      result.points.forEach((PointLatLng point) {
-        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-        points.add({'lat': point.latitude, 'lng': point.longitude});
+      await FirebaseFirestore.instance
+          .collection('incidents')
+          .doc(widget.id)
+          .update({
+        'status': 'Resolved',
       });
-    } else {
-      print(result.errorMessage);
+      await FirebaseFirestore.instance
+          .collection('incidents')
+          .doc(widget.id)
+          .collection('responders')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .update({
+        'status': 'Responded',
+        'response_end': FieldValue.serverTimestamp(),
+        'response_photo': urlDownload,
+      });
+      Navigator.of(dialogContext).pop();
+    } catch (ex) {
+      Navigator.of(dialogContext).pop();
+      Utilities.showSnackBar("$ex", Colors.red);
+
+      return;
     }
-    addPolyline(polylineCoordinates);
+    context.go('/tanod_home');
   }
-
-  addPolyline(List<LatLng> polylineCoordinates) {
-    PolylineId id = PolylineId('poly');
-    Polyline polyline = Polyline(
-      polylineId: id,
-      color: Colors.red,
-      points: polylineCoordinates,
-      width: 3,
-    );
-    polylines[id] = polyline;
-    setState(() {});
-  }
-
-  @override
-  void initState() {
-    // TODO: implement initState
-
-    super.initState();
-    getNavigation();
-    addMarker();
-  }
-  */
 
   Future<Map<String, dynamic>> getIncidentDetails() async {
     Map<String, dynamic> incidentDetails = {};
@@ -218,10 +169,17 @@ class _TanodRespondPageState extends State<TanodRespondPage> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Responding"),
+        leading: SizedBox(),
       ),
       body: SlidingUpPanel(
         backdropEnabled: true,
@@ -242,6 +200,8 @@ class _TanodRespondPageState extends State<TanodRespondPage> {
               }
 
               Map<String, dynamic> incidentDetails = snapshot.data!;
+
+              Incident incident = new Incident(incident_id: widget.id);
               return Padding(
                 padding: const EdgeInsets.all(16),
                 child: SingleChildScrollView(
@@ -276,11 +236,6 @@ class _TanodRespondPageState extends State<TanodRespondPage> {
                                   IconButton(
                                     onPressed: () async {
                                       print("this is firing");
-                                      // await launchUrl(
-                                      //   Uri.parse(
-                                      //       'https://www.google.com/maps/dir/api=1&destination=${widget.latitude},${widget.longitude}'),
-                                      //   mode: LaunchMode.externalApplication,
-                                      // );
                                       await launchUrl(Uri.parse(
                                           "https://www.google.com/maps/dir/14.9744688,120.9428094/14.9675565,120.9234425/@14.9698574,120.9302176,16z?entry=ttu"));
                                     },
@@ -290,7 +245,17 @@ class _TanodRespondPageState extends State<TanodRespondPage> {
                                     ),
                                   ),
                                   TextButton(
-                                    onPressed: () {},
+                                    onPressed: () async {
+                                      incident.update({'status': 'Verified'});
+                                      await FirebaseFirestore.instance
+                                          .collection('incidents')
+                                          .doc(widget.id)
+                                          .collection('responders')
+                                          .doc(FirebaseAuth
+                                              .instance.currentUser!.uid)
+                                          .update({'status': 'Assigned'});
+                                      Navigator.of(context).pop();
+                                    },
                                     child: Text(
                                       "EXIT",
                                       style: TextStyle(
@@ -383,7 +348,10 @@ class _TanodRespondPageState extends State<TanodRespondPage> {
                           Align(
                             alignment: Alignment.center,
                             child: TextButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                print("working");
+                                _pickImageFromGallery();
+                              },
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -402,12 +370,29 @@ class _TanodRespondPageState extends State<TanodRespondPage> {
                               ),
                             ),
                           ),
+                          (selectedImage != null)
+                              ? Stack(
+                                  children: [
+                                    Image.file(selectedImage!),
+                                    TextButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            selectedImage = null;
+                                          });
+                                        },
+                                        child: Icon(
+                                          Icons.delete,
+                                          color: Colors.red,
+                                        ))
+                                  ],
+                                )
+                              : SizedBox(),
                           SizedBox(
                             height: 16,
                           ),
                           InputButton(
                             label: "End Response",
-                            function: () {},
+                            function: endResponse,
                             large: true,
                           ),
                         ],
@@ -446,6 +431,7 @@ class _GoogleMapsSectionState extends State<GoogleMapsSection> {
 
   List<LatLng> polylineCoordinates = [];
   Position? currentLocation;
+  late StreamSubscription<Position> _positionStreamSubscription;
 
   Future<Position> getCurrentLocation() async {
     print("get location was called");
@@ -512,7 +498,8 @@ class _GoogleMapsSectionState extends State<GoogleMapsSection> {
 
     // GoogleMapController googleMapController = await _controller.future;
 
-    await Geolocator.getPositionStream().listen((event) {
+    _positionStreamSubscription =
+        await Geolocator.getPositionStream().listen((event) {
       currentLocation = event;
       // googleMapController.animateCamera(CameraUpdate.newCameraPosition(
       //     CameraPosition(
@@ -565,6 +552,12 @@ class _GoogleMapsSectionState extends State<GoogleMapsSection> {
     //   print('Error getting current location: $error');
     // });
     _getCurrentLocation();
+  }
+
+  @override
+  void dispose() {
+    _positionStreamSubscription.cancel();
+    super.dispose();
   }
 
   late GoogleMapController mapController;

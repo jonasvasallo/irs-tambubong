@@ -8,6 +8,7 @@ import 'package:irs_capstone/resident/pages/home/add_incident_page.dart';
 import 'package:irs_capstone/resident/pages/home/home_page.dart';
 import 'package:irs_capstone/resident/pages/home/incident_chatroom_page.dart';
 import 'package:irs_capstone/resident/pages/home/incident_details_page.dart';
+import 'package:irs_capstone/tanod/pages/history/tanod_response_history_page.dart';
 import 'package:irs_capstone/tanod/pages/profile/tanod_change_email_page.dart';
 import 'package:irs_capstone/tanod/pages/profile/tanod_change_phone_page.dart';
 import 'package:irs_capstone/tanod/pages/profile/tanod_update_profile_page.dart';
@@ -122,6 +123,10 @@ class AppRouter {
                         ],
                       ),
                     ],
+                  ),
+                  GoRoute(
+                    path: 'response-history',
+                    builder: (context, state) => TanodResponseHistoryPage(),
                   ),
                   GoRoute(
                     path: 'incident-details/:id',

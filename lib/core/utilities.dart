@@ -24,6 +24,7 @@ class Utilities {
   static BuildContext showLoadingIndicator(context) {
     BuildContext dialogContext = context;
     showDialog(
+        barrierDismissible: false,
         context: context,
         builder: (dialogcontext) {
           dialogContext = dialogcontext;

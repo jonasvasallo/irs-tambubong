@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irs_capstone/constants.dart';
 import 'package:irs_capstone/core/utilities.dart';
+import 'package:irs_capstone/models/incident_model.dart';
 import 'package:irs_capstone/widgets/input_button.dart';
 
 class TanodIncidentDetailsPage extends StatefulWidget {
@@ -95,6 +97,8 @@ class _TanodIncidentDetailsPageState extends State<TanodIncidentDetailsPage> {
                 }
 
                 Map<String, dynamic> incidentDetails = snapshot.data!;
+
+                Incident incident = new Incident(incident_id: widget.id);
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,7 +240,17 @@ class _TanodIncidentDetailsPageState extends State<TanodIncidentDetailsPage> {
                     ),
                     InputButton(
                       label: "Respond",
-                      function: () {
+                      function: () async {
+                        incident.update({'status': 'Handling'});
+                        await FirebaseFirestore.instance
+                            .collection('incidents')
+                            .doc(widget.id)
+                            .collection('responders')
+                            .doc(FirebaseAuth.instance.currentUser!.uid)
+                            .update({
+                          'status': 'Responding',
+                          'response_start': FieldValue.serverTimestamp(),
+                        });
                         context.go(
                             '/tanod_home/incident-details/${widget.id}/respond/${widget.id}/${incidentDetails['coordinates']['latitude']}/${incidentDetails['coordinates']['longitude']}');
                       },
