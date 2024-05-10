@@ -45,6 +45,15 @@ class _InputFieldState extends State<InputField> {
 
   @override
   Widget build(BuildContext context) {
+    TextInputType keyboardType;
+
+    if (widget.inputType == "email") {
+      keyboardType = TextInputType.emailAddress;
+    } else if (widget.inputType == "number") {
+      keyboardType = TextInputType.number;
+    } else {
+      keyboardType = TextInputType.text;
+    }
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 8),
       child: Column(
@@ -94,9 +103,7 @@ class _InputFieldState extends State<InputField> {
             ),
             cursorColor: accentColor,
             obscureText: (widget.inputType == "password") ? true : false,
-            keyboardType: (widget.inputType == "email")
-                ? TextInputType.emailAddress
-                : TextInputType.text,
+            keyboardType: keyboardType,
             readOnly: (widget.inputType == 'date') ? true : false,
             onTap: () {
               if (widget.inputType == 'date') {

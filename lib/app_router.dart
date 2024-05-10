@@ -8,6 +8,7 @@ import 'package:irs_capstone/resident/pages/home/add_incident_page.dart';
 import 'package:irs_capstone/resident/pages/home/home_page.dart';
 import 'package:irs_capstone/resident/pages/home/incident_chatroom_page.dart';
 import 'package:irs_capstone/resident/pages/home/incident_details_page.dart';
+import 'package:irs_capstone/resident/pages/news/news_details_page.dart';
 import 'package:irs_capstone/tanod/pages/history/tanod_response_details_page.dart';
 import 'package:irs_capstone/tanod/pages/history/tanod_response_history_page.dart';
 import 'package:irs_capstone/tanod/pages/profile/tanod_change_email_page.dart';
@@ -267,9 +268,16 @@ class AppRouter {
             navigatorKey: _rootNavigatorNews,
             routes: [
               GoRoute(
-                path: '/news',
-                builder: (context, state) => NewsPage(),
-              ),
+                  path: '/news',
+                  builder: (context, state) => NewsPage(),
+                  routes: [
+                    GoRoute(
+                      path: 'details/:id',
+                      builder: (context, state) => NewsDetailsPage(
+                        id: state.pathParameters['id']!,
+                      ),
+                    ),
+                  ]),
             ],
           ),
           StatefulShellBranch(
