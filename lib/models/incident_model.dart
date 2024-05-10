@@ -17,4 +17,16 @@ class Incident {
     }
     return false;
   }
+
+  getTag(String incident_tag) async {
+    try {
+      final incidentTagDetails = await FirebaseFirestore.instance
+          .collection('incident_tags')
+          .doc(incident_tag)
+          .get();
+      return incidentTagDetails['tag_name'];
+    } catch (err) {
+      print(err);
+    }
+  }
 }

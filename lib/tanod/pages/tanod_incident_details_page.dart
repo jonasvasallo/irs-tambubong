@@ -202,7 +202,7 @@ class _TanodIncidentDetailsPageState extends State<TanodIncidentDetailsPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "${incidentDetails['user_details']['first_name']} ${incidentDetails['user_details']['middle_name'].toString()[0]}. ${incidentDetails['user_details']['last_name']}",
+                                      "${incidentDetails['user_details']['first_name']} ${incidentDetails['user_details']['last_name']}",
                                       style: CustomTextStyle.regular,
                                       overflow: TextOverflow.ellipsis,
                                     ),

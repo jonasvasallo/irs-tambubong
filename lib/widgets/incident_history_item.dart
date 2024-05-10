@@ -2,7 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:irs_capstone/constants.dart';
 
 class IncidentHistoryItem extends StatelessWidget {
-  const IncidentHistoryItem({Key? key}) : super(key: key);
+  final String title;
+  final String tag;
+  final String status;
+  final String date;
+  const IncidentHistoryItem(
+      {Key? key,
+      required this.title,
+      required this.tag,
+      required this.status,
+      required this.date})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -30,15 +40,15 @@ class IncidentHistoryItem extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Text(
-                      "Bugbugan sa kanto awdawa da awd a wa a ",
+                      title,
                       style: CustomTextStyle.subheading,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      "Public Threat",
+                      tag,
                       style: CustomTextStyle.regular,
                     ),
-                    Text("Resolved"),
+                    Text(status),
                   ],
                 ),
               ),
@@ -46,7 +56,7 @@ class IncidentHistoryItem extends StatelessWidget {
                 width: 8,
               ),
               Text(
-                "May 19, 2023",
+                date,
                 style: CustomTextStyle.regular_minor,
               )
             ],
