@@ -9,6 +9,7 @@ class InputField extends StatefulWidget {
   final String? Function(String?)? validator;
   final Icon? prefixIcon;
   final void Function()? onTap;
+  final void Function(String)? onChange;
   const InputField({
     Key? key,
     required this.placeholder,
@@ -18,6 +19,7 @@ class InputField extends StatefulWidget {
     this.validator,
     this.prefixIcon,
     this.onTap,
+    this.onChange,
   }) : super(key: key);
 
   @override
@@ -71,6 +73,11 @@ class _InputFieldState extends State<InputField> {
             height: 4,
           ),
           TextFormField(
+            onChanged: (value) {
+              if (widget.onChange != null) {
+                widget.onChange!(value);
+              }
+            },
             minLines: (widget.inputType == "message") ? 5 : 1,
             maxLines: (widget.inputType == "message") ? 5 : 1,
             autovalidateMode: AutovalidateMode.onUserInteraction,

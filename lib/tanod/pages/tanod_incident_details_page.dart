@@ -247,7 +247,7 @@ class _TanodIncidentDetailsPageState extends State<TanodIncidentDetailsPage> {
                             .doc(widget.id)
                             .collection('responders')
                             .doc(FirebaseAuth.instance.currentUser!.uid)
-                            .update({
+                            .set({
                           'status': 'Responding',
                           'response_start': FieldValue.serverTimestamp(),
                         });

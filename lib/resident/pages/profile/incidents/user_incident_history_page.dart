@@ -1,27 +1,29 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:irs_capstone/constants.dart';
 import 'package:irs_capstone/core/utilities.dart';
+import 'package:irs_capstone/widgets/input_button.dart';
 
-class TanodResponseDetailsPage extends StatefulWidget {
+class UserIncidentHistoryPage extends StatefulWidget {
   final String id;
-  const TanodResponseDetailsPage({Key? key, required this.id})
-      : super(key: key);
+  const UserIncidentHistoryPage({Key? key, required this.id}) : super(key: key);
 
   @override
-  _TanodResponseDetailsPageState createState() =>
-      _TanodResponseDetailsPageState();
+  _UserIncidentHistoryPageState createState() =>
+      _UserIncidentHistoryPageState();
 }
 
-class _TanodResponseDetailsPageState extends State<TanodResponseDetailsPage> {
+class _UserIncidentHistoryPageState extends State<UserIncidentHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Incident Details"),
+        title: Text(
+          "Incident Details",
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -168,67 +170,59 @@ class _TanodResponseDetailsPageState extends State<TanodResponseDetailsPage> {
                   SizedBox(
                     height: 16,
                   ),
-                  Divider(),
+                  Container(
+                    width: double.infinity,
+                    height: 200,
+                    color: majorText,
+                    child: GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(
+                            incidentDetails['coordinates']['latitude'],
+                            incidentDetails['coordinates']['longitude']),
+                        zoom: 18,
+                      ),
+                      circles: Set.from([
+                        Circle(
+                          circleId: CircleId("customCircle"),
+                          center: LatLng(
+                              incidentDetails['coordinates']['latitude'],
+                              incidentDetails['coordinates']['longitude']),
+                          radius: 5,
+                          fillColor: Color.fromARGB(98, 255, 0, 0),
+                          strokeColor: Color.fromARGB(255, 255, 0, 0),
+                        ),
+                      ]),
+                    ),
+                  ),
                   SizedBox(
                     height: 16,
                   ),
-                  FutureBuilder(
-                    future: FirebaseFirestore.instance
-                        .collection('incidents')
-                        .doc(widget.id)
-                        .collection('responders')
-                        .doc(FirebaseAuth.instance.currentUser!.uid)
-                        .get(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
-                      if (snapshot.hasError) {
-                        return Center(
-                          child: Text("${snapshot.error}"),
-                        );
-                      }
-
-                      if (!snapshot.hasData || !snapshot.data!.exists) {
-                        return Center(
-                          child: Text("Document does not exist yet."),
-                        );
-                      }
-
-                      final responderDetails = snapshot.data!;
-
-                      return Column(
-                        children: [
-                          Text(
-                            "Response Status: ${responderDetails['status']}",
-                            style: CustomTextStyle.subheading,
-                          ),
-                          Text(
-                              "Response Start: ${Utilities.convertDate(responderDetails['response_start'])}"),
-                          Text(
-                              "Response End: ${Utilities.convertDate(responderDetails['response_end'])}"),
-                          SizedBox(
-                            height: 16,
-                          ),
-                          Text(
-                            "Response Attachment",
-                            style: CustomTextStyle.subheading,
-                          ),
-                          Container(
-                            width: MediaQuery.of(context).size.width - 32,
-                            height: 250,
-                            color: Colors.grey,
-                            child: Image.network(
-                              responderDetails['response_photo'],
-                              fit: BoxFit.cover,
+                  (incidentDetails['status'] == 'Resolved' &&
+                          incidentDetails['rated'] == null)
+                      ? InputButton(
+                          label: "Leave a review",
+                          function: () {
+                            context.go(
+                                '/profile/incidents/${widget.id}/review/${widget.id}');
+                          },
+                          large: true,
+                        )
+                      : SizedBox(),
+                  (incidentDetails['rated'] != null &&
+                          incidentDetails['rated'] == true)
+                      ? Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            "Thanks for leaving a review!",
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
                             ),
-                          )
-                        ],
-                      );
-                    },
-                  ),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      : SizedBox(),
                 ],
               );
             },

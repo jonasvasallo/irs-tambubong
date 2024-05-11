@@ -9,6 +9,8 @@ import 'package:irs_capstone/resident/pages/home/home_page.dart';
 import 'package:irs_capstone/resident/pages/home/incident_chatroom_page.dart';
 import 'package:irs_capstone/resident/pages/home/incident_details_page.dart';
 import 'package:irs_capstone/resident/pages/news/news_details_page.dart';
+import 'package:irs_capstone/resident/pages/profile/incidents/user_incident_history_page.dart';
+import 'package:irs_capstone/resident/pages/profile/incidents/user_incident_review_page.dart';
 import 'package:irs_capstone/tanod/pages/history/tanod_response_details_page.dart';
 import 'package:irs_capstone/tanod/pages/history/tanod_response_history_page.dart';
 import 'package:irs_capstone/tanod/pages/profile/tanod_change_email_page.dart';
@@ -312,9 +314,29 @@ class AppRouter {
                     builder: (context, state) => ChangePasswordPage(),
                   ),
                   GoRoute(
-                    path: 'incidents',
-                    builder: (context, state) => UserIncidentsPage(),
-                  ),
+                      path: 'incidents',
+                      builder: (context, state) => UserIncidentsPage(),
+                      routes: [
+                        GoRoute(
+                            path: ':id',
+                            builder: (context, state) =>
+                                UserIncidentHistoryPage(
+                                  id: state.pathParameters['id']!,
+                                ),
+                            routes: [
+                              GoRoute(
+                                path: 'review/:id',
+                                builder: (context, state) =>
+                                    UserIncidentReviewPage(
+                                  id: state.pathParameters['id']!,
+                                ),
+                              ),
+                            ]),
+                        GoRoute(
+                          path: 'emergency/:id',
+                          builder: (context, state) => Scaffold(),
+                        ),
+                      ]),
                   GoRoute(
                       path: 'complaint',
                       builder: (context, state) => ComplaintPage(),

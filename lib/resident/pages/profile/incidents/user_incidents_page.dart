@@ -3,7 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:intl/intl.dart';
+import 'package:irs_capstone/constants.dart';
 import 'package:irs_capstone/widgets/incident_container.dart';
+import 'package:irs_capstone/widgets/past_incident_container.dart';
 
 class UserIncidentsPage extends StatefulWidget {
   const UserIncidentsPage({Key? key}) : super(key: key);
@@ -15,51 +17,102 @@ class UserIncidentsPage extends StatefulWidget {
 class _UserIncidentsPageState extends State<UserIncidentsPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
         appBar: AppBar(
-          title: Text("Incidents"),
+          title: Text("Past Incidents"),
+          bottom: const TabBar(
+            tabs: [
+              Text(
+                "Reported Incidents",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: majorText,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                "Emergencies",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: majorText,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
         ),
-        body: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: SingleChildScrollView(
-              child: StreamBuilder(
-                stream: FirebaseFirestore.instance
-                    .collection('incidents')
-                    .where(
-                      "reported_by",
-                      isEqualTo: FirebaseAuth.instance.currentUser!.uid,
-                    )
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  List<Widget> incidentsList = [];
-                  if (!snapshot.hasData) {
-                    return Center(child: Text("No incidents reported"));
-                  }
-                  final incidents = snapshot.data?.docs.toList();
-                  for (var incident in incidents!) {
-                    String myDate = "test";
-
-                    if (incident['timestamp'] != null) {
-                      Timestamp t = incident['timestamp'] as Timestamp;
-                      DateTime date = t.toDate();
-                      myDate = DateFormat('MM/dd hh:mm').format(date);
+        body: TabBarView(
+          children: [
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection('incidents')
+                      .where(
+                        "reported_by",
+                        isEqualTo: FirebaseAuth.instance.currentUser!.uid,
+                      )
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    List<Widget> incidentsList = [];
+                    if (!snapshot.hasData) {
+                      return Center(
+                        child: Text("No incidents yet."),
+                      );
                     }
-                    final incidentWidget = IncidentContainer(
-                      id: incident.id,
-                      title: incident['title'],
-                      details: incident['details'],
-                      date: myDate,
+                    if (snapshot.data!.docs.isEmpty) {
+                      return Center(
+                        child: Text("No incidents yet."),
+                      );
+                    }
+                    final incidents = snapshot.data?.docs.toList();
+                    for (var incident in incidents!) {
+                      String myDate = "test";
+
+                      if (incident['timestamp'] != null) {
+                        Timestamp t = incident['timestamp'] as Timestamp;
+                        DateTime date = t.toDate();
+                        myDate = DateFormat('MMMM dd, y').format(date);
+                      }
+                      ;
+                      final incidentWidget = PastIncidentContainer(
+                        id: incident.id,
+                        date: myDate,
+                        title: incident['title'],
+                        location: incident['location_address'],
+                        type: 'incident',
+                      );
+                      incidentsList.add(incidentWidget);
+                    }
+                    return Column(
+                      children: incidentsList,
                     );
-                    incidentsList.add(incidentWidget);
-                  }
-                  return Column(
-                    children: incidentsList,
-                  );
-                },
+                  },
+                ),
               ),
             ),
-          ),
-        ));
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    PastIncidentContainer(
+                      id: "IDK",
+                      date: "MAY 9",
+                      title: "INCIDENT TITLE HERE",
+                      location: "LOCATION NG INA MO",
+                      type: 'emergency',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
