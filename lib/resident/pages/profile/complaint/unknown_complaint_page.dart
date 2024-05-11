@@ -205,12 +205,12 @@ class _UnknownComplaintPageState extends State<UnknownComplaintPage> {
                         hintText: "Street Address",
                         width: MediaQuery.of(context).size.width - 32,
                         onSelected: (value) {
-                          _dropdownValue = value;
+                          _dropdownValue = value!;
                         },
                         dropdownMenuEntries:
                             _incidentTags.map((Map<String, dynamic> tag) {
                           return DropdownMenuEntry(
-                              value: tag['street_id'],
+                              value: "${tag['street_name']} Street",
                               label: "${tag['street_name']} Street");
                         }).toList(),
                       );
