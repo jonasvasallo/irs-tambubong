@@ -154,23 +154,27 @@ class AppRouter {
                         ),
                       ),
                       GoRoute(
-                          path: 'respond/:id/:latitude/:longitude',
-                          builder: (context, state) => TanodRespondPage(
-                                id: state.pathParameters['id']!,
-                                latitude: double.parse(
-                                        state.pathParameters['latitude']!)
-                                    .toDouble(),
-                                longitude: double.parse(
-                                        state.pathParameters['longitude']!)
-                                    .toDouble(),
-                              ),
-                          routes: [
-                            GoRoute(
-                              path: 'chatroom/:id',
-                              builder: (context, state) => IncidentChatroomPage(
-                                  id: state.pathParameters['id']!),
+                        path:
+                            'respond/:incidentId/:latitude/:longitude', // Changed capture group name from 'id' to 'incidentId'
+                        builder: (context, state) => TanodRespondPage(
+                          id: state.pathParameters[
+                              'incidentId']!, // Updated to use 'incidentId'
+                          latitude:
+                              double.parse(state.pathParameters['latitude']!)
+                                  .toDouble(),
+                          longitude:
+                              double.parse(state.pathParameters['longitude']!)
+                                  .toDouble(),
+                        ),
+                        routes: [
+                          GoRoute(
+                            path: 'chatroom/:id',
+                            builder: (context, state) => IncidentChatroomPage(
+                              id: state.pathParameters['id']!,
                             ),
-                          ]),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ],
