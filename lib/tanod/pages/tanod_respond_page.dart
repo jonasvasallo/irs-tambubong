@@ -174,6 +174,32 @@ class _TanodRespondPageState extends State<TanodRespondPage> {
     super.initState();
   }
 
+  Future<Position> _getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error("Location services are disabled");
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error("Location permissions are denied");
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          "Location permissions are currently denied, we cannot request");
+    }
+
+    await Geolocator.getCurrentPosition().then((value) {
+      return value;
+    });
+
+    return await Geolocator.getCurrentPosition();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -236,8 +262,10 @@ class _TanodRespondPageState extends State<TanodRespondPage> {
                                   IconButton(
                                     onPressed: () async {
                                       print("this is firing");
+                                      final currentLocation =
+                                          await _getCurrentLocation();
                                       await launchUrl(Uri.parse(
-                                          "https://www.google.com/maps/dir/14.9744688,120.9428094/14.9675565,120.9234425/@14.9698574,120.9302176,16z?entry=ttu"));
+                                          "https://www.google.com/maps/dir/${currentLocation.latitude},${currentLocation.longitude}/${incidentDetails['coordinates']['latitude']},${incidentDetails['coordinates']['longitude']}/@14.9698574,120.9302176,16z?entry=ttu"));
                                     },
                                     icon: Icon(
                                       Icons.navigation_outlined,
@@ -493,7 +521,7 @@ class _GoogleMapsSectionState extends State<GoogleMapsSection> {
     await Geolocator.getCurrentPosition().then((value) {
       currentLocation = value;
 
-      getPolyPoints();
+      // getPolyPoints();
     });
 
     // GoogleMapController googleMapController = await _controller.future;
