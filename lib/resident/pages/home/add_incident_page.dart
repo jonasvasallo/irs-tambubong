@@ -299,7 +299,8 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
         'coordinates': {
           'latitude': user_loc.latitude,
           'longitude': user_loc.longitude,
-        }
+        },
+        'rated': false,
       });
 
       Utilities.showSnackBar("Successfully posted incident", Colors.green);

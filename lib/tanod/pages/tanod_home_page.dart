@@ -92,12 +92,16 @@ class _TanodHomePageState extends State<TanodHomePage> {
                   .collection('incidents')
                   .where('responders',
                       arrayContains: FirebaseAuth.instance.currentUser!.uid)
-                  .snapshots(),
+                  .where(
+                'status',
+                whereNotIn: ['Resolved', 'Closed'],
+              ).snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return CircularProgressIndicator(); // Placeholder for loading state
                 }
                 if (snapshot.hasError) {
+                  print("${snapshot.error}");
                   return Text(
                       'Error: ${snapshot.error}'); // Placeholder for error state
                 }
