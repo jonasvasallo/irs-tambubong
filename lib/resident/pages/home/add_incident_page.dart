@@ -289,7 +289,7 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
       final DocumentReference newDocumentRef = await incidentsCollection.add({
         'title': titleController.text.trim(),
         'timestamp': FieldValue.serverTimestamp(),
-        'status': 'Verified',
+        'status': 'Verifying',
         'responders': [],
         'reported_by': FirebaseAuth.instance.currentUser?.uid,
         'media_attachments': imageUrls,

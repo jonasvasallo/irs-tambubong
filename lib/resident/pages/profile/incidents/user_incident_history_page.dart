@@ -198,7 +198,7 @@ class _UserIncidentHistoryPageState extends State<UserIncidentHistoryPage> {
                     height: 16,
                   ),
                   (incidentDetails['status'] == 'Resolved' &&
-                          incidentDetails['rated'] == null)
+                          (incidentDetails['rated'] == false))
                       ? InputButton(
                           label: "Leave a review",
                           function: () {
@@ -208,8 +208,7 @@ class _UserIncidentHistoryPageState extends State<UserIncidentHistoryPage> {
                           large: true,
                         )
                       : SizedBox(),
-                  (incidentDetails['rated'] != null &&
-                          incidentDetails['rated'] == true)
+                  (incidentDetails['rated'] == true)
                       ? Align(
                           alignment: Alignment.center,
                           child: Text(
