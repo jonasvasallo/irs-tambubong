@@ -401,7 +401,9 @@ class _IncidentDetailsPageState extends State<IncidentDetailsPage> {
                                     large: true,
                                   ),
                             (incidentDetails['reported_by'] ==
-                                    FirebaseAuth.instance.currentUser?.uid)
+                                        FirebaseAuth
+                                            .instance.currentUser?.uid &&
+                                    incidentDetails['status'] == "Verifying")
                                 ? Align(
                                     alignment: Alignment.center,
                                     child: TextButton(
