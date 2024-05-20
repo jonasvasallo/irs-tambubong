@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -69,7 +71,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
         currentOption = userDetails['gender'] ?? '';
         _birthdayController.text = userDetails['birthday'] ?? '';
         _addressHouseController.text = userDetails['address_house'] ?? '';
-        _addressStreetController.text = userDetails['address_street'] ?? '';
+        _dropdownValue = userDetails['address_street'] ?? '';
         _contactNoController.text = userDetails['contact_no'] ?? '';
         _emailAddressController.text = userDetails['email'] ?? '';
         profile_path = userDetails['profile_path'] ??
@@ -85,6 +87,10 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
   }
 
   void updateDetails() async {
+    if (_dropdownValue.isEmpty) {
+      Utilities.showSnackBar("You must select the street first", Colors.red);
+      return;
+    }
     InputValidator.checkFormValidity(formKey, context);
     BuildContext dialogContext = context;
     showDialog(
@@ -121,7 +127,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
         currentOption,
         _birthdayController.text.trim(),
         _addressHouseController.text.trim(),
-        _addressStreetController.text.trim(),
+        _dropdownValue.trim(),
         urlDownload,
       );
 
@@ -134,11 +140,51 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
     }
   }
 
+  String _dropdownValue = "";
+  late StreamController<List<Map<String, dynamic>>> _streetsStreamController;
+  late List<Map<String, dynamic>> _streets;
+  Stream<List<Map<String, dynamic>>> get streetsStream =>
+      _streetsStreamController.stream;
+
+  Future<List<Map<String, dynamic>>> getStreets() async {
+    List<Map<String, dynamic>> streets = [];
+
+    try {
+      QuerySnapshot tagsSnapshot =
+          await FirebaseFirestore.instance.collection('streets').get();
+
+      if (tagsSnapshot.docs.isNotEmpty) {
+        for (var tagDocument in tagsSnapshot.docs) {
+          Map<String, dynamic> tagData =
+              tagDocument.data() as Map<String, dynamic>;
+          streets.add({
+            'street_id': tagDocument.id,
+            'street_name': tagData['name'],
+            // Add more fields if needed
+          });
+        }
+      } else {
+        print('No tags found in the incident_tags collection.');
+      }
+    } catch (ex) {
+      print('Error fetching incident tags: $ex');
+    }
+
+    return streets;
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     fetchDetails();
+    _streetsStreamController = StreamController<List<Map<String, dynamic>>>();
+    _streets = [];
+
+    // Fetch incident tags when the widget is initialized
+    getStreets().then((tags) {
+      _streetsStreamController.add(tags);
+    });
   }
 
   @override
@@ -288,30 +334,46 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                 SizedBox(
                   height: 16,
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: InputField(
-                        inputType: "text",
-                        placeholder: "e.g. 1084",
-                        label: "House/Unit No.",
-                        controller: _addressHouseController,
-                        validator: InputValidator.requiredValidator,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 8,
-                    ),
-                    Expanded(
-                      child: InputField(
-                        inputType: "text",
-                        placeholder: "e.g. Kalsadang Bago",
-                        label: "Street",
-                        controller: _addressStreetController,
-                        validator: InputValidator.requiredValidator,
-                      ),
-                    ),
-                  ],
+                InputField(
+                  inputType: "text",
+                  placeholder: "e.g. 1084",
+                  label: "House/Unit No.",
+                  controller: _addressHouseController,
+                  validator: InputValidator.requiredValidator,
+                ),
+                StreamBuilder(
+                  stream: streetsStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      // Data is still loading
+                      return CircularProgressIndicator();
+                    } else if (snapshot.hasError) {
+                      // Error occurred while fetching data
+                      return Text('Error: ${snapshot.error}');
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      // No data available
+                      return Text('No street found.');
+                    } else {
+                      // Data has been successfully fetched
+                      final _incidentTags = snapshot.data!;
+
+                      return DropdownMenu(
+                        initialSelection: _dropdownValue,
+                        label: Text(_dropdownValue),
+                        hintText: "Street Address",
+                        width: MediaQuery.of(context).size.width - 32,
+                        onSelected: (value) {
+                          _dropdownValue = value!;
+                        },
+                        dropdownMenuEntries:
+                            _incidentTags.map((Map<String, dynamic> tag) {
+                          return DropdownMenuEntry(
+                              value: "${tag['street_name']} Street",
+                              label: "${tag['street_name']} Street");
+                        }).toList(),
+                      );
+                    }
+                  },
                 ),
                 SizedBox(
                   height: 16,
