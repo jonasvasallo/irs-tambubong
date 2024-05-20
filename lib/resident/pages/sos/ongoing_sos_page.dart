@@ -2,11 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:irs_capstone/constants.dart';
-import 'package:irs_capstone/core/input_validator.dart';
-import 'package:irs_capstone/core/utilities.dart';
-import 'package:irs_capstone/widgets/input_button.dart';
-import 'package:irs_capstone/widgets/input_field.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:irs_app/constants.dart';
+import 'package:irs_app/core/input_validator.dart';
+import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/widgets/input_button.dart';
+import 'package:irs_app/widgets/input_field.dart';
 
 class OngoingSosPage extends StatefulWidget {
   final String id;
@@ -55,6 +56,12 @@ class _OngoingSosPageState extends State<OngoingSosPage> {
     } catch (ex) {
       Utilities.showSnackBar("$ex", Colors.red);
     }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
   }
 
   @override

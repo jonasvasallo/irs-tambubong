@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:irs_capstone/constants.dart';
-import 'package:irs_capstone/core/utilities.dart';
-import 'package:irs_capstone/widgets/input_button.dart';
+import 'package:irs_app/constants.dart';
+import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/widgets/input_button.dart';
 
 class IncidentDetailsPage extends StatefulWidget {
   final String id;

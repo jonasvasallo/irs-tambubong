@@ -1,13 +1,10 @@
-import 'package:camera/camera.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:irs_capstone/app_router.dart';
-import 'package:irs_capstone/constants.dart';
-import 'package:irs_capstone/resident/pages/home/home_page.dart';
-import 'package:irs_capstone/resident/pages/login_page.dart';
 import 'package:flutter/material.dart';
-import 'package:irs_capstone/firebase_options.dart';
-import 'package:irs_capstone/core/utilities.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:irs_app/app_router.dart';
+import 'package:irs_app/constants.dart';
+import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

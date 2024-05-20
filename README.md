@@ -1,4 +1,4 @@
-# irs_capstone
+# irs_app
 
 A new Flutter project.
 

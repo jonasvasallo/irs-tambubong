@@ -6,12 +6,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:irs_capstone/constants.dart';
-import 'package:irs_capstone/core/input_validator.dart';
-import 'package:irs_capstone/core/utilities.dart';
-import 'package:irs_capstone/models/user_model.dart';
-import 'package:irs_capstone/widgets/input_button.dart';
-import 'package:irs_capstone/widgets/input_field.dart';
+import 'package:irs_app/constants.dart';
+import 'package:irs_app/core/input_validator.dart';
+import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/models/user_model.dart';
+import 'package:irs_app/widgets/input_button.dart';
+import 'package:irs_app/widgets/input_field.dart';
 
 class VerifyPhonePage extends StatefulWidget {
   final String verificationId;

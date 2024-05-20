@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'package:intl/intl.dart';
-import 'package:irs_capstone/constants.dart';
-import 'package:irs_capstone/widgets/incident_container.dart';
+import 'package:irs_app/constants.dart';
+import 'package:irs_app/widgets/incident_container.dart';
 
 class ReportsPage extends StatefulWidget {
   const ReportsPage({Key? key}) : super(key: key);

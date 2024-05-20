@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:irs_capstone/constants.dart';
+import 'package:irs_app/constants.dart';
 import 'package:go_router/go_router.dart';
 
 class IncidentContainer extends StatelessWidget {

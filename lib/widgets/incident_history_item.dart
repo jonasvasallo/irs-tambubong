@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:irs_capstone/constants.dart';
+import 'package:irs_app/constants.dart';
 
 class IncidentHistoryItem extends StatelessWidget {
   final String title;

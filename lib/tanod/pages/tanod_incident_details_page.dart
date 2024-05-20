@@ -3,10 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:go_router/go_router.dart';
-import 'package:irs_capstone/constants.dart';
-import 'package:irs_capstone/core/utilities.dart';
-import 'package:irs_capstone/models/incident_model.dart';
-import 'package:irs_capstone/widgets/input_button.dart';
+import 'package:irs_app/constants.dart';
+import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/models/incident_model.dart';
+import 'package:irs_app/widgets/input_button.dart';
 
 class TanodIncidentDetailsPage extends StatefulWidget {
   final String id;

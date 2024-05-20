@@ -3,12 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:irs_capstone/constants.dart';
-import 'package:irs_capstone/core/utilities.dart';
-import 'package:irs_capstone/widgets/comment_widget.dart';
-import 'package:irs_capstone/widgets/custom_appbar.dart';
-import 'package:irs_capstone/widgets/input_button.dart';
-import 'package:irs_capstone/widgets/input_field.dart';
+import 'package:irs_app/constants.dart';
+import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/widgets/comment_widget.dart';
+import 'package:irs_app/widgets/custom_appbar.dart';
+import 'package:irs_app/widgets/input_button.dart';
+import 'package:irs_app/widgets/input_field.dart';
 
 class NewsDetailsPage extends StatefulWidget {
   final String id;

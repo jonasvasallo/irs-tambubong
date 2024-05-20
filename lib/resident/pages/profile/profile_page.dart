@@ -1,10 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:irs_capstone/constants.dart';
-import 'package:irs_capstone/models/user_model.dart';
-import 'package:irs_capstone/widgets/input_button.dart';
-import 'package:irs_capstone/widgets/profile_button.dart';
+import 'package:irs_app/constants.dart';
+import 'package:irs_app/models/user_model.dart';
+import 'package:irs_app/widgets/input_button.dart';
+import 'package:irs_app/widgets/profile_button.dart';
 
 class ProfilePage extends StatefulWidget {
   final bool? reload;

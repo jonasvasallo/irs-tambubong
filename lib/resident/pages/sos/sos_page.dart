@@ -1,12 +1,16 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:irs_capstone/constants.dart';
-import 'package:irs_capstone/core/utilities.dart';
-import 'package:irs_capstone/models/user_model.dart';
-import 'package:irs_capstone/widgets/input_button.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:irs_app/constants.dart';
+import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/models/user_model.dart';
+import 'package:irs_app/widgets/input_button.dart';
 
 class SosPage extends StatefulWidget {
   const SosPage({Key? key}) : super(key: key);
@@ -16,6 +20,16 @@ class SosPage extends StatefulWidget {
 }
 
 class _SosPageState extends State<SosPage> {
+  File? recordedVideo;
+  final picker = ImagePicker();
+  Future<bool> pickVideoFromCamera() async {
+    final video = await picker.pickVideo(source: ImageSource.camera);
+    if (video == null) return false;
+
+    recordedVideo = File(video.path);
+    return true;
+  }
+
   late String lat;
   late String long;
   String locationMessage = "";
@@ -56,6 +70,18 @@ class _SosPageState extends State<SosPage> {
       },
     );
     try {
+      var urlDownload = "";
+
+      if (recordedVideo != null) {
+        final path = '/sos_attachments/${recordedVideo!.path.split('/').last}';
+
+        final ref = FirebaseStorage.instance.ref().child(path);
+        UploadTask? uploadTask = ref.putFile(recordedVideo!);
+
+        final snapshot = await uploadTask!.whenComplete(() => null);
+
+        urlDownload = await snapshot.ref.getDownloadURL();
+      }
       CollectionReference sosCollection =
           FirebaseFirestore.instance.collection('sos');
 
@@ -64,6 +90,7 @@ class _SosPageState extends State<SosPage> {
         'status': "Active",
         'timestamp': FieldValue.serverTimestamp(),
         'responders': [],
+        'attachment': urlDownload,
         'location': {
           'latitude': latitude,
           'longitude': longitude,
@@ -169,8 +196,14 @@ class _SosPageState extends State<SosPage> {
                                       child: Text("Cancel"),
                                     ),
                                     TextButton(
-                                      onPressed: () {
+                                      onPressed: () async {
                                         Navigator.pop(context);
+
+                                        if (!await pickVideoFromCamera()) {
+                                          Utilities.showSnackBar(
+                                              "Please try again.", Colors.red);
+                                          return;
+                                        }
 
                                         _getCurrentLocation().then((value) {
                                           lat = "${value.latitude}";

@@ -10,11 +10,12 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:irs_capstone/constants.dart';
-import 'package:irs_capstone/core/input_validator.dart';
-import 'package:irs_capstone/core/utilities.dart';
-import 'package:irs_capstone/widgets/input_button.dart';
-import 'package:irs_capstone/widgets/input_field.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:irs_app/constants.dart';
+import 'package:irs_app/core/input_validator.dart';
+import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/widgets/input_button.dart';
+import 'package:irs_app/widgets/input_field.dart';
 import 'package:maps_toolkit/maps_toolkit.dart' as map_tool;
 
 class AddIncidentPage extends StatefulWidget {
@@ -312,38 +313,6 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
       print(ex);
     }
   }
-
-  // void postNews() async {
-  //   InputValidator.checkFormValidity(formKey, context);
-
-  //   try {
-  //     List<String> imageUrls = [];
-  //     if (pickedImagesInBytes.length > 0) {
-  //       imageUrls = await _uploadMultipleFiles("${FirebaseAuth.instance.currentUser?.uid}${_headingController.text}_news_media");
-  //     }
-  //     CollectionReference newsCollection =
-  //         FirebaseFirestore.instance.collection('news');
-
-  //     await newsCollection.add({
-  //       'heading': _headingController.text.trim(),
-  //       'body': _bodyController.text.trim(),
-  //       'timestamp': FieldValue.serverTimestamp(),
-  //       'media_attachments': imageUrls,
-  //       'posted_by': FirebaseAuth.instance.currentUser?.uid,
-  //     });
-  //     Utilities.showSnackBar("Successfully posted", Colors.green);
-  //     setState(() {
-  //       _headingController.text = "";
-  //       _bodyController.text = "";
-  //       selectFile = "";
-  //       imageCounts = 0;
-  //       media_photos.clear();
-  //       pickedImagesInBytes.clear();
-  //     });
-  //   } catch (ex) {
-  //     Utilities.showSnackBar("$ex", Colors.red);
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {

@@ -49,32 +49,36 @@ class DefaultFirebaseOptions {
     messagingSenderId: '718420727642',
     projectId: 'irs-capstone',
     authDomain: 'irs-capstone.firebaseapp.com',
+    databaseURL: 'https://irs-capstone-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'irs-capstone.appspot.com',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyA9fgO5eWLJk9WsItUPKVAHz1Z8YwNZKFY',
-    appId: '1:718420727642:android:2d0f97d3626d31b9b24563',
+    appId: '1:718420727642:android:48a92228f3407090b24563',
     messagingSenderId: '718420727642',
     projectId: 'irs-capstone',
+    databaseURL: 'https://irs-capstone-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'irs-capstone.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCuuQWq07L5d78qCOinKmXqxbb8Ro_CQtM',
-    appId: '1:718420727642:ios:ecd002256a1fabedb24563',
+    appId: '1:718420727642:ios:ac71adb19820bc50b24563',
     messagingSenderId: '718420727642',
     projectId: 'irs-capstone',
+    databaseURL: 'https://irs-capstone-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'irs-capstone.appspot.com',
-    iosBundleId: 'com.example.irsCapstone',
+    iosBundleId: 'com.example.irsApp',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyCuuQWq07L5d78qCOinKmXqxbb8Ro_CQtM',
-    appId: '1:718420727642:ios:f715e6fc10dd1ca6b24563',
+    appId: '1:718420727642:ios:e0a82b81197239d9b24563',
     messagingSenderId: '718420727642',
     projectId: 'irs-capstone',
+    databaseURL: 'https://irs-capstone-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'irs-capstone.appspot.com',
-    iosBundleId: 'com.example.irsCapstone.RunnerTests',
+    iosBundleId: 'com.example.irsApp.RunnerTests',
   );
 }

@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:irs_capstone/app_router.dart';
-import 'package:irs_capstone/constants.dart';
+import 'package:irs_app/app_router.dart';
+import 'package:irs_app/constants.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);

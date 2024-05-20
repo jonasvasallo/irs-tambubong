@@ -5,10 +5,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:irs_capstone/core/input_validator.dart';
-import 'package:irs_capstone/core/utilities.dart';
-import 'package:irs_capstone/widgets/input_button.dart';
-import 'package:irs_capstone/widgets/input_field.dart';
+import 'package:irs_app/core/input_validator.dart';
+import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/widgets/input_button.dart';
+import 'package:irs_app/widgets/input_field.dart';
 
 class WitnessPage extends StatefulWidget {
   final String id;

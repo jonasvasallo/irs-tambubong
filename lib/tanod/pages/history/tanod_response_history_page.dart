@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:irs_capstone/core/utilities.dart';
-import 'package:irs_capstone/models/incident_model.dart';
-import 'package:irs_capstone/widgets/incident_history_item.dart';
+import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/models/incident_model.dart';
+import 'package:irs_app/widgets/incident_history_item.dart';
 
 class TanodResponseHistoryPage extends StatefulWidget {
   const TanodResponseHistoryPage({Key? key}) : super(key: key);

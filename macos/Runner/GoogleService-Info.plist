@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.irsCapstone.RunnerTests</string>
+	<string>com.example.irsApp.RunnerTests</string>
 	<key>PROJECT_ID</key>
 	<string>irs-capstone</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,8 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:718420727642:ios:f715e6fc10dd1ca6b24563</string>
+	<string>1:718420727642:ios:e0a82b81197239d9b24563</string>
+	<key>DATABASE_URL</key>
+	<string>https://irs-capstone-default-rtdb.asia-southeast1.firebasedatabase.app</string>
 </dict>
 </plist>

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:irs_capstone/constants.dart';
+import 'package:irs_app/constants.dart';
 
 class PastIncidentContainer extends StatelessWidget {
   final String id;

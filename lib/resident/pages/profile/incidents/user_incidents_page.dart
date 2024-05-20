@@ -3,9 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:intl/intl.dart';
-import 'package:irs_capstone/constants.dart';
-import 'package:irs_capstone/widgets/incident_container.dart';
-import 'package:irs_capstone/widgets/past_incident_container.dart';
+import 'package:irs_app/constants.dart';
+import 'package:irs_app/widgets/incident_container.dart';
+import 'package:irs_app/widgets/past_incident_container.dart';
 
 class UserIncidentsPage extends StatefulWidget {
   const UserIncidentsPage({Key? key}) : super(key: key);
