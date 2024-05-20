@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -96,18 +97,55 @@ class _SignupPageState extends State<SignupPage> {
     return querySnapshot.docs.isNotEmpty;
   }
 
+  String _dropdownValue = "";
+  late StreamController<List<Map<String, dynamic>>> _streetsStreamController;
+  late List<Map<String, dynamic>> _streets;
+  Stream<List<Map<String, dynamic>>> get streetsStream =>
+      _streetsStreamController.stream;
+
+  Future<List<Map<String, dynamic>>> getStreets() async {
+    List<Map<String, dynamic>> streets = [];
+
+    try {
+      QuerySnapshot tagsSnapshot =
+          await FirebaseFirestore.instance.collection('streets').get();
+
+      if (tagsSnapshot.docs.isNotEmpty) {
+        for (var tagDocument in tagsSnapshot.docs) {
+          Map<String, dynamic> tagData =
+              tagDocument.data() as Map<String, dynamic>;
+          streets.add({
+            'street_id': tagDocument.id,
+            'street_name': tagData['name'],
+            // Add more fields if needed
+          });
+        }
+      } else {
+        print('No tags found in the incident_tags collection.');
+      }
+    } catch (ex) {
+      print('Error fetching incident tags: $ex');
+    }
+
+    return streets;
+  }
+
   Future signUp() async {
     if (selectedImage == null) {
       Utilities.showSnackBar("Please upload your ID first", Colors.red);
       return;
     }
-    Utilities.showLoadingIndicator(context);
+    if (_dropdownValue.isEmpty) {
+      Utilities.showSnackBar("You must select the street first", Colors.red);
+      return;
+    }
+
     final isValid = formKey.currentState!.validate();
     if (!isValid) {
       Navigator.of(context).pop();
       return;
     }
-
+    Utilities.showLoadingIndicator(context);
     try {
       /* Handles case where given phone number is already in the system */
       bool phoneNumberExists =
@@ -138,7 +176,7 @@ class _SignupPageState extends State<SignupPage> {
         currentOption,
         _birthdayController.text.trim(),
         _addressHouseController.text.trim(),
-        _addressStreetController.text.trim(),
+        _dropdownValue.trim(),
         _contactNoController.text.trim(),
         _emailAddressController.text.trim(),
         photoUrl,
@@ -218,6 +256,19 @@ class _SignupPageState extends State<SignupPage> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _streetsStreamController = StreamController<List<Map<String, dynamic>>>();
+    _streets = [];
+
+    // Fetch incident tags when the widget is initialized
+    getStreets().then((tags) {
+      _streetsStreamController.add(tags);
+    });
   }
 
   @override
@@ -333,30 +384,44 @@ class _SignupPageState extends State<SignupPage> {
                   SizedBox(
                     height: 16,
                   ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InputField(
-                          inputType: "text",
-                          placeholder: "e.g. 1084",
-                          label: "House/Unit No.",
-                          controller: _addressHouseController,
-                          validator: requiredValidator,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 8,
-                      ),
-                      Expanded(
-                        child: InputField(
-                          inputType: "text",
-                          placeholder: "e.g. Kalsadang Bago",
-                          label: "Street",
-                          controller: _addressStreetController,
-                          validator: requiredValidator,
-                        ),
-                      ),
-                    ],
+                  InputField(
+                    inputType: "text",
+                    placeholder: "e.g. 1084",
+                    label: "House/Unit No.",
+                    controller: _addressHouseController,
+                    validator: requiredValidator,
+                  ),
+                  StreamBuilder(
+                    stream: streetsStream,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        // Data is still loading
+                        return CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        // Error occurred while fetching data
+                        return Text('Error: ${snapshot.error}');
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        // No data available
+                        return Text('No incident tags found.');
+                      } else {
+                        // Data has been successfully fetched
+                        final _incidentTags = snapshot.data!;
+
+                        return DropdownMenu(
+                          hintText: "Street Address",
+                          width: MediaQuery.of(context).size.width - 32,
+                          onSelected: (value) {
+                            _dropdownValue = value!;
+                          },
+                          dropdownMenuEntries:
+                              _incidentTags.map((Map<String, dynamic> tag) {
+                            return DropdownMenuEntry(
+                                value: "${tag['street_name']} Street",
+                                label: "${tag['street_name']} Street");
+                          }).toList(),
+                        );
+                      }
+                    },
                   ),
                   SizedBox(
                     height: 16,
