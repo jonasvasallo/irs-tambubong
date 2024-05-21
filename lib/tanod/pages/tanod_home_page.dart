@@ -64,13 +64,6 @@ class _TanodHomePageState extends State<TanodHomePage> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.dangerous_outlined),
-              title: Text("File a Complaint"),
-              onTap: () {
-                context.go('/tanod_home/incident-details');
-              },
-            ),
-            ListTile(
               leading: Icon(Icons.logout_outlined),
               title: Text("Logout"),
               onTap: () {
