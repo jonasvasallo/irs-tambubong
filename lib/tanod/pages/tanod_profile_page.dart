@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irs_app/constants.dart';
 
@@ -84,9 +85,24 @@ class _TanodProfilePageState extends State<TanodProfilePage> {
                       children: [
                         Column(
                           children: [
-                            Text(
-                              "696969",
-                              style: CustomTextStyle.subheading,
+                            FutureBuilder(
+                              future: checkIncidents(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+                                if (snapshot.hasError) {
+                                  return Text("${snapshot.error}");
+                                }
+                                int incidentResponded = snapshot.data ?? 0;
+                                return Text(
+                                  "${incidentResponded}",
+                                  style: CustomTextStyle.subheading,
+                                );
+                              },
                             ),
                             Text(
                               "Responded",
@@ -96,9 +112,55 @@ class _TanodProfilePageState extends State<TanodProfilePage> {
                         ),
                         Column(
                           children: [
-                            Text(
-                              "4.5",
-                              style: CustomTextStyle.subheading,
+                            FutureBuilder(
+                              future: FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(FirebaseAuth.instance.currentUser!.uid)
+                                  .collection('ratings')
+                                  .get(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+                                if (snapshot.hasError) {
+                                  return Center(
+                                    child: Text("${snapshot.error}"),
+                                  );
+                                }
+                                // Handle when data is available
+                                if (snapshot.hasData) {
+                                  var ratingDocs = snapshot.data!.docs;
+
+                                  if (ratingDocs.isEmpty) {
+                                    return Center(
+                                        child: Text('No ratings found.'));
+                                  }
+
+                                  // Calculate the average rating
+                                  double totalRating = 0;
+                                  int ratingCount = ratingDocs.length;
+
+                                  ratingDocs.forEach((doc) {
+                                    var ratingData =
+                                        doc.data() as Map<String, dynamic>;
+                                    totalRating += ratingData['rating'];
+                                  });
+
+                                  double averageRating =
+                                      totalRating / ratingCount;
+                                  return Text(
+                                    "${averageRating.toStringAsFixed(1)}",
+                                    style: CustomTextStyle.subheading,
+                                  );
+                                }
+                                return Text(
+                                  "4.5",
+                                  style: CustomTextStyle.subheading,
+                                );
+                              },
                             ),
                             Text(
                               "Avg rating",
@@ -121,88 +183,137 @@ class _TanodProfilePageState extends State<TanodProfilePage> {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        "Badges earned",
+                        "Recent reviews",
                         style: CustomTextStyle.subheading,
                       ),
                     ),
                     SizedBox(
                       height: 24,
                     ),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(right: 16),
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: 80,
-                                  height: 80,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(80),
-                                    color: Colors.grey,
-                                  ),
+                    FutureBuilder(
+                      future: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(FirebaseAuth.instance.currentUser!.uid)
+                          .collection('ratings')
+                          .get(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Text("${snapshot.error}"),
+                          );
+                        }
+                        // Handle when data is available
+                        if (snapshot.hasData) {
+                          print(FirebaseAuth.instance.currentUser!.uid);
+                          var ratingDocs = snapshot.data!.docs;
+
+                          if (ratingDocs.isEmpty) {
+                            return Center(child: Text('No ratings found.'));
+                          }
+
+                          return Column(
+                            children: ratingDocs.map((doc) {
+                              var ratingData =
+                                  doc.data() as Map<String, dynamic>;
+                              // Replace with your own data structure
+                              var ratingValue = ratingData['rating'];
+                              var comment = ratingData['message'];
+
+                              return ListTile(
+                                title: Row(
+                                  children: [
+                                    Text('Rating: $ratingValue'),
+                                    SizedBox(
+                                      width: 8,
+                                    ),
+                                    RatingBar(
+                                      ignoreGestures: true,
+                                      minRating: 1,
+                                      maxRating: 5,
+                                      initialRating: ratingValue,
+                                      allowHalfRating: false,
+                                      itemSize: 28,
+                                      glowColor: Colors.lightGreen,
+                                      glowRadius: 5,
+                                      updateOnDrag: true,
+                                      ratingWidget: RatingWidget(
+                                        full: Icon(
+                                          Icons.star,
+                                          color: Colors.amber,
+                                        ),
+                                        half: Icon(
+                                          Icons.star_half,
+                                          color: Colors.amber,
+                                        ),
+                                        empty: Icon(
+                                          Icons.star_border,
+                                          color: Colors.amber,
+                                        ),
+                                      ),
+                                      onRatingUpdate: (value) {},
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  "69",
-                                  style: CustomTextStyle.subheading,
-                                ),
-                                Text(
-                                  "Excellent Service",
-                                  style: CustomTextStyle.regular,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            children: [
-                              Container(
-                                width: 80,
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(80),
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              Text(
-                                "69",
-                                style: CustomTextStyle.subheading,
-                              ),
-                              Text(
-                                "Excellent Service",
-                                style: CustomTextStyle.regular,
-                              ),
-                            ],
-                          ),
-                          Column(
-                            children: [
-                              Container(
-                                width: 80,
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(80),
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              Text(
-                                "69",
-                                style: CustomTextStyle.subheading,
-                              ),
-                              Text(
-                                "Excellent Service",
-                                style: CustomTextStyle.regular,
-                              ),
-                            ],
-                          )
-                        ],
-                      ),
-                    )
+                                subtitle: Text('Comment: $comment'),
+                              );
+                            }).toList(),
+                          );
+                        }
+
+                        // Handle any other state (e.g., no data)
+                        return Center(child: Text('No data available.'));
+                      },
+                    ),
                   ],
                 );
               }),
         ),
       ),
     );
+  }
+
+  Future<int> checkIncidents() async {
+    try {
+      QuerySnapshot incidentQuerySnapshot = await FirebaseFirestore.instance
+          .collection('incidents')
+          .where('responders',
+              arrayContains: FirebaseAuth.instance.currentUser!.uid)
+          .get();
+
+      int incidentsResponded = 0;
+
+      for (QueryDocumentSnapshot incidentDoc in incidentQuerySnapshot.docs) {
+        DocumentSnapshot respondersDocSnapshot = await FirebaseFirestore
+            .instance
+            .collection('incidents')
+            .doc(incidentDoc.id)
+            .collection('responders')
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .get();
+
+        if (respondersDocSnapshot.exists &&
+            respondersDocSnapshot.data() != null) {
+          Map<String, dynamic> respondersData =
+              respondersDocSnapshot.data() as Map<String, dynamic>;
+          if (respondersDocSnapshot.id ==
+              FirebaseAuth.instance.currentUser!.uid) {
+            if (respondersData['status'] == 'Responded') {
+              incidentsResponded++;
+            }
+          }
+        }
+      }
+
+      return incidentsResponded;
+    } catch (e) {
+      print('Error checking incidents: $e');
+      return 0;
+    }
   }
 }
