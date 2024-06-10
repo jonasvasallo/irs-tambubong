@@ -9,12 +9,15 @@ import 'package:irs_app/resident/pages/home/home_page.dart';
 import 'package:irs_app/resident/pages/home/incident_chatroom_page.dart';
 import 'package:irs_app/resident/pages/home/incident_details_page.dart';
 import 'package:irs_app/resident/pages/news/news_details_page.dart';
+import 'package:irs_app/resident/pages/profile/incidents/user_emergency_history_page.dart';
+import 'package:irs_app/resident/pages/profile/incidents/user_emergency_review_page.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_incident_history_page.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_incident_review_page.dart';
 import 'package:irs_app/tanod/pages/history/tanod_response_details_page.dart';
 import 'package:irs_app/tanod/pages/history/tanod_response_history_page.dart';
 import 'package:irs_app/tanod/pages/profile/tanod_change_email_page.dart';
 import 'package:irs_app/tanod/pages/profile/tanod_change_phone_page.dart';
+import 'package:irs_app/tanod/pages/profile/tanod_emergency_details_page.dart';
 import 'package:irs_app/tanod/pages/profile/tanod_update_profile_page.dart';
 import 'package:irs_app/resident/pages/home/witness_page.dart';
 import 'package:irs_app/resident/pages/login_page.dart';
@@ -34,6 +37,7 @@ import 'package:irs_app/resident/pages/sos/ongoing_sos_page.dart';
 import 'package:irs_app/resident/pages/sos/sos_page.dart';
 import 'package:irs_app/resident/pages/verify_phone_page.dart';
 import 'package:irs_app/resident/pages/profile/profile_page.dart';
+import 'package:irs_app/tanod/pages/tanod_emergency_chatroom_page.dart';
 import 'package:irs_app/tanod/pages/tanod_home_page.dart';
 import 'package:irs_app/tanod/pages/tanod_incident_details_page.dart';
 import 'package:irs_app/tanod/pages/tanod_profile_page.dart';
@@ -165,6 +169,7 @@ class AppRouter {
                           longitude:
                               double.parse(state.pathParameters['longitude']!)
                                   .toDouble(),
+                          type: "incident",
                         ),
                         routes: [
                           GoRoute(
@@ -177,6 +182,44 @@ class AppRouter {
                       ),
                     ],
                   ),
+                  GoRoute(
+                    path: "emergency-details/:id",
+                    builder: (context, state) => TanodEmergencyDetailsPage(
+                      id: state.pathParameters['id']!,
+                    ),
+                    routes: [
+                      GoRoute(
+                        path: 'emergency-chatroom/:id',
+                        builder: (context, state) => TanodEmergencyChatroomPage(
+                          id: state.pathParameters['id']!,
+                        ),
+                      ),
+                      GoRoute(
+                        path:
+                            'respond/:emergencyId/:latitude/:longitude', // Changed capture group name from 'id' to 'incidentId'
+                        builder: (context, state) => TanodRespondPage(
+                          id: state.pathParameters[
+                              'emergencyId']!, // Updated to use 'incidentId'
+                          latitude:
+                              double.parse(state.pathParameters['latitude']!)
+                                  .toDouble(),
+                          longitude:
+                              double.parse(state.pathParameters['longitude']!)
+                                  .toDouble(),
+                          type: "emergency",
+                        ),
+                        routes: [
+                          GoRoute(
+                            path: 'chatroom/:id',
+                            builder: (context, state) =>
+                                TanodEmergencyChatroomPage(
+                              id: state.pathParameters['id']!,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
                 ],
               ),
             ],
@@ -337,9 +380,19 @@ class AppRouter {
                               ),
                             ]),
                         GoRoute(
-                          path: 'emergency/:id',
-                          builder: (context, state) => Scaffold(),
-                        ),
+                            path: 'emergency/:id',
+                            builder: (context, state) =>
+                                UserEmergencyHistoryPage(
+                                  id: state.pathParameters['id']!,
+                                ),
+                            routes: [
+                              GoRoute(
+                                path: 'review/:id',
+                                builder: (context, state) =>
+                                    UserEmergencyReviewPage(
+                                        id: state.pathParameters['id']!),
+                              )
+                            ]),
                       ]),
                   GoRoute(
                       path: 'complaint',

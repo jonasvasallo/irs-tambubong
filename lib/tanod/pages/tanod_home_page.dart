@@ -80,79 +80,179 @@ class _TanodHomePageState extends State<TanodHomePage> {
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.all(16),
-          child: StreamBuilder(
-              stream: FirebaseFirestore.instance
-                  .collection('incidents')
-                  .where('responders',
-                      arrayContains: FirebaseAuth.instance.currentUser!.uid)
-                  .where(
-                'status',
-                whereNotIn: ['Resolved', 'Closed'],
-              ).snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator(); // Placeholder for loading state
-                }
-                if (snapshot.hasError) {
-                  print("${snapshot.error}");
-                  return Text(
-                      'Error: ${snapshot.error}'); // Placeholder for error state
-                }
-                final docs = snapshot.data?.docs ?? [];
-                return Column(
-                  children: docs.map((doc) {
-                    return GestureDetector(
-                      onTap: () {
-                        context.go('/tanod_home/incident-details/${doc.id}');
-                        print("test");
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 8, bottom: 8),
-                        child: Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 248, 246, 246),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: minorText, width: 1),
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Flexible(
-                                      flex: 3,
-                                      child: Text(
-                                        doc['title'],
-                                        overflow: TextOverflow.ellipsis,
-                                        style: CustomTextStyle.subheading,
+          child: Column(
+            children: [
+              StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection('sos')
+                    .where('responders',
+                        arrayContains: FirebaseAuth.instance.currentUser!.uid)
+                    .where('status', whereNotIn: ['Closed']).snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator(); // Placeholder for loading state
+                  }
+                  if (snapshot.hasError) {
+                    print("${snapshot.error}");
+                    return Text(
+                        'Error: ${snapshot.error}'); // Placeholder for error state
+                  }
+                  final docs = snapshot.data?.docs ?? [];
+                  return Column(
+                    children: docs.map((doc) {
+                      return GestureDetector(
+                        onTap: () {
+                          context.go('/tanod_home/emergency-details/${doc.id}');
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 8),
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Color.fromARGB(255, 248, 246, 246),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.red, width: 1),
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Flexible(
+                                        flex: 3,
+                                        child: Text(
+                                          "INCOMING SOS",
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Colors.redAccent.shade700,
+                                            fontSize: 16,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    Text(
-                                      Utilities.convertDate(doc['timestamp']),
-                                      overflow: TextOverflow.ellipsis,
-                                      style: CustomTextStyle.regular,
-                                    ),
-                                  ],
-                                ),
-                                Text(
-                                  doc['details'],
-                                  overflow: TextOverflow.ellipsis,
-                                  style: CustomTextStyle.regular_minor,
-                                ),
-                              ],
+                                      Text(
+                                        Utilities.convertDate(doc['timestamp']),
+                                        overflow: TextOverflow.ellipsis,
+                                        style: CustomTextStyle.regular,
+                                      ),
+                                    ],
+                                  ),
+                                  FutureBuilder(
+                                      future: FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(doc['user_id'])
+                                          .get(),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return CircularProgressIndicator(); // Placeholder for loading state
+                                        }
+                                        if (snapshot.hasError) {
+                                          print("${snapshot.error}");
+                                          return Text(
+                                              'Error: ${snapshot.error}'); // Placeholder for error state
+                                        }
+                                        final userData = snapshot.data?.data();
+                                        final firstName =
+                                            userData?['first_name'] ?? 'N/A';
+                                        final lastName =
+                                            userData?['last_name'] ?? 'N/A';
+                                        return Text(
+                                          "from: ${firstName} ${lastName}",
+                                          overflow: TextOverflow.ellipsis,
+                                          style: CustomTextStyle.regular,
+                                        );
+                                      }),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
+              StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection('incidents')
+                      .where('responders',
+                          arrayContains: FirebaseAuth.instance.currentUser!.uid)
+                      .where(
+                    'status',
+                    whereNotIn: ['Resolved', 'Closed'],
+                  ).snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator(); // Placeholder for loading state
+                    }
+                    if (snapshot.hasError) {
+                      print("${snapshot.error}");
+                      return Text(
+                          'Error: ${snapshot.error}'); // Placeholder for error state
+                    }
+                    final docs = snapshot.data?.docs ?? [];
+                    return Column(
+                      children: docs.map((doc) {
+                        return GestureDetector(
+                          onTap: () {
+                            context
+                                .go('/tanod_home/incident-details/${doc.id}');
+                            print("test");
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 8, bottom: 8),
+                            child: Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Color.fromARGB(255, 248, 246, 246),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: minorText, width: 1),
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Flexible(
+                                          flex: 3,
+                                          child: Text(
+                                            doc['title'],
+                                            overflow: TextOverflow.ellipsis,
+                                            style: CustomTextStyle.subheading,
+                                          ),
+                                        ),
+                                        Text(
+                                          Utilities.convertDate(
+                                              doc['timestamp']),
+                                          overflow: TextOverflow.ellipsis,
+                                          style: CustomTextStyle.regular,
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      doc['details'],
+                                      overflow: TextOverflow.ellipsis,
+                                      style: CustomTextStyle.regular_minor,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     );
-                  }).toList(),
-                );
-              }),
+                  }),
+            ],
+          ),
         ),
       ),
     );

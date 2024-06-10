@@ -50,7 +50,7 @@ class _OngoingSosPageState extends State<OngoingSosPage> {
       DocumentReference documentReference =
           await FirebaseFirestore.instance.collection('sos').doc(widget.id);
       documentReference.update({
-        'status': 'Closed',
+        'status': 'Cancelled',
       });
       Navigator.of(context).pop();
     } catch (ex) {

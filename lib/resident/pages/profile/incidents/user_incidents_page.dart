@@ -97,16 +97,49 @@ class _UserIncidentsPageState extends State<UserIncidentsPage> {
             SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    PastIncidentContainer(
-                      id: "IDK",
-                      date: "MAY 9",
-                      title: "INCIDENT TITLE HERE",
-                      location: "LOCATION NG INA MO",
-                      type: 'emergency',
-                    ),
-                  ],
+                child: StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection('sos')
+                      .where(
+                        "user_id",
+                        isEqualTo: FirebaseAuth.instance.currentUser!.uid,
+                      )
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    List<Widget> incidentsList = [];
+                    if (!snapshot.hasData) {
+                      return Center(
+                        child: Text("No emergencies yet."),
+                      );
+                    }
+                    if (snapshot.data!.docs.isEmpty) {
+                      return Center(
+                        child: Text("No emergencies yet."),
+                      );
+                    }
+                    final emergencies = snapshot.data?.docs.toList();
+                    for (var emergency in emergencies!) {
+                      String myDate = "test";
+
+                      if (emergency['timestamp'] != null) {
+                        Timestamp t = emergency['timestamp'] as Timestamp;
+                        DateTime date = t.toDate();
+                        myDate = DateFormat('MMMM dd, y').format(date);
+                      }
+                      ;
+                      final incidentWidget = PastIncidentContainer(
+                        id: emergency.id,
+                        date: myDate,
+                        title: "SOS CALL",
+                        location: "STATUS: ${emergency['status']}",
+                        type: 'emergency',
+                      );
+                      incidentsList.add(incidentWidget);
+                    }
+                    return Column(
+                      children: incidentsList,
+                    );
+                  },
                 ),
               ),
             ),

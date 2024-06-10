@@ -94,7 +94,8 @@ class _SosPageState extends State<SosPage> {
         'location': {
           'latitude': latitude,
           'longitude': longitude,
-        }
+        },
+        'rated': false,
       });
       Navigator.of(dialogContext).pop();
       context.go('/sos/ongoing/${newDocument.id}');
