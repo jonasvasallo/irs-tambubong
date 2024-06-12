@@ -50,7 +50,7 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
     });
   }
 
-  endResponse() async {
+  endResponse(reported_by) async {
     if (selectedImage == null) {
       Utilities.showSnackBar("You must attach a photo first", Colors.red);
       return;
@@ -97,6 +97,16 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
         'status': 'Responded',
         'response_end': FieldValue.serverTimestamp(),
         'response_photo': urlDownload,
+      });
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(reported_by)
+          .collection("notifications")
+          .add({
+        'title': "Incident No. ${widget.id} marked as Resolved",
+        'content':
+            "You may send your feedback through the My Incidents section of the Profile Page so that we may be able to improve our service quality.",
+        'timestamp': FieldValue.serverTimestamp(),
       });
       Navigator.of(dialogContext).pop();
     } catch (ex) {
@@ -397,7 +407,8 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
                     ),
                     InputButton(
                       label: "End Response",
-                      function: endResponse,
+                      function: () =>
+                          endResponse(incidentDetails['reported_by']),
                       large: true,
                     ),
                   ],
