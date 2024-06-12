@@ -31,6 +31,8 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
 
   String user_id = "";
 
+  String contact_no = "N/A";
+
   String _dropdownValue = "";
 
   final formKey = GlobalKey<FormState>();
@@ -94,7 +96,7 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
             "${user_Details['address_house']} ${user_Details['address_street']}",
         'respondent_info': [
           _fullNameController.text,
-          'N/A',
+          contact_no,
           "${_dropdownValue}, Tambubong, San Rafael, Bulacan",
         ],
         'respondent_id': user_id,
@@ -192,9 +194,10 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
                     showBottomSheet(
                       context: context,
                       builder: (context) {
-                        return SearchUserPage(onSelect: (name, uID) {
+                        return SearchUserPage(onSelect: (name, phone, uID) {
                           print(name);
                           user_id = uID;
+                          contact_no = phone;
                           _fullNameController.text = name;
                         });
                       },
@@ -298,7 +301,7 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
 }
 
 class SearchUserPage extends StatefulWidget {
-  final Function(String name, String uID) onSelect;
+  final Function(String name, String phone, String uID) onSelect;
   const SearchUserPage({Key? key, required this.onSelect}) : super(key: key);
 
   @override
@@ -394,6 +397,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
                       onTap: () {
                         widget.onSelect(
                           "${_resultList[index]['first_name']} ${_resultList[index]['last_name']}",
+                          "${_resultList[index]['contact_no']}",
                           _resultList[index].id,
                         );
                         Navigator.of(context).pop();

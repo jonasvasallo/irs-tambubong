@@ -58,16 +58,19 @@ class _UserIncidentsPageState extends State<UserIncidentsPage> {
                       .snapshots(),
                   builder: (context, snapshot) {
                     List<Widget> incidentsList = [];
+
                     if (!snapshot.hasData) {
                       return Center(
                         child: Text("No incidents yet."),
                       );
                     }
+
                     if (snapshot.data!.docs.isEmpty) {
                       return Center(
                         child: Text("No incidents yet."),
                       );
                     }
+
                     final incidents = snapshot.data?.docs.toList();
                     for (var incident in incidents!) {
                       String myDate = "test";
