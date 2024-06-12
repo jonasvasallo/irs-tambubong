@@ -9,6 +9,8 @@ import 'package:irs_app/resident/pages/home/home_page.dart';
 import 'package:irs_app/resident/pages/home/incident_chatroom_page.dart';
 import 'package:irs_app/resident/pages/home/incident_details_page.dart';
 import 'package:irs_app/resident/pages/news/news_details_page.dart';
+import 'package:irs_app/resident/pages/notifications/notification_detail_page.dart';
+import 'package:irs_app/resident/pages/notifications/notification_page.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_emergency_history_page.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_emergency_review_page.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_incident_history_page.dart';
@@ -51,8 +53,8 @@ class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
   static final _rootNavigatorHome =
       GlobalKey<NavigatorState>(debugLabel: "shellHome");
-  static final _rootNavigatorReports =
-      GlobalKey<NavigatorState>(debugLabel: "shellReports");
+  static final _rootNavigatorNotifications =
+      GlobalKey<NavigatorState>(debugLabel: "shellNotifications");
   static final _rootNavigatorSOS =
       GlobalKey<NavigatorState>(debugLabel: "shellSOS");
   static final _rootNavigatorNews =
@@ -270,30 +272,19 @@ class AppRouter {
             ],
           ),
           StatefulShellBranch(
-            navigatorKey: _rootNavigatorReports,
+            navigatorKey: _rootNavigatorNotifications,
             routes: [
               GoRoute(
-                  path: '/reports',
-                  builder: (context, state) => ReportsPage(),
-                  routes: [
-                    GoRoute(
-                      path: 'incident/:id',
-                      builder: (context, state) => IncidentDetailsPage(
-                          id: state.pathParameters['id'] ?? ''),
-                      routes: [
-                        GoRoute(
-                          path: 'chatroom/:id',
-                          builder: (context, state) => IncidentChatroomPage(
-                              id: state.pathParameters['id'] ?? ''),
-                        ),
-                        GoRoute(
-                          path: 'witness/:id',
-                          builder: (context, state) =>
-                              WitnessPage(id: state.pathParameters['id'] ?? ''),
-                        ),
-                      ],
-                    ),
-                  ]),
+                path: '/notifications',
+                builder: (context, state) => NotificationPage(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) =>
+                        NotificationDetailPage(id: state.pathParameters['id']!),
+                  ),
+                ],
+              ),
             ],
           ),
           StatefulShellBranch(
