@@ -50,6 +50,7 @@ class UserModel {
       'address_house': address_house,
       'address_street': address_street,
       'profile_path': profile_path,
+      'lastUpdated': FieldValue.serverTimestamp(),
     });
   }
 

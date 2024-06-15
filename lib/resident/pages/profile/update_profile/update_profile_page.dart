@@ -37,6 +37,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
   final _emailAddressController = TextEditingController();
   String profile_path = "https://i.stack.imgur.com/l60Hf.png";
   String verification_id = "";
+  Timestamp? lastUpdate;
 
   bool verified = false;
 
@@ -145,15 +146,35 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
         );
         verification_id = userDetails['verification_photo'] ?? '';
         verified = userDetails['verified'] ?? false;
+        lastUpdate = (userDetails['lastUpdated'] != null)
+            ? userDetails['lastUpdated'] as Timestamp
+            : null;
       });
     } else {
       print('User details not found');
     }
   }
 
+  bool checkIfSixMonthsPassed(Timestamp lastUpdateTimestamp) {
+    Timestamp currentTimestamp = Timestamp.now();
+
+    int difference = currentTimestamp.millisecondsSinceEpoch -
+        lastUpdateTimestamp.millisecondsSinceEpoch;
+
+    double monthsDifference = difference / (1000 * 60 * 60 * 24 * 30.44);
+
+    return monthsDifference >= 6;
+  }
+
   void updateDetails() async {
     if (_dropdownValue.isEmpty) {
       Utilities.showSnackBar("You must select the street first", Colors.red);
+      return;
+    }
+    if (lastUpdate != null && !checkIfSixMonthsPassed(lastUpdate!)) {
+      Utilities.showSnackBar(
+          "You can only update your profile every six months for security purposes. Submit a ticket if you think this is a problem.",
+          Colors.red);
       return;
     }
     InputValidator.checkFormValidity(formKey, context);
