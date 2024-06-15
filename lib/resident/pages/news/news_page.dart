@@ -18,26 +18,26 @@ class _NewsPageState extends State<NewsPage> {
       appBar: AppBar(
         title: Text("News"),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "News and Announcements",
-                  style: CustomTextStyle.heading,
-                ),
-                Text(
-                  "Latest updates and news",
-                  style: CustomTextStyle.regular_minor,
-                ),
-              ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "News and Announcements",
+                    style: CustomTextStyle.heading,
+                  ),
+                  Text(
+                    "Latest updates and news",
+                    style: CustomTextStyle.regular_minor,
+                  ),
+                ],
+              ),
             ),
-          ),
-          SingleChildScrollView(
-            child: StreamBuilder(
+            StreamBuilder(
                 stream:
                     FirebaseFirestore.instance.collection('news').snapshots(),
                 builder: (context, snapshot) {
@@ -72,9 +72,9 @@ class _NewsPageState extends State<NewsPage> {
                   return Column(
                     children: newsContainers,
                   );
-                }),
-          )
-        ],
+                })
+          ],
+        ),
       ),
     );
   }
