@@ -650,6 +650,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "timeago",
+      "rootUri": "file:///Users/jonasvasallo/.pub-cache/hosted/pub.dev/timeago-3.6.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "typed_data",
       "rootUri": "file:///Users/jonasvasallo/.pub-cache/hosted/pub.dev/typed_data-1.3.2",
       "packageUri": "lib/",
@@ -746,7 +752,7 @@
       "languageVersion": "3.4"
     }
   ],
-  "generated": "2024-05-21T04:47:00.803807Z",
+  "generated": "2024-06-15T19:57:09.703339Z",
   "generator": "pub",
   "generatorVersion": "3.4.0",
   "flutterRoot": "file:///Users/jonasvasallo/tools/flutter",
