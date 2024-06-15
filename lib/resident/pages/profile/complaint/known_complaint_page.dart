@@ -406,7 +406,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
                         "${_resultList[index]['first_name']} ${_resultList[index]['last_name']}",
                       ),
                       subtitle: Text(
-                        "${_resultList[index]['address_house']} ${_resultList[index]['address_street']}, Tambubong",
+                        "${_resultList[index]['gender']}",
                       ),
                     );
                   }),
