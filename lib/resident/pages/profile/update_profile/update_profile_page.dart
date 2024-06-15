@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -35,6 +36,9 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
   final _contactNoController = TextEditingController();
   final _emailAddressController = TextEditingController();
   String profile_path = "https://i.stack.imgur.com/l60Hf.png";
+  String verification_id = "";
+
+  bool verified = false;
 
   File? selectedImage;
 
@@ -59,6 +63,65 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
     });
   }
 
+  Future _uploadID() async {
+    final returnedImage =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (returnedImage == null) return;
+
+    final image = File(returnedImage.path);
+
+    BuildContext dialogContext = context;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        dialogContext = context;
+        return Center(
+          child: CircularProgressIndicator(
+            color: accentColor,
+          ),
+        );
+      },
+    );
+
+    try {
+      var urlDownload = "";
+
+      if (image != null) {
+        final path = '/user/verifications/${image!.path.split('/').last}';
+
+        final ref = FirebaseStorage.instance.ref().child(path);
+        UploadTask? uploadTask = ref.putFile(image!);
+
+        final snapshot = await uploadTask!.whenComplete(() => null);
+
+        urlDownload = await snapshot.ref.getDownloadURL();
+      }
+
+      if (urlDownload.isEmpty) {
+        Utilities.showSnackBar("Download URL is empty!", Colors.red);
+        return;
+      }
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .update({
+        'verification_photo': urlDownload,
+      });
+
+      Utilities.showSnackBar(
+          "Successfully upload verification ID", Colors.green);
+      setState(() {
+        verification_id = urlDownload;
+      });
+    } catch (error) {
+      print(error);
+      Utilities.showSnackBar("${error.toString()}", Colors.red);
+    }
+    Navigator.pop(dialogContext);
+  }
+
   void fetchDetails() async {
     Map<String, dynamic>? userDetails = await UserModel.getUserById(model.uId);
     if (userDetails != null) {
@@ -80,6 +143,8 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
           profile_path,
           fit: BoxFit.cover,
         );
+        verification_id = userDetails['verification_photo'] ?? '';
+        verified = userDetails['verified'] ?? false;
       });
     } else {
       print('User details not found');
@@ -375,6 +440,53 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                     }
                   },
                 ),
+                SizedBox(
+                  height: 16,
+                ),
+                (verification_id.isNotEmpty)
+                    ? Column(
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              (verified)
+                                  ? "Verification ID (Verified)"
+                                  : "Verification ID (Pending verification)",
+                              style: CustomTextStyle.subheading,
+                            ),
+                          ),
+                          SizedBox(
+                            height: 8,
+                          ),
+                          Container(
+                            width: MediaQuery.of(context).size.width - 32,
+                            height: 150,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                verification_id,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Text(
+                            "Upload an ID to verify your account",
+                          ),
+                          SizedBox(
+                            height: 8,
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              _uploadID();
+                            },
+                            child: Text("Upload ID"),
+                          ),
+                        ],
+                      ),
                 SizedBox(
                   height: 16,
                 ),
