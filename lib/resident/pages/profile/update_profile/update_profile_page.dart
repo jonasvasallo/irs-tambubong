@@ -35,7 +35,8 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
   final _addressStreetController = TextEditingController();
   final _contactNoController = TextEditingController();
   final _emailAddressController = TextEditingController();
-  String profile_path = "https://i.stack.imgur.com/l60Hf.png";
+  String profile_path =
+      "https://firebasestorage.googleapis.com/v0/b/irs-capstone.appspot.com/o/default_profile.png?alt=media&token=10c91862-f50a-416c-adce-001a51b64985";
   String verification_id = "";
   Timestamp? lastUpdate;
 
