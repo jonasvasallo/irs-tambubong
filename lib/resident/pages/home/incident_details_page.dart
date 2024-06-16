@@ -56,6 +56,9 @@ class _IncidentDetailsPageState extends State<IncidentDetailsPage> {
               print(incidentDetails['incident_tags_details']);
             } else {
               print("incident tag does not exist");
+              incidentDetails['incident_tags_details'] = {
+                'tag_name': 'Removed tag'
+              };
             }
           }
         } else {
