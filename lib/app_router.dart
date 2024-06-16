@@ -11,6 +11,8 @@ import 'package:irs_app/resident/pages/home/incident_details_page.dart';
 import 'package:irs_app/resident/pages/news/news_details_page.dart';
 import 'package:irs_app/resident/pages/notifications/notification_detail_page.dart';
 import 'package:irs_app/resident/pages/notifications/notification_page.dart';
+import 'package:irs_app/resident/pages/profile/help/CaseDetailsPage.dart';
+import 'package:irs_app/resident/pages/profile/help/HelpPage.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_emergency_history_page.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_emergency_review_page.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_incident_history_page.dart';
@@ -386,18 +388,30 @@ class AppRouter {
                             ]),
                       ]),
                   GoRoute(
-                      path: 'complaint',
-                      builder: (context, state) => ComplaintPage(),
-                      routes: [
-                        GoRoute(
-                          path: 'known',
-                          builder: (context, state) => KnownComplaintPage(),
-                        ),
-                        GoRoute(
-                          path: 'unknown',
-                          builder: (context, state) => UnknownComplaintPage(),
-                        ),
-                      ]),
+                    path: 'complaint',
+                    builder: (context, state) => ComplaintPage(),
+                    routes: [
+                      GoRoute(
+                        path: 'known',
+                        builder: (context, state) => KnownComplaintPage(),
+                      ),
+                      GoRoute(
+                        path: 'unknown',
+                        builder: (context, state) => UnknownComplaintPage(),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'help',
+                    builder: (context, state) => HelpPage(),
+                    routes: [
+                      GoRoute(
+                        path: 'details/:id',
+                        builder: (context, state) =>
+                            CaseDetailsPage(id: state.pathParameters['id']!),
+                      ),
+                    ],
+                  ),
                 ],
               ),
               GoRoute(
