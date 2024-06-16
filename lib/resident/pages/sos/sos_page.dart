@@ -161,21 +161,29 @@ class _SosPageState extends State<SosPage> {
                 Text(locationMessage),
                 StreamBuilder(
                   stream: FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .collection('sos')
+                      .where('user_id',
+                          isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+                      .where('status', isEqualTo: 'Active')
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
-                      return Text('Error ${snapshot.error}');
+                      return Text('Error: ${snapshot.error}');
                     }
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(
                         child: CircularProgressIndicator(),
                       );
                     }
-                    Map<String, dynamic>? userData = snapshot.data?.data();
-                    bool isVerified = userData?['verified'] ?? false;
-                    if (isVerified) {
+                    if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                      String activeSosDocId = snapshot.data!.docs.first.id;
+                      return InputButton(
+                          label: "Go back to SOS",
+                          function: () {
+                            context.go('/sos/ongoing/${activeSosDocId}');
+                          },
+                          large: true);
+                    } else {
                       return Align(
                         alignment: Alignment.bottomCenter,
                         child: InputButton(
@@ -222,16 +230,6 @@ class _SosPageState extends State<SosPage> {
                             );
                           },
                           large: true,
-                        ),
-                      );
-                    } else {
-                      return Text(
-                        "Your account must be verified in order to use this feature",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
                         ),
                       );
                     }
