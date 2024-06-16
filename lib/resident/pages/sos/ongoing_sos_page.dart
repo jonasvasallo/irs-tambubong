@@ -108,6 +108,16 @@ class _OngoingSosPageState extends State<OngoingSosPage> {
             LatLng location = LatLng(sosDocument['location']['latitude'],
                 sosDocument['location']['longitude']);
             String userId = sosDocument['user_id'];
+            String status = sosDocument['status'].toString().toLowerCase();
+
+            if (status == 'resolved' ||
+                status == 'closed' ||
+                status == 'cancelled' ||
+                status == 'dismissed') {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.of(context).pop();
+              });
+            }
             return SafeArea(
                 child: SingleChildScrollView(
               child: Column(
