@@ -22,39 +22,7 @@ class _ReportsPageState extends State<ReportsPage> {
         body: SafeArea(
           child: Padding(
             padding: EdgeInsets.all(16),
-            child: SingleChildScrollView(
-              child: StreamBuilder(
-                stream: FirebaseFirestore.instance
-                    .collection('incidents')
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  List<Widget> incidentsList = [];
-                  if (!snapshot.hasData) {
-                    return Text("No Data");
-                  }
-                  final incidents = snapshot.data?.docs.toList();
-                  for (var incident in incidents!) {
-                    String myDate = "test";
-
-                    if (incident['timestamp'] != null) {
-                      Timestamp t = incident['timestamp'] as Timestamp;
-                      DateTime date = t.toDate();
-                      myDate = DateFormat('MM/dd hh:mm').format(date);
-                    }
-                    final incidentWidget = IncidentContainer(
-                      id: incident.id,
-                      title: incident['title'],
-                      details: incident['details'],
-                      date: myDate,
-                    );
-                    incidentsList.add(incidentWidget);
-                  }
-                  return Column(
-                    children: incidentsList,
-                  );
-                },
-              ),
-            ),
+            child: SingleChildScrollView(child: Center()),
           ),
         ));
   }

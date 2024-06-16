@@ -6,6 +6,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:irs_app/app_router.dart';
 import 'package:irs_app/constants.dart';
+import 'package:irs_app/widgets/incident_container.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -72,58 +75,161 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final oneWeekAgo = now.subtract(Duration(days: 7));
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.go('/home/add-incident');
-        },
-        backgroundColor: accentColor,
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            context.go('/home/add-incident');
+          },
+          backgroundColor: accentColor,
+          child: const Icon(
+            Icons.add,
+            color: Colors.white,
+          ),
         ),
-      ),
-      body: StreamBuilder(
-          stream:
-              FirebaseFirestore.instance.collection('incidents').snapshots(),
-          builder: (context, snapshot) {
-            Set<Marker> incidentsList = {};
-            if (!snapshot.hasData) {
-              return Text("No Data");
-            }
-            final incidents = snapshot.data?.docs.toList();
-            for (var incident in incidents!) {
-              final incidentWidget = Marker(
-                markerId: MarkerId(incident.id),
-                icon: BitmapDescriptor.defaultMarker,
-                position: LatLng(
-                  incident['coordinates']['latitude'],
-                  incident['coordinates']['longitude'],
-                ),
-                onTap: () {
-                  context.go('/home/incident/${incident.id}');
-                },
-              );
-              incidentsList.add(incidentWidget);
-            }
+        floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
+        body: SlidingUpPanel(
+          backdropEnabled: true,
+          borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+          panel: Padding(
+            padding: padding16,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Text(
+                    "Recent Incidents",
+                    style: CustomTextStyle.subheading,
+                  ),
+                  SizedBox(
+                    height: 16,
+                  ),
+                  StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('incidents')
+                        .where(
+                          'timestamp',
+                          isGreaterThanOrEqualTo:
+                              Timestamp.fromDate(oneWeekAgo),
+                        )
+                        .orderBy('timestamp', descending: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      List<Widget> incidentsList = [];
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        print("No incidents found or snapshot has no data");
+                        return Text("No incidents yet.");
+                      }
+                      final incidents = snapshot.data!.docs.toList();
+                      for (int i = 0; i < incidents.length; i++) {
+                        print("fetching incidents");
+                        var incident = incidents[i];
+                        String myDate = "test";
+                        bool isLatest = i == 0;
 
-            return GoogleMap(
-              myLocationButtonEnabled: false,
-              initialCameraPosition: CameraPosition(
-                target: LatLng(14.970254, 120.925633),
-                zoom: 15,
+                        if (incident['status'] == 'Verifying') {
+                          print("found incident with verifying status");
+                          continue;
+                        }
+
+                        if (incident['timestamp'] != null) {
+                          Timestamp t = incident['timestamp'] as Timestamp;
+                          DateTime date = t.toDate();
+                          myDate = DateFormat('MM/dd hh:mm').format(date);
+                          myDate = timeago.format(date);
+                        }
+
+                        final incidentWidget = FutureBuilder(
+                          future: FirebaseFirestore.instance
+                              .collection('incidents')
+                              .doc(incident.id)
+                              .collection('witnesses')
+                              .get(),
+                          builder: (context, futureSnapshot) {
+                            if (!futureSnapshot.hasData) {
+                              return IncidentContainer(
+                                title: incident['title'],
+                                location: incident['location_address'],
+                                details: incident['details'],
+                                date: myDate,
+                                id: incident.id,
+                                latest: isLatest,
+                                witnesses: 0, // Default value while loading
+                              );
+                            }
+
+                            int witnessCount = futureSnapshot.data!.docs.length;
+
+                            return IncidentContainer(
+                              title: incident['title'],
+                              location: incident['location_address'],
+                              details: incident['details'],
+                              date: myDate,
+                              id: incident.id,
+                              latest: isLatest,
+                              witnesses: witnessCount,
+                            );
+                          },
+                        );
+                        incidentsList.add(incidentWidget);
+                      }
+                      return Column(
+                        children: incidentsList,
+                      );
+                    },
+                  ),
+                ],
               ),
-              polygons: {
-                Polygon(
-                  polygonId: PolygonId("1"),
-                  points: polygonPoints,
-                  fillColor: Color(0xFF006491).withOpacity(0.2),
-                  strokeWidth: 2,
-                )
-              },
-              markers: incidentsList,
-            );
-          }),
-    );
+            ),
+          ),
+          body: StreamBuilder(
+              stream: FirebaseFirestore.instance
+                  .collection('incidents')
+                  .where('timestamp',
+                      isGreaterThanOrEqualTo: Timestamp.fromDate(oneWeekAgo))
+                  .snapshots(),
+              builder: (context, snapshot) {
+                Set<Marker> incidentsList = {};
+                if (snapshot.hasData) {
+                  final incidents = snapshot.data?.docs.toList();
+
+                  for (var incident in incidents!) {
+                    if (incident['status'] == 'Verifying') {
+                      continue;
+                    }
+                    final incidentWidget = Marker(
+                      markerId: MarkerId(incident.id),
+                      icon: BitmapDescriptor.defaultMarker,
+                      position: LatLng(
+                        incident['coordinates']['latitude'],
+                        incident['coordinates']['longitude'],
+                      ),
+                      onTap: () {
+                        context.go('/home/incident/${incident.id}');
+                      },
+                    );
+                    incidentsList.add(incidentWidget);
+                  }
+                }
+
+                return GoogleMap(
+                  myLocationButtonEnabled: false,
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(14.970254, 120.925633),
+                    zoom: 15,
+                  ),
+                  polygons: {
+                    Polygon(
+                      polygonId: PolygonId("1"),
+                      points: polygonPoints,
+                      fillColor: Color(0xFF006491).withOpacity(0.2),
+                      strokeWidth: 2,
+                    )
+                  },
+                  markers: incidentsList,
+                );
+              }),
+        ));
   }
 }
