@@ -100,12 +100,14 @@ class _UserIncidentReviewPageState extends State<UserIncidentReviewPage> {
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return Center(
-                    child: Text("No incidents yet."),
+                    child: Text(
+                        "No responders. If you think this is a problem, please submit a support ticket."),
                   );
                 }
                 if (snapshot.data!.docs.isEmpty) {
                   return Center(
-                    child: Text("No responders yet."),
+                    child: Text(
+                        "No responders. If you think this is a problem, please submit a support ticket."),
                   );
                 }
                 final incidentDetails = snapshot.data!.docs.toList();

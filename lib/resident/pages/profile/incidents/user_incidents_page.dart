@@ -55,6 +55,7 @@ class _UserIncidentsPageState extends State<UserIncidentsPage> {
                         "reported_by",
                         isEqualTo: FirebaseAuth.instance.currentUser!.uid,
                       )
+                      .orderBy('timestamp', descending: true)
                       .snapshots(),
                   builder: (context, snapshot) {
                     List<Widget> incidentsList = [];
@@ -107,6 +108,7 @@ class _UserIncidentsPageState extends State<UserIncidentsPage> {
                         "user_id",
                         isEqualTo: FirebaseAuth.instance.currentUser!.uid,
                       )
+                      .orderBy('timestamp', descending: true)
                       .snapshots(),
                   builder: (context, snapshot) {
                     List<Widget> incidentsList = [];
