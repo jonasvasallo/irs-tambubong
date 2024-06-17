@@ -273,7 +273,7 @@ class _CaseDetailsPageState extends State<CaseDetailsPage> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                              "${userDetails['first_name']} ${userDetails['last_name']} <${userDetails['email']}>"),
+                                              "${userDetails['first_name']} ${userDetails['last_name']}"),
                                           Text(
                                             myDate,
                                           ),
