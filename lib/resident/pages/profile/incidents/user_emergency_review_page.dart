@@ -72,6 +72,17 @@ class _UserEmergencyReviewPageState extends State<UserEmergencyReviewPage> {
           'message': data.message,
           'emergency_id': widget.id,
           'type': 'emergency',
+          'timestamp': FieldValue.serverTimestamp(),
+          'reviewer_id': FirebaseAuth.instance.currentUser!.uid,
+        });
+        await FirebaseFirestore.instance.collection('ratings').add({
+          'tanod_id': data.id,
+          'emergency_id': widget.id,
+          'rating': data.rating,
+          'message': data.message,
+          'type': 'emergency',
+          'timestamp': FieldValue.serverTimestamp(),
+          'reviewer_id': FirebaseAuth.instance.currentUser!.uid,
         });
       } catch (err) {
         Utilities.showSnackBar("${err}", Colors.red);

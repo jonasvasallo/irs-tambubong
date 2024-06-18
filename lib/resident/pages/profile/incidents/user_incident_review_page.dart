@@ -71,6 +71,17 @@ class _UserIncidentReviewPageState extends State<UserIncidentReviewPage> {
           'message': data.message,
           'incident_id': widget.id,
           'type': 'incident',
+          'timestamp': FieldValue.serverTimestamp(),
+          'reviewer_id': FirebaseAuth.instance.currentUser!.uid,
+        });
+        await FirebaseFirestore.instance.collection('ratings').add({
+          'tanod_id': data.id,
+          'incident_id': widget.id,
+          'rating': data.rating,
+          'message': data.message,
+          'type': 'incident',
+          'timestamp': FieldValue.serverTimestamp(),
+          'reviewer_id': FirebaseAuth.instance.currentUser!.uid,
         });
       } catch (err) {
         Utilities.showSnackBar("${err}", Colors.red);
