@@ -142,24 +142,35 @@ class _SignupPageState extends State<SignupPage> {
 
     final isValid = formKey.currentState!.validate();
     if (!isValid) {
-      Navigator.of(context).pop();
       return;
     }
-    Utilities.showLoadingIndicator(context);
+    BuildContext dialogContext = context;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        dialogContext = context;
+        return Center(
+          child: CircularProgressIndicator(
+            color: accentColor,
+          ),
+        );
+      },
+    );
     try {
       /* Handles case where given phone number is already in the system */
       bool phoneNumberExists =
           await checkPhoneNumberExists(_contactNoController.text.trim());
       var photoUrl = await uploadImageToFirebase();
 
-      // if (phoneNumberExists) {
-      //   Utilities.showSnackBar(
-      //     'This phone number is already associated with another account',
-      //     Colors.red,
-      //   );
-      //   Navigator.of(context).pop(); // Dismiss loading indicator
-      //   return;
-      // }
+      if (phoneNumberExists) {
+        Utilities.showSnackBar(
+          'This phone number is already associated with another account',
+          Colors.red,
+        );
+        Navigator.of(dialogContext).pop(); // Dismiss loading indicator
+        return;
+      }
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailAddressController.text.trim(),
@@ -206,7 +217,7 @@ class _SignupPageState extends State<SignupPage> {
       }
       print('Sign Up failed ${e.message}');
     }
-    Navigator.of(context).pop();
+    Navigator.of(dialogContext).pop();
   }
 
   Future addUserDetails(
