@@ -1,6 +1,8 @@
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +11,7 @@ import 'package:irs_app/constants.dart';
 import 'package:irs_app/widgets/incident_container.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:image/image.dart' as img;
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -71,6 +74,63 @@ class _HomePageState extends State<HomePage> {
         context.go('/tanod_home');
       }
     }
+  }
+
+  Future<Uint8List> _getImageFromNetwork(imageUrl) async {
+    Uint8List bytes =
+        (await NetworkAssetBundle(Uri.parse(imageUrl)).load(imageUrl))
+            .buffer
+            .asUint8List();
+
+    // Decode the image
+    img.Image? image = img.decodeImage(bytes);
+    if (image != null) {
+      // Resize the image
+      img.Image resized = img.copyResize(image, width: 200, height: 200);
+
+      // Encode the image to Uint8List
+      Uint8List resizedBytes = Uint8List.fromList(img.encodePng(resized));
+      return resizedBytes;
+    }
+
+    return bytes;
+  }
+
+  Future<Set<Marker>> _getMarkers(QuerySnapshot incidents) async {
+    Set<Marker> incidentsList = {};
+    for (var incident in incidents.docs) {
+      if (incident['status'] == 'Verifying') {
+        continue;
+      }
+      final incidentTagSnapshot = await FirebaseFirestore.instance
+          .collection('incident_tags')
+          .doc(incident['incident_tag'])
+          .get();
+
+      String myURL = "";
+      if (incidentTagSnapshot.exists) {
+        final incidentTagData =
+            incidentTagSnapshot.data() as Map<String, dynamic>;
+        myURL = incidentTagData['tag_image'];
+      } else {
+        myURL =
+            "https://firebasestorage.googleapis.com/v0/b/irs-capstone.appspot.com/o/incident_tags_icons%2Fassault.png?alt=media&token=51fc633e-2cbb-4d18-b263-1d8c3cb82037";
+      }
+      Uint8List bytes = await _getImageFromNetwork(myURL);
+      final incidentWidget = Marker(
+        markerId: MarkerId(incident.id),
+        icon: BitmapDescriptor.fromBytes(bytes),
+        position: LatLng(
+          incident['coordinates']['latitude'],
+          incident['coordinates']['longitude'],
+        ),
+        onTap: () {
+          context.go('/home/incident/${incident.id}');
+        },
+      );
+      incidentsList.add(incidentWidget);
+    }
+    return incidentsList;
   }
 
   @override
@@ -190,45 +250,34 @@ class _HomePageState extends State<HomePage> {
                       isGreaterThanOrEqualTo: Timestamp.fromDate(oneWeekAgo))
                   .snapshots(),
               builder: (context, snapshot) {
-                Set<Marker> incidentsList = {};
                 if (snapshot.hasData) {
-                  final incidents = snapshot.data?.docs.toList();
-
-                  for (var incident in incidents!) {
-                    if (incident['status'] == 'Verifying') {
-                      continue;
-                    }
-                    final incidentWidget = Marker(
-                      markerId: MarkerId(incident.id),
-                      icon: BitmapDescriptor.defaultMarker,
-                      position: LatLng(
-                        incident['coordinates']['latitude'],
-                        incident['coordinates']['longitude'],
-                      ),
-                      onTap: () {
-                        context.go('/home/incident/${incident.id}');
-                      },
-                    );
-                    incidentsList.add(incidentWidget);
-                  }
+                  return FutureBuilder<Set<Marker>>(
+                    future: _getMarkers(snapshot.data!),
+                    builder: (context, markersSnapshot) {
+                      if (!markersSnapshot.hasData) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+                      return GoogleMap(
+                        myLocationButtonEnabled: false,
+                        initialCameraPosition: CameraPosition(
+                          target: LatLng(14.970254, 120.925633),
+                          zoom: 15,
+                        ),
+                        polygons: {
+                          Polygon(
+                            polygonId: PolygonId("1"),
+                            points: polygonPoints,
+                            fillColor: Color(0xFF006491).withOpacity(0.2),
+                            strokeWidth: 2,
+                          )
+                        },
+                        markers: markersSnapshot.data!,
+                      );
+                    },
+                  );
+                } else {
+                  return Center(child: CircularProgressIndicator());
                 }
-
-                return GoogleMap(
-                  myLocationButtonEnabled: false,
-                  initialCameraPosition: CameraPosition(
-                    target: LatLng(14.970254, 120.925633),
-                    zoom: 15,
-                  ),
-                  polygons: {
-                    Polygon(
-                      polygonId: PolygonId("1"),
-                      points: polygonPoints,
-                      fillColor: Color(0xFF006491).withOpacity(0.2),
-                      strokeWidth: 2,
-                    )
-                  },
-                  markers: incidentsList,
-                );
               }),
         ));
   }
