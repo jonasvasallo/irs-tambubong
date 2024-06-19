@@ -92,6 +92,10 @@ class _UserIncidentReviewPageState extends State<UserIncidentReviewPage> {
     Navigator.of(context).pop();
   }
 
+  Duration calculateResponseTime(Timestamp start, Timestamp end) {
+    return end.toDate().difference(start.toDate());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,6 +128,11 @@ class _UserIncidentReviewPageState extends State<UserIncidentReviewPage> {
                 final incidentDetails = snapshot.data!.docs.toList();
                 List<Widget> ratingContainers = [];
                 for (var responder in incidentDetails) {
+                  final responseStart =
+                      responder['response_start'] as Timestamp;
+                  final responseEnd = responder['response_end'] as Timestamp;
+                  final responseTime =
+                      calculateResponseTime(responseStart, responseEnd);
                   final rating = FutureBuilder(
                       future: FirebaseFirestore.instance
                           .collection('users')
@@ -146,7 +155,7 @@ class _UserIncidentReviewPageState extends State<UserIncidentReviewPage> {
                           id: responder.id,
                           name:
                               "${residentDetails['first_name']} ${residentDetails['last_name']}",
-                          userType: residentDetails['user_type'],
+                          responseTime: "${responseTime.inMinutes} minutes",
                           profileURL: residentDetails['profile_path'],
                           onUpdateRatingData: updateResponderRatingData,
                         );

@@ -141,9 +141,10 @@ class AppRouter {
                     builder: (context, state) => TanodResponseHistoryPage(),
                     routes: [
                       GoRoute(
-                        path: 'details/:id',
+                        path: 'details/:id/:type',
                         builder: (context, state) => TanodResponseDetailsPage(
                           id: state.pathParameters['id']!,
+                          type: state.pathParameters['type']!,
                         ),
                       ),
                     ],

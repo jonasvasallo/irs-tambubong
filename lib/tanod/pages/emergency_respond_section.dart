@@ -39,7 +39,7 @@ class _EmergencyRespondSectionState extends State<EmergencyRespondSection> {
   );
   Future _pickImageFromGallery() async {
     final returnedImage =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
+        await ImagePicker().pickImage(source: ImageSource.camera);
     if (returnedImage == null) return;
 
     setState(() {
@@ -84,7 +84,7 @@ class _EmergencyRespondSectionState extends State<EmergencyRespondSection> {
       }
 
       await FirebaseFirestore.instance.collection('sos').doc(widget.id).update({
-        'status': 'Closed',
+        'status': 'Resolved',
       });
       await FirebaseFirestore.instance
           .collection('sos')

@@ -71,7 +71,7 @@ class _TanodResponseHistoryPageState extends State<TanodResponseHistoryPage> {
                             return GestureDetector(
                               onTap: () {
                                 context.go(
-                                    '/tanod_home/response-history/details/${doc.id}');
+                                    '/tanod_home/response-history/details/${doc.id}/incident');
                               },
                               child: IncidentHistoryItem(
                                 title: doc['title'],
@@ -91,11 +91,69 @@ class _TanodResponseHistoryPageState extends State<TanodResponseHistoryPage> {
             SingleChildScrollView(
               child: Padding(
                 padding: EdgeInsets.all(16),
-                child: Column(
-                  children: [],
+                child: StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection('sos')
+                      .where('responders',
+                          arrayContains: FirebaseAuth.instance.currentUser!.uid)
+                      .where('status',
+                          whereIn: ['Resolved', 'Closed']).snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text("${snapshot.error}"),
+                      );
+                    }
+                    if (snapshot.data!.size == 0) {
+                      return Center(
+                        child: Text("No responses yet."),
+                      );
+                    }
+
+                    final docs = snapshot.data?.docs ?? [];
+                    return Column(
+                      children: docs.map((doc) {
+                        return FutureBuilder(
+                          future: FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(doc['user_id'])
+                              .get(),
+                          builder: (context, userSnapshot) {
+                            if (userSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return CircularProgressIndicator(); // or any loading widget
+                            }
+                            if (userSnapshot.hasError) {
+                              return Text("Error: ${userSnapshot.error}");
+                            }
+                            final userDetails = userSnapshot.data!.data()
+                                as Map<String, dynamic>;
+                            return GestureDetector(
+                              onTap: () {
+                                context.go(
+                                    '/tanod_home/response-history/details/${doc.id}/emergency');
+                              },
+                              child: IncidentHistoryItem(
+                                title: "SOS CALL",
+                                tag:
+                                    "${userDetails['first_name']} ${userDetails['last_name']}",
+                                status: doc['status'],
+                                date: Utilities.convertDate(doc['timestamp']),
+                              ),
+                            );
+                          },
+                        );
+                      }).toList(),
+                    );
+                  },
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),

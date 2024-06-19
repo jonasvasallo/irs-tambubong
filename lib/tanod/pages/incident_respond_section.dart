@@ -38,7 +38,7 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
   );
   Future _pickImageFromGallery() async {
     final returnedImage =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
+        await ImagePicker().pickImage(source: ImageSource.camera);
     if (returnedImage == null) return;
 
     setState(() {
