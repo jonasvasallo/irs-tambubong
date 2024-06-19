@@ -7,14 +7,14 @@ import 'package:irs_app/widgets/input_field.dart';
 class RatingContainer extends StatefulWidget {
   final String id;
   final String name;
-  final String userType;
+  final String responseTime;
   final String profileURL;
   final Function(String, double, String) onUpdateRatingData;
   const RatingContainer(
       {Key? key,
       required this.id,
       required this.name,
-      required this.userType,
+      required this.responseTime,
       required this.profileURL,
       required this.onUpdateRatingData})
       : super(key: key);
@@ -74,7 +74,7 @@ class _RatingContainerState extends State<RatingContainer> {
                         ),
                       ),
                       Text(
-                        widget.userType.toUpperCase(),
+                        "Response Time: ${widget.responseTime} mins",
                       ),
                     ],
                   ),
