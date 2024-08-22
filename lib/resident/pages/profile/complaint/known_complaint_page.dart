@@ -317,6 +317,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
   getUserStream() async {
     var data = await FirebaseFirestore.instance
         .collection('users')
+        .where('user_type', isEqualTo: 'resident')
         .orderBy('first_name')
         .get();
 
