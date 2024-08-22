@@ -34,8 +34,9 @@ class _TanodResponseHistoryPageState extends State<TanodResponseHistoryPage> {
                       .collection('incidents')
                       .where('responders',
                           arrayContains: FirebaseAuth.instance.currentUser!.uid)
-                      .where('status',
-                          whereIn: ['Resolved', 'Closed']).snapshots(),
+                      .where('status', whereIn: ['Resolved', 'Closed'])
+                      .orderBy('timestamp', descending: true)
+                      .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(
@@ -43,6 +44,7 @@ class _TanodResponseHistoryPageState extends State<TanodResponseHistoryPage> {
                       );
                     }
                     if (snapshot.hasError) {
+                      print(snapshot.error);
                       return Center(
                         child: Text("${snapshot.error}"),
                       );
@@ -96,8 +98,9 @@ class _TanodResponseHistoryPageState extends State<TanodResponseHistoryPage> {
                       .collection('sos')
                       .where('responders',
                           arrayContains: FirebaseAuth.instance.currentUser!.uid)
-                      .where('status',
-                          whereIn: ['Resolved', 'Closed']).snapshots(),
+                      .where('status', whereIn: ['Resolved', 'Closed'])
+                      .orderBy('timestamp', descending: true)
+                      .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(
@@ -105,6 +108,7 @@ class _TanodResponseHistoryPageState extends State<TanodResponseHistoryPage> {
                       );
                     }
                     if (snapshot.hasError) {
+                      print(snapshot.error);
                       return Center(
                         child: Text("${snapshot.error}"),
                       );

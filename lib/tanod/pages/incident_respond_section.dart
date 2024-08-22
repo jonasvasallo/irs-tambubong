@@ -82,40 +82,180 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
         urlDownload = await snapshot.ref.getDownloadURL();
       }
 
-      await FirebaseFirestore.instance
+      // handle case if the incident is an incident head
+      DocumentSnapshot incidentDoc = await FirebaseFirestore.instance
           .collection('incidents')
           .doc(widget.id)
-          .update({
-        'status': 'Resolved',
-      });
-      await FirebaseFirestore.instance
-          .collection('incidents')
-          .doc(widget.id)
-          .collection('responders')
-          .doc(FirebaseAuth.instance.currentUser!.uid)
-          .update({
-        'status': 'Responded',
-        'response_end': FieldValue.serverTimestamp(),
-        'response_photo': urlDownload,
-      });
-      await FirebaseFirestore.instance
-          .collection("users")
-          .doc(reported_by)
-          .collection("notifications")
-          .add({
-        'title': "Incident No. ${widget.id} marked as Resolved",
-        'content':
-            "You may send your feedback through the My Incidents section of the Profile Page so that we may be able to improve our service quality.",
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+          .get();
+      if (incidentDoc.exists) {
+        DocumentSnapshot incidentResponderDoc = await FirebaseFirestore.instance
+            .collection('incidents')
+            .doc(widget.id)
+            .collection('responders')
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .get();
+
+        if (incidentResponderDoc.exists) {
+          Map<String, dynamic>? incidentResponderData =
+              incidentResponderDoc.data() as Map<String, dynamic>?;
+          if (incidentResponderData != null &&
+              incidentResponderData['response_start'] != null) {
+            Map<String, dynamic>? incidentData =
+                incidentDoc.data() as Map<String, dynamic>?;
+            if (incidentData != null &&
+                incidentData['incident_group'] != null) {
+              DocumentSnapshot incidentGroupDoc = await FirebaseFirestore
+                  .instance
+                  .collection('incident_groups')
+                  .doc(incidentData['incident_group'])
+                  .get();
+
+              if (incidentGroupDoc.exists) {
+                Map<String, dynamic>? incidentGroupData =
+                    incidentGroupDoc.data() as Map<String, dynamic>?;
+                if (incidentGroupData != null) {
+                  if (incidentGroupData['head'] == widget.id) {
+                    //add the responders in this incident to all incidents within the group
+                    if (incidentData['status'] != null) {
+                      if (incidentData['status'] == "Resolved" ||
+                          incidentData['status'] == "Closed") {
+                        for (var incident_in_group
+                            in incidentGroupData['in_group']) {
+                          await FirebaseFirestore.instance
+                              .collection('incidents')
+                              .doc(incident_in_group)
+                              .collection('responders')
+                              .doc(FirebaseAuth.instance.currentUser!.uid)
+                              .set({
+                            'status': 'Responded',
+                            'response_start':
+                                incidentResponderData['response_start'],
+                            'response_end': FieldValue.serverTimestamp(),
+                            'response_photo': urlDownload,
+                          });
+                        }
+                        Navigator.of(dialogContext).pop();
+                        context.go('/tanod_home');
+                        return;
+                      } else {
+                        await FirebaseFirestore.instance
+                            .collection('incident_groups')
+                            .doc(incidentData['incident_group'])
+                            .update({
+                          'status': 'Resolved',
+                        });
+                        for (var incident_in_group
+                            in incidentGroupData['in_group']) {
+                          DocumentSnapshot individualIncidentDoc =
+                              await FirebaseFirestore.instance
+                                  .collection('incidents')
+                                  .doc(incident_in_group)
+                                  .get();
+                          if (individualIncidentDoc.exists) {
+                            Map<String, dynamic>? individualIncidentData =
+                                individualIncidentDoc.data()
+                                    as Map<String, dynamic>?;
+                            if (individualIncidentData != null) {
+                              await FirebaseFirestore.instance
+                                  .collection('incidents')
+                                  .doc(incident_in_group)
+                                  .update({
+                                'status': 'Resolved',
+                              });
+
+                              await FirebaseFirestore.instance
+                                  .collection('incidents')
+                                  .doc(incident_in_group)
+                                  .collection('responders')
+                                  .doc(FirebaseAuth.instance.currentUser!.uid)
+                                  .set({
+                                'status': 'Responded',
+                                'response_start':
+                                    incidentResponderData['response_start'],
+                                'response_end': FieldValue.serverTimestamp(),
+                                'response_photo': urlDownload,
+                              });
+
+                              await FirebaseFirestore.instance
+                                  .collection("users")
+                                  .doc(individualIncidentData['reported_by'])
+                                  .collection("notifications")
+                                  .add({
+                                'title':
+                                    "Incident No. ${incident_in_group} marked as Resolved",
+                                'content':
+                                    "You may send your feedback through the My Incidents section of the Profile Page so that we may be able to improve our service quality.",
+                                'timestamp': FieldValue.serverTimestamp(),
+                              });
+                            }
+                          }
+                        }
+                        Navigator.of(dialogContext).pop();
+                        context.go('/tanod_home');
+                        return;
+                      }
+                    }
+                  }
+                }
+              }
+            } else if (incidentData != null && incidentData['status'] != null) {
+              if (incidentData['status'] == "Resolved" ||
+                  incidentData['status'] == "Closed") {
+                await FirebaseFirestore.instance
+                    .collection('incidents')
+                    .doc(widget.id)
+                    .collection('responders')
+                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                    .update({
+                  'status': 'Responded',
+                  'response_end': FieldValue.serverTimestamp(),
+                  'response_photo': urlDownload,
+                });
+                Navigator.of(dialogContext).pop();
+                context.go('/tanod_home');
+                return;
+              } else {
+                await FirebaseFirestore.instance
+                    .collection('incidents')
+                    .doc(widget.id)
+                    .update({
+                  'status': 'Resolved',
+                });
+                await FirebaseFirestore.instance
+                    .collection('incidents')
+                    .doc(widget.id)
+                    .collection('responders')
+                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                    .update({
+                  'status': 'Responded',
+                  'response_end': FieldValue.serverTimestamp(),
+                  'response_photo': urlDownload,
+                });
+                await FirebaseFirestore.instance
+                    .collection("users")
+                    .doc(reported_by)
+                    .collection("notifications")
+                    .add({
+                  'title': "Incident No. ${widget.id} marked as Resolved",
+                  'content':
+                      "You may send your feedback through the My Incidents section of the Profile Page so that we may be able to improve our service quality.",
+                  'timestamp': FieldValue.serverTimestamp(),
+                });
+                Navigator.of(dialogContext).pop();
+                context.go('/tanod_home');
+                return;
+              }
+            }
+          }
+        }
+      }
       Navigator.of(dialogContext).pop();
+      Utilities.showSnackBar("Something has gone wrong", Colors.red);
     } catch (ex) {
       Navigator.of(dialogContext).pop();
       Utilities.showSnackBar("$ex", Colors.red);
-
       return;
     }
-    context.go('/tanod_home');
   }
 
   Future<Map<String, dynamic>> getIncidentDetails() async {

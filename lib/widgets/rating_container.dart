@@ -152,6 +152,9 @@ class _RatingContainerState extends State<RatingContainer> {
                   ),
                   Text(
                     "${rating_name}",
+                    style: TextStyle(
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
