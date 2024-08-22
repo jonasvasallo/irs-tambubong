@@ -49,7 +49,7 @@ class _SignupPageState extends State<SignupPage> {
 
   Future _pickImageFromGallery() async {
     final returnedImage =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
+        await ImagePicker().pickImage(source: ImageSource.camera);
     if (returnedImage == null) return;
     setState(() {
       selectedImage = File(returnedImage!.path);
@@ -479,8 +479,8 @@ class _SignupPageState extends State<SignupPage> {
                         )
                       : SizedBox(),
                   InputField(
-                    placeholder: "e.g. +63 9XX-XXX-XXXX",
-                    inputType: "number",
+                    placeholder: "e.g. +639XXXXXXXXX",
+                    inputType: "phone",
                     label: "Contact No.",
                     controller: _contactNoController,
                     validator: (value) {
@@ -489,10 +489,10 @@ class _SignupPageState extends State<SignupPage> {
                       }
 
                       // Define the regex pattern for the desired format: +63 9XX-XXX-XXXX
-                      RegExp regex = RegExp(r'^\+63 9\d{2}-\d{3}-\d{4}$');
+                      RegExp regex = RegExp(r'^\+639\d{2}\d{3}\d{4}$');
 
                       if (!regex.hasMatch(value)) {
-                        return 'Enter a valid phone number (+63 9XX-XXX-XXXX)';
+                        return 'Enter a valid phone number (+639XXXXXXXXX)';
                       }
 
                       return null; // Return null if validation succeeds

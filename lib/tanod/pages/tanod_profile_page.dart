@@ -195,6 +195,7 @@ class _TanodProfilePageState extends State<TanodProfilePage> {
                           .collection('users')
                           .doc(FirebaseAuth.instance.currentUser!.uid)
                           .collection('ratings')
+                          .orderBy('timestamp', descending: true)
                           .get(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==

@@ -149,7 +149,7 @@ class _UserEmergencyHistoryPageState extends State<UserEmergencyHistoryPage> {
                   SizedBox(
                     height: 16,
                   ),
-                  (emergencyDetails['status'] == 'Closed' &&
+                  (emergencyDetails['status'] == 'Resolved' &&
                           (emergencyDetails['rated'] == false))
                       ? InputButton(
                           label: "Leave a review",

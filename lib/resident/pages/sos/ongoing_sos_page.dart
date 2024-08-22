@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:irs_app/constants.dart';
@@ -52,7 +53,7 @@ class _OngoingSosPageState extends State<OngoingSosPage> {
       documentReference.update({
         'status': 'Cancelled',
       });
-      Navigator.of(context).pop();
+      context.go('/sos');
     } catch (ex) {
       Utilities.showSnackBar("$ex", Colors.red);
     }
@@ -73,21 +74,7 @@ class _OngoingSosPageState extends State<OngoingSosPage> {
           color: Colors.red,
         ),
         title: Text("Ongoing SOS"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              endSos();
-            },
-            child: Text(
-              "End",
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
+        actions: [],
       ),
       body: StreamBuilder(
           stream: FirebaseFirestore.instance

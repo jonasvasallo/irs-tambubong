@@ -90,7 +90,8 @@ class _TanodHomePageState extends State<TanodHomePage> {
                     .where('status', whereNotIn: [
                   'Closed',
                   'Resolved',
-                  'Dismissed'
+                  'Dismissed',
+                  'Cancelled',
                 ]).snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -187,7 +188,7 @@ class _TanodHomePageState extends State<TanodHomePage> {
                           arrayContains: FirebaseAuth.instance.currentUser!.uid)
                       .where(
                     'status',
-                    whereNotIn: ['Resolved', 'Closed'],
+                    whereNotIn: ['Resolved', 'Closed', 'Rejected'],
                   ).snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {

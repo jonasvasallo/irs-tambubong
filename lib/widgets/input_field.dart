@@ -53,6 +53,8 @@ class _InputFieldState extends State<InputField> {
       keyboardType = TextInputType.emailAddress;
     } else if (widget.inputType == "number") {
       keyboardType = TextInputType.number;
+    } else if (widget.inputType == "phone") {
+      keyboardType = TextInputType.phone;
     } else {
       keyboardType = TextInputType.text;
     }

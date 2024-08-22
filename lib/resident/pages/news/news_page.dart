@@ -38,14 +38,17 @@ class _NewsPageState extends State<NewsPage> {
               ),
             ),
             StreamBuilder(
-                stream:
-                    FirebaseFirestore.instance.collection('news').snapshots(),
+                stream: FirebaseFirestore.instance
+                    .collection('news')
+                    .orderBy('timestamp', descending: true)
+                    .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(
                       child: CircularProgressIndicator(),
                     );
                   } else if (snapshot.hasError) {
+                    print(snapshot.error);
                     return Text("Error ${snapshot.error}");
                   }
                   List<Widget> newsContainers = [];

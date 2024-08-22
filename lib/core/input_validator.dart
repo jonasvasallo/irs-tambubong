@@ -23,10 +23,10 @@ class InputValidator {
     }
 
     // Define the regex pattern for the desired format: +63 9XX-XXX-XXXX
-    RegExp regex = RegExp(r'^\+63 9\d{2}-\d{3}-\d{4}$');
+    RegExp regex = RegExp(r'^\+639\d{2}\d{3}\d{4}$');
 
     if (!regex.hasMatch(value)) {
-      return 'Enter a valid phone number (+63 9XX-XXX-XXXX)';
+      return 'Enter a valid phone number (+639XXXXXXXXX)';
     }
 
     return null; // Return null if validation succeeds

@@ -191,12 +191,6 @@ class _NewsPartSectionState extends State<NewsPartSection> {
                           )
                           .snapshots(),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
                         if (snapshot.hasError) {
                           return Center(
                             child: Text("${snapshot.error}"),
@@ -256,11 +250,6 @@ class _NewsPartSectionState extends State<NewsPartSection> {
                         .collection('comments')
                         .snapshots(),
                     builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
                       if (snapshot.hasError) {
                         return Center(
                           child: Text("${snapshot.error}"),
