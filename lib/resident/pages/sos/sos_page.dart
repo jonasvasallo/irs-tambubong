@@ -23,7 +23,8 @@ class _SosPageState extends State<SosPage> {
   File? recordedVideo;
   final picker = ImagePicker();
   Future<bool> pickVideoFromCamera() async {
-    final video = await picker.pickVideo(source: ImageSource.camera);
+    final video = await picker.pickVideo(
+        source: ImageSource.camera, maxDuration: Duration(minutes: 1));
     if (video == null) return false;
 
     recordedVideo = File(video.path);
