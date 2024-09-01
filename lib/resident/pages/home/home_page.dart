@@ -188,7 +188,7 @@ class _HomePageState extends State<HomePage> {
                         String myDate = "test";
                         bool isLatest = i == 0;
 
-                        if (incident['status'] == 'Verifying') {
+                        if (incident['status'] == 'Verifying' || incident['status'] == 'Rejected') {
                           print("found incident with verifying status");
                           continue;
                         }
