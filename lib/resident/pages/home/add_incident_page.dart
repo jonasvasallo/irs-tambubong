@@ -274,6 +274,13 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
       },
     );
 
+    if(!await checkIfIncidentIsHandled(user_loc)){
+      Navigator.pop(dialogContext);
+      Utilities.showSnackBar("This incident is already being handled!", Colors.red);
+      return;
+      
+    }
+
     try {
       List<String> imageUrls = [];
       if (pickedImagesInBytes.length > 0) {
@@ -311,6 +318,70 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
       Utilities.showSnackBar("$ex", Colors.red);
       Navigator.pop(dialogContext);
       print(ex);
+    }
+  }
+
+  Future<bool> checkIfIncidentIsHandled (LatLng location) async {
+    Timestamp timestamp = Timestamp.now();
+    final double RADIUS = 100; //in meters
+    final int TIME_FRAME = 900000; // in miliseconds (15 minutes)
+
+    final incidentsRef = FirebaseFirestore.instance.collection('incidents');
+    final incidentTimestamp = timestamp.millisecondsSinceEpoch;
+    final lowerTimeThreshold = DateTime.fromMillisecondsSinceEpoch(incidentTimestamp - TIME_FRAME);
+    final upperTimeThreshold = DateTime.fromMillisecondsSinceEpoch(incidentTimestamp + TIME_FRAME);
+
+    try{
+      QuerySnapshot snapshot = await incidentsRef
+        .where('timestamp', isGreaterThanOrEqualTo: lowerTimeThreshold)
+        .where('timestamp', isLessThanOrEqualTo: upperTimeThreshold)
+        .where('status', whereNotIn: ['Resolved', 'Closed', 'Rejected'])
+        .get();
+
+      print('Number of documents found: ${snapshot.docs.length}');
+
+      List<Map<String, dynamic>> nearbyIncidentsList = [];
+
+      bool isHandled = false;
+
+    for (var doc in snapshot.docs) {
+      final docData = doc.data() as Map<String, dynamic>;
+      final incidentLocation = docData['coordinates'];
+      final incidentStatus = docData['status'];
+
+      double distance = Geolocator.distanceBetween(
+        location.latitude,
+        location.longitude,
+        incidentLocation['latitude'],
+      incidentLocation['longitude'],
+      );
+
+      if (distance <= RADIUS) {
+        if (incidentStatus == 'Handling') {
+          isHandled = true;
+          break;
+        } else {
+          nearbyIncidentsList.add({
+            'id': doc.id,
+            ...docData,
+            'distanceDiff': distance,
+          });
+        }
+      }
+    }
+
+    print("Nearby incidents: $nearbyIncidentsList");
+
+    if (isHandled) {
+      return false;
+    } else {
+      // setNearbyIncidents(nearbyIncidentsList);
+      
+      return true;
+    }
+    } catch(err){
+      print("Error fetching nearby incidents: $err");
+      return false;
     }
   }
 
