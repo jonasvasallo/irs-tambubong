@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +9,8 @@ import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/incident_container.dart';
 import 'package:irs_app/widgets/input_button.dart';
+
+import 'package:http/http.dart' as http;
 
 class TanodHomePage extends StatefulWidget {
   const TanodHomePage({Key? key}) : super(key: key);
@@ -70,6 +74,20 @@ class _TanodHomePageState extends State<TanodHomePage> {
       Utilities.showSnackBar("Went offline", Colors.green);
     } catch (ex) {
       Utilities.showSnackBar("${ex}", Colors.red);
+    }
+  }
+
+  Future<DateTime> fetchWorldTime() async {
+    final url = Uri.parse('http://worldtimeapi.org/api/timezone/Asia/Manila');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final datetime = DateTime.parse(data['datetime']);
+      print("fetched time");
+      return datetime;
+    } else {
+      throw Exception('Failed to load time');
     }
   }
 
@@ -187,18 +205,8 @@ class _TanodHomePageState extends State<TanodHomePage> {
                       },
                       large: true,
                     ),
-                    StreamBuilder(
-                      stream: FirebaseFirestore.instance
-                          .collection('sos')
-                          .where('responders',
-                              arrayContains:
-                                  FirebaseAuth.instance.currentUser!.uid)
-                          .where('status', whereNotIn: [
-                        'Closed',
-                        'Resolved',
-                        'Dismissed',
-                        'Cancelled',
-                      ]).snapshots(),
+                    FutureBuilder(
+                      future: fetchWorldTime(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -209,177 +217,248 @@ class _TanodHomePageState extends State<TanodHomePage> {
                           return Text(
                               'Error: ${snapshot.error}'); // Placeholder for error state
                         }
-                        final docs = snapshot.data?.docs ?? [];
-                        return Column(
-                          children: docs.map((doc) {
-                            return GestureDetector(
-                              onTap: () {
-                                context.go(
-                                    '/tanod_home/emergency-details/${doc.id}');
-                              },
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.only(top: 8, bottom: 8),
-                                child: Container(
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: Color.fromARGB(255, 248, 246, 246),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border:
-                                        Border.all(color: Colors.red, width: 1),
-                                  ),
+
+                        final worldTime = snapshot.data as DateTime;
+                        final sixPM = DateTime(worldTime.year, worldTime.month,
+                            worldTime.day, 18, 0);
+
+                        Query query = FirebaseFirestore.instance
+                            .collection('sos')
+                            .where('status', whereNotIn: [
+                          'Closed',
+                          'Resolved',
+                          'Dismissed',
+                          'Cancelled',
+                        ]);
+
+                        if (worldTime.isBefore(sixPM)) {
+                          print("it is before 6 pm");
+                          query = query.where('responders',
+                              arrayContains:
+                                  FirebaseAuth.instance.currentUser!.uid);
+                        }
+                        return StreamBuilder(
+                          stream: query.snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return CircularProgressIndicator(); // Placeholder for loading state
+                            }
+                            if (snapshot.hasError) {
+                              print("${snapshot.error}");
+                              return Text(
+                                  'Error: ${snapshot.error}'); // Placeholder for error state
+                            }
+                            final docs = snapshot.data?.docs ?? [];
+                            return Column(
+                              children: docs.map((doc) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    context.go(
+                                        '/tanod_home/emergency-details/${doc.id}');
+                                  },
                                   child: Padding(
-                                    padding: EdgeInsets.all(16),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                                    padding: const EdgeInsets.only(
+                                        top: 8, bottom: 8),
+                                    child: Container(
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Color.fromARGB(255, 248, 246, 246),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                            color: Colors.red, width: 1),
+                                      ),
+                                      child: Padding(
+                                        padding: EdgeInsets.all(16),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            Flexible(
-                                              flex: 3,
-                                              child: Text(
-                                                "INCOMING SOS",
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  color:
-                                                      Colors.redAccent.shade700,
-                                                  fontSize: 16,
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Flexible(
+                                                  flex: 3,
+                                                  child: Text(
+                                                    "INCOMING SOS",
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      color: Colors
+                                                          .redAccent.shade700,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
-                                            ),
-                                            Text(
-                                              Utilities.convertDate(
-                                                  doc['timestamp']),
-                                              overflow: TextOverflow.ellipsis,
-                                              style: CustomTextStyle.regular,
-                                            ),
-                                          ],
-                                        ),
-                                        FutureBuilder(
-                                            future: FirebaseFirestore.instance
-                                                .collection('users')
-                                                .doc(doc['user_id'])
-                                                .get(),
-                                            builder: (context, snapshot) {
-                                              if (snapshot.connectionState ==
-                                                  ConnectionState.waiting) {
-                                                return CircularProgressIndicator(); // Placeholder for loading state
-                                              }
-                                              if (snapshot.hasError) {
-                                                print("${snapshot.error}");
-                                                return Text(
-                                                    'Error: ${snapshot.error}'); // Placeholder for error state
-                                              }
-                                              final userData =
-                                                  snapshot.data?.data();
-                                              final firstName =
-                                                  userData?['first_name'] ??
-                                                      'N/A';
-                                              final lastName =
-                                                  userData?['last_name'] ??
-                                                      'N/A';
-                                              return Text(
-                                                "from: ${firstName} ${lastName}",
-                                                overflow: TextOverflow.ellipsis,
-                                                style: CustomTextStyle.regular,
-                                              );
-                                            }),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        );
-                      },
-                    ),
-                    StreamBuilder(
-                        stream: FirebaseFirestore.instance
-                            .collection('incidents')
-                            .where('responders',
-                                arrayContains:
-                                    FirebaseAuth.instance.currentUser!.uid)
-                            .where(
-                          'status',
-                          whereNotIn: ['Resolved', 'Closed', 'Rejected'],
-                        ).snapshots(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return CircularProgressIndicator(); // Placeholder for loading state
-                          }
-                          if (snapshot.hasError) {
-                            print("${snapshot.error}");
-                            return Text(
-                                'Error: ${snapshot.error}'); // Placeholder for error state
-                          }
-                          final docs = snapshot.data?.docs ?? [];
-                          return Column(
-                            children: docs.map((doc) {
-                              return GestureDetector(
-                                onTap: () {
-                                  context.go(
-                                      '/tanod_home/incident-details/${doc.id}');
-                                  print("test");
-                                },
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.only(top: 8, bottom: 8),
-                                  child: Container(
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color: Color.fromARGB(255, 248, 246, 246),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                          color: minorText, width: 1),
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.all(16),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Flexible(
-                                                flex: 3,
-                                                child: Text(
-                                                  doc['title'],
+                                                Text(
+                                                  Utilities.convertDate(
+                                                      doc['timestamp']),
                                                   overflow:
                                                       TextOverflow.ellipsis,
-                                                  style: CustomTextStyle
-                                                      .subheading,
+                                                  style:
+                                                      CustomTextStyle.regular,
                                                 ),
-                                              ),
-                                              Text(
-                                                Utilities.convertDate(
-                                                    doc['timestamp']),
-                                                overflow: TextOverflow.ellipsis,
-                                                style: CustomTextStyle.regular,
-                                              ),
-                                            ],
-                                          ),
-                                          Text(
-                                            doc['details'],
-                                            overflow: TextOverflow.ellipsis,
-                                            style:
-                                                CustomTextStyle.regular_minor,
-                                          ),
-                                        ],
+                                              ],
+                                            ),
+                                            FutureBuilder(
+                                                future: FirebaseFirestore
+                                                    .instance
+                                                    .collection('users')
+                                                    .doc(doc['user_id'])
+                                                    .get(),
+                                                builder: (context, snapshot) {
+                                                  if (snapshot
+                                                          .connectionState ==
+                                                      ConnectionState.waiting) {
+                                                    return CircularProgressIndicator(); // Placeholder for loading state
+                                                  }
+                                                  if (snapshot.hasError) {
+                                                    print("${snapshot.error}");
+                                                    return Text(
+                                                        'Error: ${snapshot.error}'); // Placeholder for error state
+                                                  }
+                                                  final userData =
+                                                      snapshot.data?.data();
+                                                  final firstName =
+                                                      userData?['first_name'] ??
+                                                          'N/A';
+                                                  final lastName =
+                                                      userData?['last_name'] ??
+                                                          'N/A';
+                                                  return Text(
+                                                    "from: ${firstName} ${lastName}",
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style:
+                                                        CustomTextStyle.regular,
+                                                  );
+                                                }),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              );
-                            }).toList(),
-                          );
-                        }),
+                                );
+                              }).toList(),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    FutureBuilder(
+                      future: fetchWorldTime(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return CircularProgressIndicator(); // Placeholder for loading state
+                        }
+                        if (snapshot.hasError) {
+                          print("${snapshot.error}");
+                          return Text(
+                              'Error: ${snapshot.error}'); // Placeholder for error state
+                        }
+
+                        final worldTime = snapshot.data as DateTime;
+                        final sixPM = DateTime(worldTime.year, worldTime.month,
+                            worldTime.day, 18, 0);
+
+                        // Query for the 'incidents' collection
+                        Query incidentsQuery = FirebaseFirestore.instance
+                            .collection('incidents')
+                            .where('status',
+                                whereNotIn: ['Resolved', 'Closed', 'Rejected']);
+
+                        if (worldTime.isBefore(sixPM)) {
+                          print("it is before 6 pm");
+                          incidentsQuery = incidentsQuery.where('responders',
+                              arrayContains:
+                                  FirebaseAuth.instance.currentUser!.uid);
+                        }
+
+                        return StreamBuilder(
+                          stream: incidentsQuery.snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return CircularProgressIndicator(); // Placeholder for loading state
+                            }
+                            if (snapshot.hasError) {
+                              print("${snapshot.error}");
+                              return Text(
+                                  'Error: ${snapshot.error}'); // Placeholder for error state
+                            }
+                            final docs = snapshot.data?.docs ?? [];
+                            return Column(
+                              children: docs.map((doc) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    context.go(
+                                        '/tanod_home/incident-details/${doc.id}');
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 8, bottom: 8),
+                                    child: Container(
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Color.fromARGB(255, 248, 246, 246),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                            color: minorText, width: 1),
+                                      ),
+                                      child: Padding(
+                                        padding: EdgeInsets.all(16),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Flexible(
+                                                  flex: 3,
+                                                  child: Text(
+                                                    doc['title'],
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: CustomTextStyle
+                                                        .subheading,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  Utilities.convertDate(
+                                                      doc['timestamp']),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style:
+                                                      CustomTextStyle.regular,
+                                                ),
+                                              ],
+                                            ),
+                                            Text(
+                                              doc['details'],
+                                              overflow: TextOverflow.ellipsis,
+                                              style:
+                                                  CustomTextStyle.regular_minor,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ],
                 ),
         ),
