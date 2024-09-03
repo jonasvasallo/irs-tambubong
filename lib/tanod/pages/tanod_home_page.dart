@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/models/user_model.dart';
@@ -11,6 +13,7 @@ import 'package:irs_app/widgets/incident_container.dart';
 import 'package:irs_app/widgets/input_button.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:location/location.dart';
 
 class TanodHomePage extends StatefulWidget {
   const TanodHomePage({Key? key}) : super(key: key);
@@ -20,6 +23,12 @@ class TanodHomePage extends StatefulWidget {
 }
 
 class _TanodHomePageState extends State<TanodHomePage> {
+
+  Location location = new Location();
+  
+  late StreamSubscription<LocationData> locationSubscription;
+  
+
   UserModel model = new UserModel();
   bool onDuty = false;
 
@@ -39,6 +48,65 @@ class _TanodHomePageState extends State<TanodHomePage> {
     // TODO: implement initState
     super.initState();
     fetchIsOnline();
+    if(onDuty){
+      print("this happened");
+      _subscribeToLocationChanges();
+    }
+  }
+
+  void updateTanodLocation(LatLng new_loc) async {
+    try{
+      await FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid).update({
+      'current_location' : {
+        'latitude' : new_loc.latitude,
+        'longitude' : new_loc.longitude,
+      },
+      });
+      print("updated tanod location");
+    } catch(err){
+      print(err);
+    }
+  }
+
+  void _subscribeToLocationChanges() async {
+    print("function called");
+    if(!await getLocationPermissions()) return;
+
+    location.changeSettings(interval: 15000, distanceFilter: 10);
+    location.enableBackgroundMode(enable: true);
+    locationSubscription = location.onLocationChanged.listen((LocationData currentLocation) {
+      print("Location changed: ${currentLocation.latitude}, ${currentLocation.longitude}");
+      if(currentLocation.latitude != null || currentLocation.longitude != null){
+        updateTanodLocation(LatLng(currentLocation.latitude!, currentLocation.longitude!));
+      }
+      
+    });
+    
+  }
+
+  Future<bool> getLocationPermissions () async {
+    print("permissions called");
+    bool _serviceEnabled;
+    PermissionStatus _permissionGranted;
+
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return false;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return false;
+      }
+    }
+
+    return true;
+
   }
 
   void goOnline() async {
@@ -52,6 +120,7 @@ class _TanodHomePageState extends State<TanodHomePage> {
       });
       setState(() {
         onDuty = true;
+        _subscribeToLocationChanges();
       });
       Utilities.showSnackBar("Went online", Colors.green);
     } catch (ex) {
@@ -70,6 +139,9 @@ class _TanodHomePageState extends State<TanodHomePage> {
       });
       setState(() {
         onDuty = false;
+        if(locationSubscription != null){
+          locationSubscription.cancel();
+        }
       });
       Utilities.showSnackBar("Went offline", Colors.green);
     } catch (ex) {
@@ -89,6 +161,12 @@ class _TanodHomePageState extends State<TanodHomePage> {
     } else {
       throw Exception('Failed to load time');
     }
+  }
+
+  @override
+  void dispose() {
+    locationSubscription.cancel();
+    super.dispose();
   }
 
   @override
