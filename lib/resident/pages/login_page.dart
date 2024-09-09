@@ -7,6 +7,7 @@ import 'package:irs_app/app_router.dart';
 import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/input_validator.dart';
 import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/models/firebase_api.dart';
 import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/input_field.dart';
 import 'dart:async';
@@ -83,6 +84,7 @@ class _LoginPageState extends State<LoginPage> {
               print('User is signed out');
             } else {
               await model.loginTimestamp(model.uId);
+              await model.updateFCMToken(model.uId, await FirebaseApi().initNotifications() ?? '');
               print("working 1");
               DocumentSnapshot documentSnapshot = await FirebaseFirestore
                   .instance

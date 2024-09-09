@@ -123,6 +123,19 @@ class UserModel {
     }
   }
 
+  Future<void> updateFCMToken(String docID, String token) async {
+    try {
+      await users.doc(docID).update({
+        'fcmToken': token,
+        'fcmLastFetched' : FieldValue.serverTimestamp(),
+      });
+      print('FCM Token updated successfully.');
+    } catch (e) {
+      print('Error updating FCM Token: $e');
+      // Handle error as needed
+    }
+  }
+
   Future<bool> deleteInactiveUser(String docID) async {
     try {
       DocumentSnapshot snapshot =
