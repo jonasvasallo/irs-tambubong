@@ -21,9 +21,13 @@ class _CommentWidgetState extends State<CommentWidget> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(
-            child: CircularProgressIndicator(),
           );
         }
+      if (!snapshot.hasData || snapshot.data == null) {
+        return Center(
+          child: Text("No data available"),
+        );
+      }
         if (snapshot.hasError) {
           return Center(
             child: Text("${snapshot.error}"),

@@ -156,7 +156,7 @@ class _NewsPartSectionState extends State<NewsPartSection> {
                         width: 4,
                       ),
                       Text(
-                        "Admin",
+                        "Barangay Tambubong",
                         style: CustomTextStyle.regular_minor,
                       ),
                     ],
@@ -196,6 +196,11 @@ class _NewsPartSectionState extends State<NewsPartSection> {
                             child: Text("${snapshot.error}"),
                           );
                         }
+                        if (!snapshot.hasData || snapshot.data == null) {
+                          return Center(
+                            
+                          );
+                        }
                         final likes = snapshot.data!.docs;
 
                         // Check if the user liked the post
@@ -220,7 +225,7 @@ class _NewsPartSectionState extends State<NewsPartSection> {
                               ),
                             ),
                             Text(
-                              "${newsDetails.data()!.containsKey("like_count") ? newsDetails['like_count'] : 0}",
+                              "${(newsDetails.data() != null) ? (newsDetails.data()!.containsKey("like_count") ? newsDetails['like_count'] : 0) : 0}",
                               style: CustomTextStyle.regular_minor,
                             ),
                             SizedBox(
@@ -234,7 +239,7 @@ class _NewsPartSectionState extends State<NewsPartSection> {
                               width: 8,
                             ),
                             Text(
-                              "${newsDetails.data()!.containsKey("comment_count") ? newsDetails['comment_count'] : 0}",
+                              "${(newsDetails.data() != null) ? (newsDetails.data()!.containsKey("comment_count") ? newsDetails['comment_count'] : 0) : 0}",
                               style: CustomTextStyle.regular_minor,
                             ),
                           ],
@@ -248,11 +253,17 @@ class _NewsPartSectionState extends State<NewsPartSection> {
                         .collection('news')
                         .doc(widget.id)
                         .collection('comments')
+                        .orderBy('sent_at')
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         return Center(
                           child: Text("${snapshot.error}"),
+                        );
+                      }
+                      if (!snapshot.hasData || snapshot.data == null) {
+                        return Center(
+                          
                         );
                       }
                       List<Widget> commentWidgets = [];

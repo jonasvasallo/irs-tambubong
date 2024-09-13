@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/widgets/incident_timeline_tile.dart';
 import 'package:irs_app/widgets/input_button.dart';
 
 class IncidentDetailsPage extends StatefulWidget {
@@ -266,12 +267,7 @@ class _IncidentDetailsPageState extends State<IncidentDetailsPage> {
                             ),
                             Container(
                               width: MediaQuery.of(context).size.width - 32,
-                              height: 150,
-                              decoration: BoxDecoration(
-                                border:
-                                    Border.all(color: accentColor, width: 2),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
+                              height: 250,
                               child: StreamBuilder(
                                 stream: FirebaseFirestore.instance
                                     .collection('incidents')
@@ -288,9 +284,18 @@ class _IncidentDetailsPageState extends State<IncidentDetailsPage> {
                                   }
                                   if (!snapshot.hasData ||
                                       snapshot.data!.docs.isEmpty) {
-                                    return Center(
-                                      child: Text("No status yet..."),
-                                    );
+                                        Timestamp t = incidentDetails['timestamp'] as Timestamp;
+                                        DateTime date = t.toDate();
+                                        String incidentDate = DateFormat('MM/dd hh:mm a')
+                                          .format(date);
+                                    return Column(children: [
+                                       IncidentTimelineTile(
+                                        date: incidentDate,
+                                        content: "User reported this incident",
+                                        isFirst: true,
+                                        isLast: true,
+                                      ),
+                                    ],);
                                   }
                                   if (snapshot.hasError) {
                                     return Center(
@@ -300,50 +305,48 @@ class _IncidentDetailsPageState extends State<IncidentDetailsPage> {
 
                                   List<Widget> statusWidgets = [];
 
+                                  
                                   final statuses = snapshot.data!.docs;
 
-                                  for (var status in statuses) {
+                                  for (int i = 0; i < statuses.length; i++) {
                                     String myDate = "Error fetching date";
-                                    if (status['timestamp'] != null) {
+                                    if (statuses[i]['timestamp'] != null) {
                                       Timestamp t =
-                                          status['timestamp'] as Timestamp;
+                                          statuses[i]['timestamp'] as Timestamp;
                                       DateTime date = t.toDate();
                                       myDate = DateFormat('MM/dd hh:mm a')
                                           .format(date);
                                     }
 
+                                    bool isFirst =
+                                        i == 0;// Last status in the list
+                                    
                                     statusWidgets.add(
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            myDate,
-                                          ),
-                                          SizedBox(
-                                            width: 16,
-                                          ),
-                                          Flexible(
-                                            child: Text(
-                                              status['status_content'],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                    statusWidgets.add(
-                                      SizedBox(
-                                        height: 16,
+                                      IncidentTimelineTile(
+                                        date: myDate,
+                                        content: statuses[i]['status_content'],
+                                        isFirst: isFirst,
+                                        isLast: false,
                                       ),
                                     );
                                   }
 
-                                  return SingleChildScrollView(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16),
-                                      child: Column(
-                                        children: statusWidgets,
+                                  Timestamp t = incidentDetails['timestamp'] as Timestamp;
+                                        DateTime date = t.toDate();
+                                        String incidentDate = DateFormat('MM/dd hh:mm a')
+                                          .format(date);
+                                   statusWidgets.add(
+                                        IncidentTimelineTile(
+                                        date: incidentDate,
+                                        content: "User reported this incident",
+                                        isFirst: false,
+                                        isLast: true,
                                       ),
+                                  );
+
+                                  return SingleChildScrollView(
+                                    child: Column(
+                                      children: statusWidgets,
                                     ),
                                   );
                                 },
