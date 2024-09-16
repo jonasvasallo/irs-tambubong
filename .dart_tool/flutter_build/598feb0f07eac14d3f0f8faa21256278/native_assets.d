@@ -1,1 +1,0 @@
- /Users/jonasvasallo/flutter_projects/userside-incident-reporting-system/.dart_tool/flutter_build/598feb0f07eac14d3f0f8faa21256278/native_assets.yaml: 
