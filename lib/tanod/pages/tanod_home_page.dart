@@ -23,11 +23,9 @@ class TanodHomePage extends StatefulWidget {
 }
 
 class _TanodHomePageState extends State<TanodHomePage> {
-
   Location location = new Location();
-  
-  late StreamSubscription<LocationData> locationSubscription;
-  
+
+  StreamSubscription<LocationData>? locationSubscription;
 
   UserModel model = new UserModel();
   bool onDuty = false;
@@ -48,43 +46,48 @@ class _TanodHomePageState extends State<TanodHomePage> {
     // TODO: implement initState
     super.initState();
     fetchIsOnline();
-    if(onDuty){
+    if (onDuty) {
       print("this happened");
       _subscribeToLocationChanges();
     }
   }
 
   void updateTanodLocation(LatLng new_loc) async {
-    try{
-      await FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid).update({
-      'current_location' : {
-        'latitude' : new_loc.latitude,
-        'longitude' : new_loc.longitude,
-      },
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .update({
+        'current_location': {
+          'latitude': new_loc.latitude,
+          'longitude': new_loc.longitude,
+        },
       });
       print("updated tanod location");
-    } catch(err){
+    } catch (err) {
       print(err);
     }
   }
 
   void _subscribeToLocationChanges() async {
     print("function called");
-    if(!await getLocationPermissions()) return;
+    if (!await getLocationPermissions()) return;
 
     location.changeSettings(interval: 15000, distanceFilter: 10);
     location.enableBackgroundMode(enable: true);
-    locationSubscription = location.onLocationChanged.listen((LocationData currentLocation) {
-      print("Location changed: ${currentLocation.latitude}, ${currentLocation.longitude}");
-      if(currentLocation.latitude != null || currentLocation.longitude != null){
-        updateTanodLocation(LatLng(currentLocation.latitude!, currentLocation.longitude!));
+    locationSubscription =
+        location.onLocationChanged.listen((LocationData currentLocation) {
+      print(
+          "Location changed: ${currentLocation.latitude}, ${currentLocation.longitude}");
+      if (currentLocation.latitude != null ||
+          currentLocation.longitude != null) {
+        updateTanodLocation(
+            LatLng(currentLocation.latitude!, currentLocation.longitude!));
       }
-      
     });
-    
   }
 
-  Future<bool> getLocationPermissions () async {
+  Future<bool> getLocationPermissions() async {
     print("permissions called");
     bool _serviceEnabled;
     PermissionStatus _permissionGranted;
@@ -106,7 +109,6 @@ class _TanodHomePageState extends State<TanodHomePage> {
     }
 
     return true;
-
   }
 
   void goOnline() async {
@@ -139,8 +141,8 @@ class _TanodHomePageState extends State<TanodHomePage> {
       });
       setState(() {
         onDuty = false;
-        if(locationSubscription != null){
-          locationSubscription.cancel();
+        if (locationSubscription != null) {
+          locationSubscription!.cancel();
         }
       });
       Utilities.showSnackBar("Went offline", Colors.green);
@@ -165,7 +167,9 @@ class _TanodHomePageState extends State<TanodHomePage> {
 
   @override
   void dispose() {
-    locationSubscription.cancel();
+    if (locationSubscription != null) {
+      locationSubscription!.cancel();
+    }
     super.dispose();
   }
 
@@ -291,9 +295,8 @@ class _TanodHomePageState extends State<TanodHomePage> {
                           return CircularProgressIndicator(); // Placeholder for loading state
                         }
                         if (snapshot.hasError) {
-                          print("${snapshot.error}");
                           return Text(
-                              'Error: ${snapshot.error}'); // Placeholder for error state
+                              'Could not validate time. Please check your internet connection or try restarting the app. Error Message: (${snapshot.error})'); // Placeholder for error state
                         }
 
                         final worldTime = snapshot.data as DateTime;

@@ -25,7 +25,11 @@ class _SosPageState extends State<SosPage> {
   final picker = ImagePicker();
   Future<bool> pickVideoFromCamera() async {
     final video = await picker.pickVideo(
-        source: ImageSource.camera, maxDuration: Duration(minutes: 1));
+      source: ImageSource.camera,
+      maxDuration: Duration(
+        seconds: 30,
+      ),
+    );
     if (video == null) return false;
 
     recordedVideo = File(video.path);
@@ -123,22 +127,24 @@ class _SosPageState extends State<SosPage> {
     return userDetails['verified'];
   }
 
-  Future<bool> checkIfEmergencyIsHandled (LatLng location) async {
+  Future<bool> checkIfEmergencyIsHandled(LatLng location) async {
     Timestamp timestamp = Timestamp.now();
     final double RADIUS = 100; //in meters
     final int TIME_FRAME = 900000; // in miliseconds (15 minutes)
 
     final sosRef = FirebaseFirestore.instance.collection('sos');
     final sosTimestamp = timestamp.millisecondsSinceEpoch;
-    final lowerTimeThreshold = DateTime.fromMillisecondsSinceEpoch(sosTimestamp - TIME_FRAME);
-    final upperTimeThreshold = DateTime.fromMillisecondsSinceEpoch(sosTimestamp + TIME_FRAME);
+    final lowerTimeThreshold =
+        DateTime.fromMillisecondsSinceEpoch(sosTimestamp - TIME_FRAME);
+    final upperTimeThreshold =
+        DateTime.fromMillisecondsSinceEpoch(sosTimestamp + TIME_FRAME);
 
-    try{
+    try {
       QuerySnapshot snapshot = await sosRef
-        .where('timestamp', isGreaterThanOrEqualTo: lowerTimeThreshold)
-        .where('timestamp', isLessThanOrEqualTo: upperTimeThreshold)
-        .where('status', whereNotIn: ['Resolved', 'Closed', 'Dismissed'])
-        .get();
+          .where('timestamp', isGreaterThanOrEqualTo: lowerTimeThreshold)
+          .where('timestamp', isLessThanOrEqualTo: upperTimeThreshold)
+          .where('status',
+              whereNotIn: ['Resolved', 'Closed', 'Dismissed']).get();
 
       print('Number of documents found: ${snapshot.docs.length}');
 
@@ -146,42 +152,42 @@ class _SosPageState extends State<SosPage> {
 
       bool isHandled = false;
 
-    for (var doc in snapshot.docs) {
-      final docData = doc.data() as Map<String, dynamic>;
-      final sosLocation = docData['location'];
-      final sosStatus = docData['status'];
+      for (var doc in snapshot.docs) {
+        final docData = doc.data() as Map<String, dynamic>;
+        final sosLocation = docData['location'];
+        final sosStatus = docData['status'];
 
-      double distance = Geolocator.distanceBetween(
-        location.latitude,
-        location.longitude,
-        sosLocation['latitude'],
-      sosLocation['longitude'],
-      );
+        double distance = Geolocator.distanceBetween(
+          location.latitude,
+          location.longitude,
+          sosLocation['latitude'],
+          sosLocation['longitude'],
+        );
 
-      if (distance <= RADIUS) {
-        if (sosStatus == 'Handling') {
-          isHandled = true;
-          break;
-        } else {
-          nearbySOSList.add({
-            'id': doc.id,
-            ...docData,
-            'distanceDiff': distance,
-          });
+        if (distance <= RADIUS) {
+          if (sosStatus == 'Handling') {
+            isHandled = true;
+            break;
+          } else {
+            nearbySOSList.add({
+              'id': doc.id,
+              ...docData,
+              'distanceDiff': distance,
+            });
+          }
         }
       }
-    }
 
-    print("Nearby incidents: $nearbySOSList");
+      print("Nearby incidents: $nearbySOSList");
 
-    if (isHandled) {
-      return false;
-    } else {
-      // setNearbyIncidents(nearbyIncidentsList);
-      
-      return true;
-    }
-    } catch(err){
+      if (isHandled) {
+        return false;
+      } else {
+        // setNearbyIncidents(nearbyIncidentsList);
+
+        return true;
+      }
+    } catch (err) {
       print("Error fetching nearby incidents: $err");
       return false;
     }

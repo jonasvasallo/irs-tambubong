@@ -8,6 +8,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:irs_app/app_router.dart';
 import 'package:irs_app/constants.dart';
+import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/models/firebase_api.dart';
+import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/incident_container.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -55,6 +58,18 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     checkUserType();
+    subscribeToTopic();
+  }
+
+  void subscribeToTopic() async {
+    UserModel model = UserModel();
+    if (FirebaseAuth.instance.currentUser == null) {
+      return;
+    }
+    await model.updateFCMToken(
+      FirebaseAuth.instance.currentUser!.uid,
+      await FirebaseApi().initNotifications() ?? '',
+    );
   }
 
   void checkUserType() async {
@@ -66,13 +81,23 @@ class _HomePageState extends State<HomePage> {
     if (documentSnapshot.exists) {
       Map<String, dynamic> userDetails =
           documentSnapshot.data() as Map<String, dynamic>;
-
+      if (userDetails['disabled'] == true) {
+        Utilities.showSnackBar(
+          "Your account has been restricted from accessing the app.",
+          Colors.red,
+        );
+        FirebaseAuth.instance.signOut();
+        context.go('/login');
+        return;
+      }
       if (userDetails['user_type'] == 'resident') {
         AppRouter.initR = "/home";
       } else {
         AppRouter.initR = "/tanod_home";
         context.go('/tanod_home');
       }
+    } else {
+      context.go('/login');
     }
   }
 
@@ -188,7 +213,8 @@ class _HomePageState extends State<HomePage> {
                         String myDate = "test";
                         bool isLatest = i == 0;
 
-                        if (incident['status'] == 'Verifying' || incident['status'] == 'Rejected') {
+                        if (incident['status'] == 'Verifying' ||
+                            incident['status'] == 'Rejected') {
                           print("found incident with verifying status");
                           continue;
                         }
