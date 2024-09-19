@@ -46,18 +46,30 @@ class _InputFieldState extends State<InputField> {
     }
   }
 
+  
+
   @override
   Widget build(BuildContext context) {
     TextInputType keyboardType;
-
+    List<TextInputFormatter> inputFormatters = [
+      LengthLimitingTextInputFormatter((widget.inputType == "message") ? 300 : 150),
+    ];
     if (widget.inputType == "email") {
       keyboardType = TextInputType.emailAddress;
     } else if (widget.inputType == "number") {
       keyboardType = TextInputType.number;
     } else if (widget.inputType == "phone") {
       keyboardType = TextInputType.phone;
-    } else {
+    } else if(widget.inputType == "password"){
       keyboardType = TextInputType.text;
+    }
+    else if(widget.inputType == "name"){
+      keyboardType = TextInputType.name;
+      inputFormatters.add(FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')));
+    }
+    else {
+      keyboardType = TextInputType.text;
+      inputFormatters.add(FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),);
     }
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 8),
@@ -76,10 +88,7 @@ class _InputFieldState extends State<InputField> {
             height: 4,
           ),
           TextFormField(
-            inputFormatters: [
-              LengthLimitingTextInputFormatter(
-                  (widget.inputType == "message") ? 300 : 150),
-            ],
+            inputFormatters: inputFormatters,
             maxLength: (widget.inputType == "message") ? 300 : null,
             onChanged: (value) {
               if (widget.onChange != null) {

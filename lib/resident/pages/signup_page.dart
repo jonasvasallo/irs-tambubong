@@ -213,9 +213,12 @@ class _SignupPageState extends State<SignupPage> {
           Colors.red,
         );
       } else {
-        Utilities.showSnackBar("Unexpected error has occured", Colors.red);
+        Utilities.showSnackBar("Unexpected error has occured ${e}", Colors.red);
       }
       print('Sign Up failed ${e.message}');
+    } catch(err){
+      Utilities.showSnackBar("Unexpected error has occured ${err}", Colors.red);
+      print('Sign Up failed ${err}');
     }
     Navigator.of(dialogContext).pop();
   }
@@ -313,7 +316,7 @@ class _SignupPageState extends State<SignupPage> {
                         flex: 1,
                         child: InputField(
                           placeholder: "e.g. Saimon",
-                          inputType: "text",
+                          inputType: "name",
                           label: "First Name",
                           controller: _firstNameController,
                           validator: requiredValidator,
@@ -326,7 +329,7 @@ class _SignupPageState extends State<SignupPage> {
                         flex: 1,
                         child: InputField(
                           placeholder: "e.g. Bautista",
-                          inputType: "text",
+                          inputType: "name",
                           label: "Middle Name",
                           controller: _middleNameController,
                         ),
@@ -335,7 +338,7 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                   InputField(
                     placeholder: "e.g. Bello",
-                    inputType: "text",
+                    inputType: "name",
                     label: "Last Name",
                     controller: _lastNameController,
                     validator: requiredValidator,
@@ -513,14 +516,14 @@ class _SignupPageState extends State<SignupPage> {
                     },
                   ),
                   InputField(
-                    placeholder: "Min. 8 characters",
+                    placeholder: "Min. 12 characters",
                     inputType: "password",
                     label: "Password",
                     controller: _passwordController,
                     validator: InputValidator.passwordValidator,
                   ),
                   InputField(
-                    placeholder: "Min. 8 characters",
+                    placeholder: "Min. 12 characters",
                     inputType: "password",
                     label: "Confirm Password",
                     controller: _confirmPasswordController,

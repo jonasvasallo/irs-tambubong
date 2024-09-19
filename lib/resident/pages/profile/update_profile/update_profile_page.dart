@@ -344,7 +344,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                       flex: 1,
                       child: InputField(
                         placeholder: "e.g. Saimon",
-                        inputType: "text",
+                        inputType: "name",
                         label: "First Name",
                         controller: _firstNameController,
                         validator: InputValidator.requiredValidator,
@@ -357,7 +357,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                       flex: 1,
                       child: InputField(
                         placeholder: "e.g. Bautista",
-                        inputType: "text",
+                        inputType: "name",
                         label: "Middle Name",
                         controller: _middleNameController,
                       ),
@@ -366,7 +366,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                 ),
                 InputField(
                   placeholder: "e.g. Bello",
-                  inputType: "text",
+                  inputType: "name",
                   label: "Last Name",
                   controller: _lastNameController,
                   validator: InputValidator.requiredValidator,
@@ -427,7 +427,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                   height: 16,
                 ),
                 InputField(
-                  inputType: "text",
+                  inputType: "number",
                   placeholder: "e.g. 1084",
                   label: "House/Unit No.",
                   controller: _addressHouseController,

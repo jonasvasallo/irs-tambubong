@@ -32,6 +32,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   void changePassword() async {
     InputValidator.checkFormValidity(formKey, context);
+    if(_newPasswordController.text == _currentPasswordController.text){
+      Utilities.showSnackBar("New password must not be the same as your old password!", Colors.red);
+      return;
+    }
     BuildContext dialogContext = context;
     showDialog(
       context: context,

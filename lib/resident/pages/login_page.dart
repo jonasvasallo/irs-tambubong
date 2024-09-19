@@ -169,13 +169,16 @@ class _LoginPageState extends State<LoginPage> {
 
                 if (_isMounted) {
                   print("working 4");
-                  if (userDetails['user_type'] == 'resident') {
+                  if (userDetails['user_type'] == 'resident' || userDetails['user_type'] == 'moderator' || userDetails['user_type'] == 'admin') {
                     print("working 5");
                     AppRouter.initR = "/home";
                     context.go('/home');
-                  } else {
+                  } else if(userDetails['user_type'] == 'tanod'){
                     AppRouter.initR = "/tanod_home";
                     context.go('/tanod_home');
+                  } else{
+                    FirebaseAuth.instance.signOut();
+                    Utilities.showSnackBar("Unknown user type. Contact the admin if you think this is a problem. ", Colors.red);
                   }
                 }
               } else {

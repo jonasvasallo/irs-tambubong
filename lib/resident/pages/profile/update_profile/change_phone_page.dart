@@ -23,6 +23,8 @@ class _ChangePhonePageState extends State<ChangePhonePage> {
   final phoneNoKey = GlobalKey<FormState>();
   String _verificationId = "";
 
+  bool _isCodeSent = false;
+
   void changePhone() async {
     InputValidator.checkFormValidity(formKey, context);
     if (_verificationId.isEmpty) {
@@ -82,7 +84,47 @@ class _ChangePhonePageState extends State<ChangePhonePage> {
     } on FirebaseAuthException catch (ex) {
       Navigator.pop(dialogContext);
       print(ex);
-      Utilities.showSnackBar("${ex.message}", Colors.red);
+      Utilities.showSnackBar("Error: ${ex.message}", Colors.red);
+    }
+  }
+
+  void sendCode() async {
+    
+    InputValidator.checkFormValidity(phoneNoKey, context);
+    if (_phoneNoController.text.length < 13) {
+      print('phone no is less than 16 characters');
+      Utilities.showSnackBar("Phone Number format is incorrect", Colors.red);
+      return;
+    }
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseAuth.instance.verifyPhoneNumber(
+          verificationCompleted: (PhoneAuthCredential credential) async {},
+          verificationFailed: (FirebaseAuthException ex) {
+            print(ex);
+          },
+          codeSent: (String verificationId, int? resendToken) async {
+            setState(() {
+              _verificationId = verificationId;
+            });
+            print("ID after code sent: $_verificationId");
+          },
+          codeAutoRetrievalTimeout: (String verificationId) {},
+          phoneNumber: _phoneNoController.text.trim(),
+        );
+        setState(() {
+          _isCodeSent = true;
+        });
+      } else{
+        Utilities.showSnackBar("User is null", Colors.red);
+      }
+      print("phone send sms check");
+    } catch (err) {
+      Utilities.showSnackBar("${err}", Colors.red);
+      setState(() {
+        _isCodeSent = false;
+      });
     }
   }
 
@@ -119,7 +161,7 @@ class _ChangePhonePageState extends State<ChangePhonePage> {
                         key: phoneNoKey,
                         child: Expanded(
                           child: InputField(
-                            placeholder: "+63 9XX-XXX-XXXX",
+                            placeholder: "+639XXXXXXXXX",
                             inputType: "phone",
                             controller: _phoneNoController,
                             label: "New Phone Number",
@@ -133,41 +175,9 @@ class _ChangePhonePageState extends State<ChangePhonePage> {
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 8),
-                          child: InputButton(
+                          child: (_isCodeSent) ? Text("SMS sent", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold,)) : InputButton(
                             label: "SEND SMS",
-                            function: () async {
-                              InputValidator.checkFormValidity(
-                                  phoneNoKey, context);
-                              if (_phoneNoController.text.length < 16) {
-                                print('phone no is less than 16 characters');
-                                Utilities.showSnackBar(
-                                    "Phone Number format is incorrect",
-                                    Colors.red);
-                                return;
-                              }
-                              User? user = FirebaseAuth.instance.currentUser;
-                              if (user != null) {
-                                await FirebaseAuth.instance.verifyPhoneNumber(
-                                  verificationCompleted:
-                                      (PhoneAuthCredential credential) async {},
-                                  verificationFailed:
-                                      (FirebaseAuthException ex) {
-                                    print(ex);
-                                  },
-                                  codeSent: (String verificationId,
-                                      int? resendToken) async {
-                                    setState(() {
-                                      _verificationId = verificationId;
-                                    });
-                                    print(
-                                        "ID after code sent: $_verificationId");
-                                  },
-                                  codeAutoRetrievalTimeout:
-                                      (String verificationId) {},
-                                  phoneNumber: _phoneNoController.text.trim(),
-                                );
-                              }
-                            },
+                            function: sendCode,
                             large: false,
                           ),
                         ),

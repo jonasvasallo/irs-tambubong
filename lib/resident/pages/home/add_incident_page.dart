@@ -155,10 +155,14 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
   List<Uint8List> pickedImagesInBytes = [];
 
   _selectFile(bool imageFrom) async {
+    double _sizeKbs = 0;
+    final int maxSizeKbs = 1024;
+
     FilePickerResult? fileResult = await FilePicker.platform.pickFiles(
       withData: true,
       allowMultiple: true,
       type: FileType.image,
+      
     );
 
     if (fileResult != null) {
@@ -447,7 +451,7 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
                 ),
                 InputField(
                   placeholder: "Incident Title",
-                  inputType: "text",
+                  inputType: "name",
                   controller: titleController,
                   label: "Incident Title",
                   validator: InputValidator.requiredValidator,

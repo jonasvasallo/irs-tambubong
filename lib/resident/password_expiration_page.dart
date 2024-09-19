@@ -36,6 +36,12 @@ class _PasswordExpirationPageState extends State<PasswordExpirationPage> {
     if (!isValid) {
       return;
     }
+
+    if(_newPasswordController.text == _currentPasswordController.text){
+      Utilities.showSnackBar("New password cannot be the same as old password!", Colors.red);
+      return;
+    }
+
     BuildContext dialogContext = context;
     showDialog(
       context: context,
