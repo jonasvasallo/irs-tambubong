@@ -216,7 +216,7 @@ class _SignupPageState extends State<SignupPage> {
         Utilities.showSnackBar("Unexpected error has occured ${e}", Colors.red);
       }
       print('Sign Up failed ${e.message}');
-    } catch(err){
+    } catch (err) {
       Utilities.showSnackBar("Unexpected error has occured ${err}", Colors.red);
       print('Sign Up failed ${err}');
     }
@@ -535,6 +535,20 @@ class _SignupPageState extends State<SignupPage> {
                   SizedBox(
                     height: 8,
                   ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                            "By creating your account, you agree to Tambubong IRS's Terms of Service."),
+                      ),
+                      TextButton(
+                          onPressed: () {
+                            context.go('/signup/tos');
+                          },
+                          child: Text("Terms of Service")),
+                    ],
+                  ),
+                  SizedBox(height: 8),
                   InputButton(
                     label: "Create Account",
                     function: () {

@@ -27,10 +27,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.macOS:
         return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -45,7 +42,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyCU7lz9ijnL5SAak3_AUNW_WrytTq50LNE',
-    appId: '1:718420727642:web:ccbf254f1ebff716b24563',
+    appId: '1:718420727642:web:9bc4761537c7c895b24563',
     messagingSenderId: '718420727642',
     projectId: 'irs-capstone',
     authDomain: 'irs-capstone.firebaseapp.com',
@@ -55,7 +52,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyA9fgO5eWLJk9WsItUPKVAHz1Z8YwNZKFY',
-    appId: '1:718420727642:android:48a92228f3407090b24563',
+    appId: '1:718420727642:android:4a28c497d5a522f3b24563',
     messagingSenderId: '718420727642',
     projectId: 'irs-capstone',
     databaseURL: 'https://irs-capstone-default-rtdb.asia-southeast1.firebasedatabase.app',
@@ -69,16 +66,31 @@ class DefaultFirebaseOptions {
     projectId: 'irs-capstone',
     databaseURL: 'https://irs-capstone-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'irs-capstone.appspot.com',
+    androidClientId: '718420727642-cus5qpl0lpivvdmmi5t6d7s94futonv2.apps.googleusercontent.com',
+    iosClientId: '718420727642-qr18pem6hfm32i1k1dcloelu8pu0sgji.apps.googleusercontent.com',
     iosBundleId: 'com.example.irsApp',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyCuuQWq07L5d78qCOinKmXqxbb8Ro_CQtM',
-    appId: '1:718420727642:ios:e0a82b81197239d9b24563',
+    appId: '1:718420727642:ios:ac71adb19820bc50b24563',
     messagingSenderId: '718420727642',
     projectId: 'irs-capstone',
     databaseURL: 'https://irs-capstone-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'irs-capstone.appspot.com',
-    iosBundleId: 'com.example.irsApp.RunnerTests',
+    androidClientId: '718420727642-cus5qpl0lpivvdmmi5t6d7s94futonv2.apps.googleusercontent.com',
+    iosClientId: '718420727642-qr18pem6hfm32i1k1dcloelu8pu0sgji.apps.googleusercontent.com',
+    iosBundleId: 'com.example.irsApp',
   );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyCU7lz9ijnL5SAak3_AUNW_WrytTq50LNE',
+    appId: '1:718420727642:web:9bc4761537c7c895b24563',
+    messagingSenderId: '718420727642',
+    projectId: 'irs-capstone',
+    authDomain: 'irs-capstone.firebaseapp.com',
+    databaseURL: 'https://irs-capstone-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'irs-capstone.appspot.com',
+  );
+
 }

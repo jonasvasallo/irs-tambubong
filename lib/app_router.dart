@@ -19,6 +19,7 @@ import 'package:irs_app/resident/pages/profile/incidents/user_emergency_history_
 import 'package:irs_app/resident/pages/profile/incidents/user_emergency_review_page.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_incident_history_page.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_incident_review_page.dart';
+import 'package:irs_app/resident/pages/tos_page.dart';
 import 'package:irs_app/resident/password_expiration_page.dart';
 import 'package:irs_app/tanod/pages/history/tanod_response_details_page.dart';
 import 'package:irs_app/tanod/pages/history/tanod_response_history_page.dart';
@@ -79,6 +80,7 @@ class AppRouter {
       if (currentUser == null &&
           state.uri.path != '/login' &&
           state.uri.path != '/signup' &&
+          state.uri.path != '/signup/tos' &&
           state.uri.path != '/forgot-password') {
         return '/login';
       }
@@ -92,6 +94,9 @@ class AppRouter {
       GoRoute(
         path: '/signup',
         builder: (context, state) => SignupPage(),
+        routes: [
+          GoRoute(path: 'tos', builder: (context, state) => TosPage(),)
+        ]
       ),
       GoRoute(
         path: '/forgot-password',

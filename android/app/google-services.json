@@ -13,7 +13,20 @@
           "package_name": "com.example.irsApp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "718420727642-rsru6l5pnuklkcv787nrt7463s9c7u4e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.irsApp",
+            "certificate_hash": "bf435bbaa96c5c8301c9ba1c749d75189aa5c766"
+          }
+        },
+        {
+          "client_id": "718420727642-7euvqfm20o7g7l375fimgehl3p790bnj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA9fgO5eWLJk9WsItUPKVAHz1Z8YwNZKFY"
@@ -21,7 +34,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "718420727642-7euvqfm20o7g7l375fimgehl3p790bnj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "718420727642-1lk2q2tg4fg22806vhjdec2mhkvp56bc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.irsAdmin"
+              }
+            }
+          ]
         }
       }
     },
@@ -32,7 +57,12 @@
           "package_name": "com.example.irs_admin"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "718420727642-7euvqfm20o7g7l375fimgehl3p790bnj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA9fgO5eWLJk9WsItUPKVAHz1Z8YwNZKFY"
@@ -40,7 +70,55 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "718420727642-7euvqfm20o7g7l375fimgehl3p790bnj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "718420727642-1lk2q2tg4fg22806vhjdec2mhkvp56bc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.irsAdmin"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:718420727642:android:4a28c497d5a522f3b24563",
+        "android_client_info": {
+          "package_name": "com.example.irs_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "718420727642-7euvqfm20o7g7l375fimgehl3p790bnj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9fgO5eWLJk9WsItUPKVAHz1Z8YwNZKFY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "718420727642-7euvqfm20o7g7l375fimgehl3p790bnj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "718420727642-1lk2q2tg4fg22806vhjdec2mhkvp56bc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.irsAdmin"
+              }
+            }
+          ]
         }
       }
     },
@@ -51,7 +129,20 @@
           "package_name": "com.example.irs_capstone"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "718420727642-cus5qpl0lpivvdmmi5t6d7s94futonv2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.irs_capstone",
+            "certificate_hash": "bf435bbaa96c5c8301c9ba1c749d75189aa5c766"
+          }
+        },
+        {
+          "client_id": "718420727642-7euvqfm20o7g7l375fimgehl3p790bnj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA9fgO5eWLJk9WsItUPKVAHz1Z8YwNZKFY"
@@ -59,7 +150,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "718420727642-7euvqfm20o7g7l375fimgehl3p790bnj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "718420727642-1lk2q2tg4fg22806vhjdec2mhkvp56bc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.irsAdmin"
+              }
+            }
+          ]
         }
       }
     }

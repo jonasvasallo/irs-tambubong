@@ -62,6 +62,8 @@ dependencies:
   firebase_messaging: ^14.9.4
   timeline_tile: ^2.0.0
   shared_preferences: ^2.3.2
+  firebase_app_check: ^0.2.2+7
+  syncfusion_flutter_pdfviewer: ^27.1.48
 
 dev_dependencies:
   flutter_test:
