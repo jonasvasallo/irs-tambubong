@@ -3,6 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irs_app/navigation_menu.dart';
+import 'package:irs_app/resident/mfa_phone_page.dart';
+import 'package:irs_app/resident/mfa_page.dart';
 import 'package:irs_app/resident/pages/forgot_password_page.dart';
 import 'package:irs_app/resident/pages/home/add_incident_page.dart';
 import 'package:irs_app/resident/pages/home/home_page.dart';
@@ -17,6 +19,7 @@ import 'package:irs_app/resident/pages/profile/incidents/user_emergency_history_
 import 'package:irs_app/resident/pages/profile/incidents/user_emergency_review_page.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_incident_history_page.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_incident_review_page.dart';
+import 'package:irs_app/resident/password_expiration_page.dart';
 import 'package:irs_app/tanod/pages/history/tanod_response_details_page.dart';
 import 'package:irs_app/tanod/pages/history/tanod_response_history_page.dart';
 import 'package:irs_app/tanod/pages/profile/tanod_change_email_page.dart';
@@ -93,6 +96,22 @@ class AppRouter {
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: '/password-expired',
+        builder: (context, state) => PasswordExpirationPage(),
+      ),
+      GoRoute(
+        path: '/mfa',
+        builder: (context, state) => MfaPage(),
+        routes: [
+          GoRoute(
+            path: 'phone/:id',
+            builder: (context, state) => MfaPhonePage(
+              id: state.pathParameters['id'] ?? '',
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: '/verify/:verificationId/:phoneNumber',

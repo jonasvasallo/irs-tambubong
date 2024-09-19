@@ -517,9 +517,7 @@ class _SignupPageState extends State<SignupPage> {
                     inputType: "password",
                     label: "Password",
                     controller: _passwordController,
-                    validator: (value) => value != null && value.length < 8
-                        ? 'Enter min. 8 characters'
-                        : null,
+                    validator: InputValidator.passwordValidator,
                   ),
                   InputField(
                     placeholder: "Min. 8 characters",

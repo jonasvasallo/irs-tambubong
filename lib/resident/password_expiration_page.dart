@@ -8,14 +8,14 @@ import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/widgets/input_button.dart';
 import 'package:irs_app/widgets/input_field.dart';
 
-class ChangePasswordPage extends StatefulWidget {
-  const ChangePasswordPage({Key? key}) : super(key: key);
+class PasswordExpirationPage extends StatefulWidget {
+  const PasswordExpirationPage({Key? key}) : super(key: key);
 
   @override
-  State<ChangePasswordPage> createState() => _ChangePasswordPageState();
+  _PasswordExpirationPageState createState() => _PasswordExpirationPageState();
 }
 
-class _ChangePasswordPageState extends State<ChangePasswordPage> {
+class _PasswordExpirationPageState extends State<PasswordExpirationPage> {
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -31,7 +31,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   }
 
   void changePassword() async {
-    InputValidator.checkFormValidity(formKey, context);
+    print("password change function called");
+    final isValid = formKey.currentState!.validate();
+    if (!isValid) {
+      return;
+    }
     BuildContext dialogContext = context;
     showDialog(
       context: context,
@@ -62,14 +66,18 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               FieldValue.serverTimestamp(), // Update to current timestamp
         });
 
+        FirebaseAuth.instance.signOut();
+
         Navigator.pop(dialogContext);
         Utilities.showSnackBar("Successfully changed password", Colors.green);
-        Navigator.of(context).pop();
+        context.go('/login');
       }).catchError((error) {
         Navigator.pop(dialogContext);
         print(error);
         Utilities.showSnackBar("${error}", Colors.red);
       });
+    } else {
+      Utilities.showSnackBar("User is not logged in!", Colors.red);
     }
   }
 
@@ -77,51 +85,55 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Change Password"),
+        title: Text("Password Expired"),
         leading: TextButton(
           child: Icon(Icons.chevron_left),
           onPressed: () {
-            Navigator.of(context).pop();
+            FirebaseAuth.instance.signOut();
+            context.go('/login');
           },
         ),
       ),
-      body: Form(
-        key: formKey,
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            children: [
-              InputField(
-                label: "Current Password",
-                inputType: 'password',
-                placeholder: 'Old Password',
-                controller: _currentPasswordController,
-                validator: InputValidator.requiredValidator,
-              ),
-              InputField(
-                label: "New Password",
-                inputType: 'password',
-                placeholder: 'Must be atleast 12 characters',
-                controller: _newPasswordController,
-                validator: InputValidator.passwordValidator,
-              ),
-              InputField(
-                label: "Confirm New Password",
-                inputType: 'password',
-                placeholder: 'Must match with new password',
-                controller: _confirmPasswordController,
-                validator: (p0) =>
-                    (p0 != null && p0 != _newPasswordController.text.trim())
-                        ? 'Passwords must match'
-                        : '',
-              ),
-              InputButton(
-                  label: "UPDATE PASSWORD",
-                  function: () {
-                    changePassword();
-                  },
-                  large: true),
-            ],
+      body: SingleChildScrollView(
+        physics: NeverScrollableScrollPhysics(),
+        child: Form(
+          key: formKey,
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              children: [
+                InputField(
+                  label: "Current Password",
+                  inputType: 'password',
+                  placeholder: 'Old Password',
+                  controller: _currentPasswordController,
+                  validator: InputValidator.requiredValidator,
+                ),
+                InputField(
+                  label: "New Password",
+                  inputType: 'password',
+                  placeholder: 'Must be atleast 12 characters',
+                  controller: _newPasswordController,
+                  validator: InputValidator.passwordValidator,
+                ),
+                InputField(
+                  label: "Confirm New Password",
+                  inputType: 'password',
+                  placeholder: 'Must match with new password',
+                  controller: _confirmPasswordController,
+                  validator: (p0) =>
+                      (p0 != null && p0 != _newPasswordController.text.trim())
+                          ? 'Passwords must match'
+                          : null,
+                ),
+                InputButton(
+                    label: "UPDATE PASSWORD",
+                    function: () {
+                      changePassword();
+                    },
+                    large: true),
+              ],
+            ),
           ),
         ),
       ),

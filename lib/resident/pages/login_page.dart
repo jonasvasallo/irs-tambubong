@@ -12,6 +12,8 @@ import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/input_field.dart';
 import 'dart:async';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
 
@@ -26,6 +28,42 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   StreamSubscription<User?>? _authSubscription;
 
+  static const int maxAttempts = 3;
+  static const int twoMinutes = 2 * 60 * 1000;
+  static const String lastAttemptKey = 'lastAttempt';
+  static const String attemptCountKey = "attemptCount";
+
+  Future<void> checkLogin() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Get last login attempt and failed attempt count
+    final int? lastAttempt = prefs.getInt(lastAttemptKey);
+    final int attemptCount = prefs.getInt(attemptCountKey) ?? 0;
+
+    print("${attemptCount}, ${lastAttempt ?? 123}");
+
+    // If the user has failed 3 attempts and hasn't waited 2 minutes
+    if (attemptCount >= maxAttempts - 1 && lastAttempt != null) {
+      print("is this happening");
+      final int now = DateTime.now().millisecondsSinceEpoch;
+      final int difference = now - lastAttempt;
+
+      if (difference < twoMinutes) {
+        Utilities.showSnackBar(
+          "You have to wait 2 minutes before trying again",
+          Colors.red,
+        );
+        return;
+      } else {
+        // Reset attempts after 2 minutes have passed
+        await prefs.remove(lastAttemptKey);
+        await prefs.remove(attemptCountKey);
+      }
+    }
+
+    await signIn();
+  }
+
   Future<void> signIn() async {
     Utilities.showLoadingIndicator(context);
     final isValid = formKey.currentState!.validate();
@@ -33,11 +71,16 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.of(context).pop();
       return;
     }
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+
+      prefs.remove(attemptCountKey);
 
       UserModel model = new UserModel();
 
@@ -75,6 +118,32 @@ class _LoginPageState extends State<LoginPage> {
             return;
           } else {}
 
+          if (details['passwordLastUpdated'] == null ||
+              DateTime.now()
+                      .difference((details['passwordLastUpdated'] as Timestamp)
+                          .toDate())
+                      .inDays >=
+                  30) {
+            // Notify user to update their password
+            Utilities.showSnackBar(
+              "Your password is older than 30 days. Please update it.",
+              Colors.red,
+            );
+            Navigator.of(context).pop();
+            context.go('/password-expired');
+            return;
+
+            // You can also redirect the user to a password update page if needed
+            // context.go('/update-password');
+          }
+
+          if (details['mfa_enabled'] != null &&
+              details['mfa_enabled'] == true) {
+            Navigator.of(context).pop();
+            context.go('/mfa');
+            return;
+          }
+
           // Sign-in was successful, now listen for authentication state changes
           _authSubscription = FirebaseAuth.instance
               .authStateChanges()
@@ -84,7 +153,8 @@ class _LoginPageState extends State<LoginPage> {
               print('User is signed out');
             } else {
               await model.loginTimestamp(model.uId);
-              await model.updateFCMToken(model.uId, await FirebaseApi().initNotifications() ?? '');
+              await model.updateFCMToken(
+                  model.uId, await FirebaseApi().initNotifications() ?? '');
               print("working 1");
               DocumentSnapshot documentSnapshot = await FirebaseFirestore
                   .instance
@@ -116,20 +186,27 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'INVALID_LOGIN_CREDENTIALS') {
-        Utilities.showSnackBar('Invalid Login Credentials', Colors.red);
-      } else if (e.code == 'too-many-requests') {
-        Utilities.showSnackBar(
-            'Too many login attempts. Try again later.', Colors.red);
-      } else if (e.code == 'user-not-found') {
-        Utilities.showSnackBar(
-            'No user has been found with this credentials', Colors.red);
+      if (e.code == 'user-not-found' || e.code == 'wrong-password') {
+        // Increment failed attempt count
+        int attemptCount = prefs.getInt(attemptCountKey) ?? 0;
+        attemptCount += 1;
+
+        if (attemptCount >= maxAttempts) {
+          prefs.setInt(lastAttemptKey, DateTime.now().millisecondsSinceEpoch);
+          Utilities.showSnackBar(
+            "Too many failed attempts. Please wait two minutes.",
+            Colors.red,
+          );
+        } else {
+          prefs.setInt(attemptCountKey, attemptCount);
+          Utilities.showSnackBar(
+            "Invalid credentials. You have ${maxAttempts - attemptCount} attempts left.",
+            Colors.red,
+          );
+        }
       } else {
         Utilities.showSnackBar('${e.message}', Colors.red);
       }
-      // Handle sign-in errors
-      print('Sign-in failed: $e');
-      // You can display an error message or handle the error in another way
     }
     Navigator.of(context).pop();
   }
@@ -245,7 +322,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-                      onPressed: signIn,
+                      onPressed: checkLogin,
                       child: Text(
                         "Login",
                         style: TextStyle(

@@ -14,8 +14,39 @@ class InputValidator {
     return null; // Return null if validation succeeds
   };
 
-  static String? Function(String?)? passwordValidator = (value) =>
-      value != null && value.length < 8 ? 'Enter min. 8 characters' : null;
+  static String? Function(String?)? passwordValidator = (value) {
+    if (value == null || value.isEmpty) {
+      return 'Password cannot be empty';
+    }
+
+    if (value.length < 12) {
+      return 'Enter min. 12 characters';
+    }
+
+    final hasUppercase = value.contains(RegExp(r'[A-Z]'));
+    final hasLowercase = value.contains(RegExp(r'[a-z]'));
+    final hasDigits = value.contains(RegExp(r'\d'));
+    final hasSpecialCharacters =
+        value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+
+    if (!hasUppercase) {
+      return 'Password must contain at least one uppercase letter';
+    }
+
+    if (!hasLowercase) {
+      return 'Password must contain at least one lowercase letter';
+    }
+
+    if (!hasDigits) {
+      return 'Password must contain at least one digit';
+    }
+
+    if (!hasSpecialCharacters) {
+      return 'Password must contain at least one special character';
+    }
+
+    return null; // Password is strong
+  };
 
   static String? Function(String?)? phoneValidator = (value) {
     if (value == null || value.isEmpty) {

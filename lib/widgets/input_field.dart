@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:irs_app/constants.dart';
 
 class InputField extends StatefulWidget {
@@ -75,6 +76,11 @@ class _InputFieldState extends State<InputField> {
             height: 4,
           ),
           TextFormField(
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(
+                  (widget.inputType == "message") ? 300 : 150),
+            ],
+            maxLength: (widget.inputType == "message") ? 300 : null,
             onChanged: (value) {
               if (widget.onChange != null) {
                 widget.onChange!(value);

@@ -42,6 +42,8 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
 
   bool verified = false;
 
+  bool mfaEnabled = false;
+
   File? selectedImage;
 
   Image imageShown = Image.network(
@@ -150,6 +152,9 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
         lastUpdate = (userDetails['lastUpdated'] != null)
             ? userDetails['lastUpdated'] as Timestamp
             : null;
+        mfaEnabled = (userDetails['mfa_enabled'] != null)
+            ? userDetails['mfa_enabled']
+            : false;
       });
     } else {
       print('User details not found');
@@ -532,6 +537,37 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                             '/profile/update/email/${_emailAddressController.text}');
                       },
                       child: Text("Change"),
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: 8,
+                ),
+                Row(
+                  children: [
+                    Text("Two-factor Authentication"),
+                    SizedBox(
+                      width: 8,
+                    ),
+                    Switch(
+                      trackOutlineColor:
+                          WidgetStatePropertyAll(Colors.transparent),
+                      activeColor: Colors.green,
+                      activeTrackColor: Colors.greenAccent,
+                      inactiveThumbColor: Colors.grey,
+                      inactiveTrackColor: Color.fromARGB(255, 242, 243, 245),
+                      value: mfaEnabled,
+                      onChanged: (value) async {
+                        setState(() {
+                          mfaEnabled = !mfaEnabled;
+                        });
+                        await FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(FirebaseAuth.instance.currentUser!.uid)
+                            .update({
+                          'mfa_enabled': mfaEnabled,
+                        });
+                      },
                     ),
                   ],
                 ),
