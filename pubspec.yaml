@@ -64,10 +64,19 @@ dependencies:
   shared_preferences: ^2.3.2
   firebase_app_check: ^0.2.2+7
   syncfusion_flutter_pdfviewer: ^27.1.48
+  
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo.jpeg"
+  min_sdk_android: 21
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
