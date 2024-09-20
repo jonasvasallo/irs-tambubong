@@ -41,7 +41,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
   Timestamp? lastUpdate;
 
   bool verified = false;
-
+  bool sms_verified = false;
   bool mfaEnabled = false;
 
   File? selectedImage;
@@ -149,6 +149,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
         );
         verification_id = userDetails['verification_photo'] ?? '';
         verified = userDetails['verified'] ?? false;
+        sms_verified = userDetails['sms_verified'] ?? false;
         lastUpdate = (userDetails['lastUpdated'] != null)
             ? userDetails['lastUpdated'] as Timestamp
             : null;
@@ -558,6 +559,10 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                       inactiveTrackColor: Color.fromARGB(255, 242, 243, 245),
                       value: mfaEnabled,
                       onChanged: (value) async {
+                        if(!sms_verified){
+                          Utilities.showSnackBar("Verify your phone first by logging in again or changing your phone number before being able to turn on 2FA", Colors.red);
+                          return;
+                        }
                         setState(() {
                           mfaEnabled = !mfaEnabled;
                         });

@@ -104,6 +104,8 @@ class _MfaPageState extends State<MfaPage> with WidgetsBindingObserver {
                             verificationFailed: (FirebaseAuthException ex) {
                               print(ex);
                               Utilities.showSnackBar("${ex}", Colors.red);
+                              FirebaseAuth.instance.signOut();
+                              context.go('/login');
                             },
                             codeSent: (String verificationId,
                                 int? resendToken) async {

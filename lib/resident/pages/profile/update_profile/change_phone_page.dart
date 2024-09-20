@@ -71,6 +71,7 @@ class _ChangePhonePageState extends State<ChangePhonePage> {
           // Update phone number in database
           await model.users.doc(model.uId).update({
             'contact_no': _phoneNoController.text.trim(),
+            'sms_verified': true,
           });
           Navigator.pop(dialogContext);
           Utilities.showSnackBar("Successfully updated phone", Colors.green);
