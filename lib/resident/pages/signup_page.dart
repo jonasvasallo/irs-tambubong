@@ -257,6 +257,7 @@ class _SignupPageState extends State<SignupPage> {
       'profile_path':
           "https://firebasestorage.googleapis.com/v0/b/irs-capstone.appspot.com/o/default_profile.png?alt=media&token=10c91862-f50a-416c-adce-001a51b64985",
       'verification_photo': verification_photo,
+      'passwordLastUpdated' : FieldValue.serverTimestamp(),
     });
   }
 
