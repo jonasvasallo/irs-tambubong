@@ -99,6 +99,9 @@ class _LoginPageState extends State<LoginPage> {
             verificationCompleted: (PhoneAuthCredential credential) async {},
             verificationFailed: (FirebaseAuthException ex) {
               print(ex);
+              Utilities.showSnackBar("Phone verification failed: ${ex}", Colors.red);
+              context.go('/home');
+              return;
             },
             codeSent: (String verificationId, int? resendToken) async {
               context.go(
@@ -210,6 +213,9 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         Utilities.showSnackBar('${e.message}', Colors.red);
       }
+    } catch(err){
+      Utilities.showSnackBar('${err}', Colors.red);
+      print(err);
     }
     Navigator.of(context).pop();
   }

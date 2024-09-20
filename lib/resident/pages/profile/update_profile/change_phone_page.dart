@@ -92,7 +92,7 @@ class _ChangePhonePageState extends State<ChangePhonePage> {
     
     InputValidator.checkFormValidity(phoneNoKey, context);
     if (_phoneNoController.text.length < 13) {
-      print('phone no is less than 16 characters');
+      print('phone no is less than 13 characters');
       Utilities.showSnackBar("Phone Number format is incorrect", Colors.red);
       return;
     }
@@ -103,6 +103,8 @@ class _ChangePhonePageState extends State<ChangePhonePage> {
           verificationCompleted: (PhoneAuthCredential credential) async {},
           verificationFailed: (FirebaseAuthException ex) {
             print(ex);
+            Utilities.showSnackBar("OTP send failed: ${ex}", Colors.red);
+            return;
           },
           codeSent: (String verificationId, int? resendToken) async {
             setState(() {

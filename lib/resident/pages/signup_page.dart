@@ -181,7 +181,7 @@ class _SignupPageState extends State<SignupPage> {
 
       addUserDetails(
         userId,
-        _firstNameController.text.trim(),
+        _firstNameController.text,
         _middleNameController.text.trim(),
         _lastNameController.text.trim(),
         currentOption,
@@ -197,6 +197,9 @@ class _SignupPageState extends State<SignupPage> {
         verificationCompleted: (PhoneAuthCredential credential) async {},
         verificationFailed: (FirebaseAuthException ex) {
           print(ex);
+          Utilities.showSnackBar("Phone verification failed: ${ex}", Colors.red);
+          context.go('/login');
+          return;
         },
         codeSent: (String verificationId, int? resendToken) async {
           context.go(
@@ -400,7 +403,7 @@ class _SignupPageState extends State<SignupPage> {
                     height: 16,
                   ),
                   InputField(
-                    inputType: "text",
+                    inputType: "number",
                     placeholder: "e.g. 1084",
                     label: "House/Unit No.",
                     controller: _addressHouseController,

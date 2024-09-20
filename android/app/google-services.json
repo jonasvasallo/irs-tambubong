@@ -15,11 +15,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "718420727642-rsru6l5pnuklkcv787nrt7463s9c7u4e.apps.googleusercontent.com",
+          "client_id": "718420727642-itrfhidvrpjnvbbncp7cvq8rl5r3tl7f.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.irsApp",
-            "certificate_hash": "bf435bbaa96c5c8301c9ba1c749d75189aa5c766"
+            "certificate_hash": "27269a5808f1c82e7a4a45b94f47dd2c9f8f0f25"
           }
         },
         {
@@ -95,6 +95,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "718420727642-c1b4nr4v6gf6r5cs7t3th6i66por7s2m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.irs_app",
+            "certificate_hash": "bf435bbaa96c5c8301c9ba1c749d75189aa5c766"
+          }
+        },
+        {
+          "client_id": "718420727642-mut6lnim8bgpl5401l3edri8uitpkjh0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.irs_app",
+            "certificate_hash": "27269a5808f1c82e7a4a45b94f47dd2c9f8f0f25"
+          }
+        },
+        {
           "client_id": "718420727642-7euvqfm20o7g7l375fimgehl3p790bnj.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -136,6 +152,14 @@
           "android_info": {
             "package_name": "com.example.irs_capstone",
             "certificate_hash": "bf435bbaa96c5c8301c9ba1c749d75189aa5c766"
+          }
+        },
+        {
+          "client_id": "718420727642-umae00sa9kj749j9iiv8nl38o3mgqr57.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.irs_capstone",
+            "certificate_hash": "27269a5808f1c82e7a4a45b94f47dd2c9f8f0f25"
           }
         },
         {
