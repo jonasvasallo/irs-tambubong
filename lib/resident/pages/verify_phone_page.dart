@@ -83,18 +83,114 @@ class _VerifyPhonePageState extends State<VerifyPhonePage> {
       isResendButtonEnabled = false;
     });
 
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      verificationCompleted: (PhoneAuthCredential credential) async {},
-      verificationFailed: (FirebaseAuthException ex) {
-        print(ex);
+    BuildContext dialogContext = context;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        dialogContext = context;
+        return Center(
+          child: CircularProgressIndicator(
+            color: accentColor,
+          ),
+        );
       },
-      codeSent: (String verificationId, int? resendToken) async {
-        verifId = verificationId;
-        Utilities.showSnackBar("SMS sent successfully", Colors.green);
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {},
-      phoneNumber: phoneNumbah,
     );
+
+    try{
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        verificationCompleted: (PhoneAuthCredential credential) async {},
+        verificationFailed: (FirebaseAuthException ex) {
+          print(ex);
+          Utilities.showSnackBar("${ex.message}", Colors.red);
+        },
+        codeSent: (String verificationId, int? resendToken) async {
+          verifId = verificationId;
+          Utilities.showSnackBar("SMS sent successfully", Colors.green);
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {},
+        phoneNumber: phoneNumbah,
+      );
+      Navigator.pop(dialogContext);
+      return;
+    } catch(err){
+      Utilities.showSnackBar("${err}", Colors.red);
+    }
+    Navigator.pop(dialogContext);
+  }
+
+  void verifyPhone() async {
+    String codeSMS = firstNum.text.toString() +
+          secondNum.text.toString() +
+          thirdNum.text.toString() +
+          fourthNum.text.toString() +
+          fifthNum.text.toString() +
+          sixthNum.text.toString();
+    
+    if(codeSMS.length < 6){
+      Utilities.showSnackBar("Invalid code! Check if you entered the all the digits.", Colors.red);
+      return;
+    }
+    
+    BuildContext dialogContext = context;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        dialogContext = context;
+        return Center(
+          child: CircularProgressIndicator(
+            color: accentColor,
+          ),
+        );
+      },
+    );
+    try {
+      
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: verifId,
+        smsCode: codeSMS,
+      );
+      User? emailPasswordUser = FirebaseAuth.instance.currentUser;
+
+      if (emailPasswordUser != null) {
+        
+        UserCredential result =
+            await emailPasswordUser.linkWithCredential(credential);
+
+        if (result.user != null) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(result.user!.uid)
+              .update({
+            'verified': false,
+            'contact_no': phoneNumbah,
+            'sms_verified': true,
+          });
+          Navigator.pop(dialogContext);
+          FirebaseAuth.instance.signOut();
+          context.go('/login');
+          return;
+        } else {
+          print('Linking failed: User is null');
+          Utilities.showSnackBar("Error. Try restarting the app.", Colors.red);
+        }
+      }
+    } on FirebaseAuthException catch (ex) {
+      print(ex);
+      if (ex.code == 'invalid-verification-code') {
+        Utilities.showSnackBar("Wrong Code", Colors.red);
+      } else if (ex.code == 'session-expired') {
+        Utilities.showSnackBar(
+            "The SMS code has expired. Please re-send the verification code to try again",
+            Colors.red);
+      } else {
+        Utilities.showSnackBar("${ex.message}", Colors.red);
+      }
+    } catch (err) {
+      Utilities.showSnackBar("${err}", Colors.red);
+    }
+    Navigator.pop(dialogContext);
   }
 
   @override
@@ -298,61 +394,7 @@ class _VerifyPhonePageState extends State<VerifyPhonePage> {
                     height: 34,
                   ),
                   InputButton(
-                      label: "VERIFY",
-                      function: () async {
-                        try {
-                          String codeSMS = firstNum.text.toString() +
-                              secondNum.text.toString() +
-                              thirdNum.text.toString() +
-                              fourthNum.text.toString() +
-                              fifthNum.text.toString() +
-                              sixthNum.text.toString();
-                          PhoneAuthCredential credential =
-                              PhoneAuthProvider.credential(
-                            verificationId: verifId,
-                            smsCode: codeSMS,
-                          );
-                          User? emailPasswordUser =
-                              FirebaseAuth.instance.currentUser;
-
-                          if (emailPasswordUser != null) {
-                            // Link the email/password user with the phone number credential
-                            UserCredential result = await emailPasswordUser
-                                .linkWithCredential(credential);
-
-                            // Check if the linking was successful
-                            if (result.user != null) {
-                              // Update the 'verified' field in the user's document in Firestore
-                              await FirebaseFirestore.instance
-                                  .collection('users')
-                                  .doc(result.user!.uid)
-                                  .update({
-                                'verified': false,
-                                'contact_no': phoneNumbah,
-                                'sms_verified': true,
-                              });
-
-                              // Navigate to the home screen or any other destination
-                              context.go('/home');
-                            } else {
-                              print('Linking failed: User is null');
-                              // Handle failed linking, show an error message, etc.
-                            }
-                          }
-                        } on FirebaseAuthException catch (ex) {
-                          print(ex);
-                          if (ex.code == 'invalid-verification-code') {
-                            Utilities.showSnackBar("Wrong Code", Colors.red);
-                          } else if (ex.code == 'session-expired') {
-                            Utilities.showSnackBar(
-                                "The SMS code has expired. Please re-send the verification code to try again",
-                                Colors.red);
-                          } else {
-                            Utilities.showSnackBar("${ex.message}", Colors.red);
-                          }
-                        }
-                      },
-                      large: true),
+                      label: "VERIFY", function: verifyPhone, large: true),
                 ],
               ),
             ),
