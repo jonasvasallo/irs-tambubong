@@ -262,13 +262,13 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
     checkLocation(user_loc);
     print(user_loc);
     print(isInSelectedArea);
-    // if (!isInSelectedArea) {
-    //   Utilities.showSnackBar(
-    //     "You are not within the boundaries of Brgy. Tambubong!",
-    //     Colors.red,
-    //   );
-    //   return;
-    // }
+    if (!isInSelectedArea) {
+      Utilities.showSnackBar(
+        "You are not within the boundaries of Brgy. Tambubong!",
+        Colors.red,
+      );
+      return;
+    }
 
     BuildContext dialogContext = context;
     showDialog(

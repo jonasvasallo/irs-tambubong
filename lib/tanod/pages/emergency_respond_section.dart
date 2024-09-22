@@ -101,10 +101,6 @@ class _EmergencyRespondSectionState extends State<EmergencyRespondSection> {
         });
       }
 
-      await FirebaseFirestore.instance.collection('sos').doc(widget.id).update({
-        'responders': FirebaseAuth.instance.currentUser!.uid,
-      });
-
       await FirebaseFirestore.instance
           .collection('sos')
           .doc(widget.id)

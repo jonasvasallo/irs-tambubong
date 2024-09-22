@@ -94,6 +94,91 @@ class _LoginPageState extends State<LoginPage> {
           FirebaseAuth.instance.signOut();
           return;
         }
+
+                  /*
+          if (await model.deleteInactiveUser(model.uId)) {
+            Utilities.showSnackBar(
+              "Your account was deactivated. Please register a new one.",
+              Colors.red,
+            );
+            return;
+          } else {}
+          */
+
+          if (details['passwordLastUpdated'] == null ||
+              DateTime.now()
+                      .difference((details['passwordLastUpdated'] as Timestamp)
+                          .toDate())
+                      .inDays >=
+                  30) {
+            // Notify user to update their password
+            Utilities.showSnackBar(
+              "Your password is older than 30 days. Please update it.",
+              Colors.red,
+            );
+            Navigator.of(context).pop();
+            context.go('/password-expired');
+            return;
+          }
+
+          //MFA Functionality
+          /*
+          if (details['mfa_enabled'] != null &&
+              details['mfa_enabled'] == true) {
+            Navigator.of(context).pop();
+            context.go('/mfa');S
+            return;
+          }
+          */
+
+          // Sign-in was successful, now listen for authentication state changes
+          _authSubscription = FirebaseAuth.instance
+              .authStateChanges()
+              .listen((User? user) async {
+            if (user == null) {
+              // User is signed out
+              print('User is signed out');
+            } else {
+              await model.loginTimestamp(model.uId);
+              await model.updateFCMToken(
+                  model.uId, await FirebaseApi().initNotifications() ?? '');
+              print("working 1");
+              DocumentSnapshot documentSnapshot = await FirebaseFirestore
+                  .instance
+                  .collection('users')
+                  .doc(FirebaseAuth.instance.currentUser?.uid)
+                  .get();
+              print("working 2");
+              if (documentSnapshot.exists) {
+                Map<String, dynamic> userDetails =
+                    documentSnapshot.data() as Map<String, dynamic>;
+                print("working 3");
+
+                if (_isMounted) {
+                  print("working 4");
+                  if (userDetails['user_type'] == 'resident' ||
+                      userDetails['user_type'] == 'moderator' ||
+                      userDetails['user_type'] == 'admin') {
+                    print("working 5");
+                    AppRouter.initR = "/home";
+                    context.go('/home');
+                  } else if (userDetails['user_type'] == 'tanod') {
+                    AppRouter.initR = "/tanod_home";
+                    context.go('/tanod_home');
+                  } else {
+                    FirebaseAuth.instance.signOut();
+                    Utilities.showSnackBar(
+                        "Unknown user type. Contact the admin if you think this is a problem. ",
+                        Colors.red);
+                  }
+                }
+              } else {
+                Utilities.showSnackBar("User not in collection", Colors.red);
+              }
+            }
+          });
+        
+        /*
         if (details['sms_verified'] == false) {
           /*
           await FirebaseAuth.instance.verifyPhoneNumber(
@@ -199,6 +284,7 @@ class _LoginPageState extends State<LoginPage> {
             }
           });
         }
+        */
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' || e.code == 'wrong-password') {
