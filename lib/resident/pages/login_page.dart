@@ -95,11 +95,13 @@ class _LoginPageState extends State<LoginPage> {
           return;
         }
         if (details['sms_verified'] == false) {
+          /*
           await FirebaseAuth.instance.verifyPhoneNumber(
             verificationCompleted: (PhoneAuthCredential credential) async {},
             verificationFailed: (FirebaseAuthException ex) {
               print(ex);
-              Utilities.showSnackBar("Phone verification failed: ${ex}", Colors.red);
+              Utilities.showSnackBar(
+                  "Phone verification failed: ${ex}", Colors.red);
               context.go('/home');
               return;
             },
@@ -112,7 +114,9 @@ class _LoginPageState extends State<LoginPage> {
             codeAutoRetrievalTimeout: (String verificationId) {},
             phoneNumber: details['contact_no'],
           );
+          */
         } else {
+          /*
           if (await model.deleteInactiveUser(model.uId)) {
             Utilities.showSnackBar(
               "Your account was deactivated. Please register a new one.",
@@ -120,6 +124,7 @@ class _LoginPageState extends State<LoginPage> {
             );
             return;
           } else {}
+          */
 
           if (details['passwordLastUpdated'] == null ||
               DateTime.now()
@@ -135,17 +140,17 @@ class _LoginPageState extends State<LoginPage> {
             Navigator.of(context).pop();
             context.go('/password-expired');
             return;
-
-            // You can also redirect the user to a password update page if needed
-            // context.go('/update-password');
           }
 
+          //MFA Functionality
+          /*
           if (details['mfa_enabled'] != null &&
               details['mfa_enabled'] == true) {
             Navigator.of(context).pop();
-            context.go('/mfa');
+            context.go('/mfa');S
             return;
           }
+          */
 
           // Sign-in was successful, now listen for authentication state changes
           _authSubscription = FirebaseAuth.instance
@@ -172,16 +177,20 @@ class _LoginPageState extends State<LoginPage> {
 
                 if (_isMounted) {
                   print("working 4");
-                  if (userDetails['user_type'] == 'resident' || userDetails['user_type'] == 'moderator' || userDetails['user_type'] == 'admin') {
+                  if (userDetails['user_type'] == 'resident' ||
+                      userDetails['user_type'] == 'moderator' ||
+                      userDetails['user_type'] == 'admin') {
                     print("working 5");
                     AppRouter.initR = "/home";
                     context.go('/home');
-                  } else if(userDetails['user_type'] == 'tanod'){
+                  } else if (userDetails['user_type'] == 'tanod') {
                     AppRouter.initR = "/tanod_home";
                     context.go('/tanod_home');
-                  } else{
+                  } else {
                     FirebaseAuth.instance.signOut();
-                    Utilities.showSnackBar("Unknown user type. Contact the admin if you think this is a problem. ", Colors.red);
+                    Utilities.showSnackBar(
+                        "Unknown user type. Contact the admin if you think this is a problem. ",
+                        Colors.red);
                   }
                 }
               } else {
@@ -213,7 +222,7 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         Utilities.showSnackBar('${e.message}', Colors.red);
       }
-    } catch(err){
+    } catch (err) {
       Utilities.showSnackBar('${err}', Colors.red);
       print(err);
     }

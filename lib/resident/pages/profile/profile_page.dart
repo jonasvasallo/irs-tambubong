@@ -2,9 +2,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irs_app/constants.dart';
+import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
 import 'package:irs_app/widgets/profile_button.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
   final bool? reload;
@@ -79,7 +81,20 @@ class _ProfilePageState extends State<ProfilePage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               GestureDetector(
-                onTap: () => context.go('/profile/update'),
+                onTap: () async {
+                  SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+                  final int checkProfile = prefs.getInt("checkProfile") ?? 0;
+
+                  if (checkProfile > 100) {
+                    Utilities.showSnackBar(
+                        "You are only limited to check your profile 100 times in demo version!",
+                        Colors.red);
+                    return;
+                  }
+                  prefs.setInt("checkProfile", checkProfile + 1);
+                  context.go('/profile/update');
+                },
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [

@@ -90,7 +90,9 @@ class _HomePageState extends State<HomePage> {
         context.go('/login');
         return;
       }
-      if (userDetails['user_type'] == 'resident') {
+      if (userDetails['user_type'] == 'resident' ||
+          userDetails['user_type'] == 'moderator' ||
+          userDetails['user_type'] == 'admin') {
         AppRouter.initR = "/home";
       } else {
         AppRouter.initR = "/tanod_home";

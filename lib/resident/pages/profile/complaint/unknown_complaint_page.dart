@@ -74,6 +74,15 @@ class _UnknownComplaintPageState extends State<UnknownComplaintPage> {
         return;
       }
 
+      if (user_Details['complaint_count'] != null &&
+          user_Details['complaint_count'] > 5) {
+        Navigator.of(dialogContext).pop();
+        Utilities.showSnackBar(
+            "You can only file a complaint 5 times in demo version!",
+            Colors.red);
+        return;
+      }
+
       if (filePickerUtil.pickedImagesInBytes.length > 0) {
         imageUrls = await filePickerUtil.uploadMultipleFiles(
             "${user_Details['first_name']}-${user_Details['last_name']}_${FirebaseAuth.instance.currentUser!.uid}");
@@ -102,6 +111,12 @@ class _UnknownComplaintPageState extends State<UnknownComplaintPage> {
         'issued_at': FieldValue.serverTimestamp(),
         'issued_by': FirebaseAuth.instance.currentUser!.uid,
         'status': "Open",
+      });
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .update({
+        'complaint_count': FieldValue.increment(1),
       });
       Utilities.showSnackBar("Successfully filed complaint", Colors.green);
       Navigator.of(dialogContext).pop();

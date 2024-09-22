@@ -14,6 +14,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/input_validator.dart';
 import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
 import 'package:irs_app/widgets/input_field.dart';
 import 'package:maps_toolkit/maps_toolkit.dart' as map_tool;
@@ -162,10 +163,15 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
       withData: true,
       allowMultiple: true,
       type: FileType.image,
-      
     );
 
     if (fileResult != null) {
+      if (fileResult.files.length > 2) {
+        Utilities.showSnackBar(
+            "You can only select 2 files to be uploaded in demo version!",
+            Colors.red);
+        return;
+      }
       setState(() {
         selectFile = fileResult.files.first.name;
         fileResult.files.forEach((element) {
@@ -278,11 +284,23 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
       },
     );
 
-    if(!await checkIfIncidentIsHandled(user_loc)){
+    UserModel model = new UserModel();
+    Map<String, dynamic>? userDetails =
+        await model.getUserDetails(FirebaseAuth.instance.currentUser!.uid);
+
+    if (userDetails != null &&
+        userDetails['incident_count'] != null &&
+        userDetails['incident_count'] > 5) {
       Navigator.pop(dialogContext);
-      Utilities.showSnackBar("This incident is already being handled!", Colors.red);
+      Utilities.showSnackBar(
+          "You can only report five incidents in demo version!", Colors.red);
       return;
-      
+    }
+    if (!await checkIfIncidentIsHandled(user_loc)) {
+      Navigator.pop(dialogContext);
+      Utilities.showSnackBar(
+          "This incident is already being handled!", Colors.red);
+      return;
     }
 
     try {
@@ -315,6 +333,13 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
         'rated': false,
       });
 
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .update({
+        'incident_count': FieldValue.increment(1),
+      });
+
       Utilities.showSnackBar("Successfully posted incident", Colors.green);
       Navigator.pop(dialogContext);
       context.go("/home/incident/${newDocumentRef.id}");
@@ -325,22 +350,24 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
     }
   }
 
-  Future<bool> checkIfIncidentIsHandled (LatLng location) async {
+  Future<bool> checkIfIncidentIsHandled(LatLng location) async {
     Timestamp timestamp = Timestamp.now();
     final double RADIUS = 100; //in meters
     final int TIME_FRAME = 900000; // in miliseconds (15 minutes)
 
     final incidentsRef = FirebaseFirestore.instance.collection('incidents');
     final incidentTimestamp = timestamp.millisecondsSinceEpoch;
-    final lowerTimeThreshold = DateTime.fromMillisecondsSinceEpoch(incidentTimestamp - TIME_FRAME);
-    final upperTimeThreshold = DateTime.fromMillisecondsSinceEpoch(incidentTimestamp + TIME_FRAME);
+    final lowerTimeThreshold =
+        DateTime.fromMillisecondsSinceEpoch(incidentTimestamp - TIME_FRAME);
+    final upperTimeThreshold =
+        DateTime.fromMillisecondsSinceEpoch(incidentTimestamp + TIME_FRAME);
 
-    try{
+    try {
       QuerySnapshot snapshot = await incidentsRef
-        .where('timestamp', isGreaterThanOrEqualTo: lowerTimeThreshold)
-        .where('timestamp', isLessThanOrEqualTo: upperTimeThreshold)
-        .where('status', whereNotIn: ['Resolved', 'Closed', 'Rejected'])
-        .get();
+          .where('timestamp', isGreaterThanOrEqualTo: lowerTimeThreshold)
+          .where('timestamp', isLessThanOrEqualTo: upperTimeThreshold)
+          .where('status',
+              whereNotIn: ['Resolved', 'Closed', 'Rejected']).get();
 
       print('Number of documents found: ${snapshot.docs.length}');
 
@@ -348,42 +375,42 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
 
       bool isHandled = false;
 
-    for (var doc in snapshot.docs) {
-      final docData = doc.data() as Map<String, dynamic>;
-      final incidentLocation = docData['coordinates'];
-      final incidentStatus = docData['status'];
+      for (var doc in snapshot.docs) {
+        final docData = doc.data() as Map<String, dynamic>;
+        final incidentLocation = docData['coordinates'];
+        final incidentStatus = docData['status'];
 
-      double distance = Geolocator.distanceBetween(
-        location.latitude,
-        location.longitude,
-        incidentLocation['latitude'],
-      incidentLocation['longitude'],
-      );
+        double distance = Geolocator.distanceBetween(
+          location.latitude,
+          location.longitude,
+          incidentLocation['latitude'],
+          incidentLocation['longitude'],
+        );
 
-      if (distance <= RADIUS) {
-        if (incidentStatus == 'Handling') {
-          isHandled = true;
-          break;
-        } else {
-          nearbyIncidentsList.add({
-            'id': doc.id,
-            ...docData,
-            'distanceDiff': distance,
-          });
+        if (distance <= RADIUS) {
+          if (incidentStatus == 'Handling') {
+            isHandled = true;
+            break;
+          } else {
+            nearbyIncidentsList.add({
+              'id': doc.id,
+              ...docData,
+              'distanceDiff': distance,
+            });
+          }
         }
       }
-    }
 
-    print("Nearby incidents: $nearbyIncidentsList");
+      print("Nearby incidents: $nearbyIncidentsList");
 
-    if (isHandled) {
-      return false;
-    } else {
-      // setNearbyIncidents(nearbyIncidentsList);
-      
-      return true;
-    }
-    } catch(err){
+      if (isHandled) {
+        return false;
+      } else {
+        // setNearbyIncidents(nearbyIncidentsList);
+
+        return true;
+      }
+    } catch (err) {
       print("Error fetching nearby incidents: $err");
       return false;
     }

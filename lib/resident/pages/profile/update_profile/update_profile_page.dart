@@ -198,6 +198,19 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
         );
       },
     );
+    UserModel model = new UserModel();
+    Map<String, dynamic>? userDetails =
+        await model.getUserDetails(FirebaseAuth.instance.currentUser!.uid);
+
+    if (userDetails != null &&
+        userDetails['update_profile_count'] != null &&
+        userDetails['update_profile_count'] > 5) {
+      Navigator.pop(dialogContext);
+      Utilities.showSnackBar(
+          "You can only update your profile 5 times in demo version!",
+          Colors.red);
+      return;
+    }
     try {
       var urlDownload = profile_path;
 
@@ -223,6 +236,13 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
         _dropdownValue.trim(),
         urlDownload,
       );
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .update({
+        'update_profile_count': FieldValue.increment(1),
+      });
 
       Utilities.showSnackBar("Successfully Updated Details", Colors.green);
     } catch (ex) {
@@ -523,7 +543,10 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                     Text(_contactNoController.text.trim()),
                     TextButton(
                       onPressed: () {
-                        context.go('/profile/update/phone');
+                        Utilities.showSnackBar(
+                            "This is currently disabled in the demo version",
+                            Colors.red);
+                        //context.go('/profile/update/phone');
                       },
                       child: Text("Change"),
                     ),
@@ -559,8 +582,10 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                       inactiveTrackColor: Color.fromARGB(255, 242, 243, 245),
                       value: mfaEnabled,
                       onChanged: (value) async {
-                        if(!sms_verified){
-                          Utilities.showSnackBar("Verify your phone first by logging in again or changing your phone number before being able to turn on 2FA", Colors.red);
+                        if (!sms_verified) {
+                          Utilities.showSnackBar(
+                              "Verify your phone first by logging in again or changing your phone number before being able to turn on 2FA",
+                              Colors.red);
                           return;
                         }
                         setState(() {

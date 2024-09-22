@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/input_validator.dart';
 import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
 import 'package:irs_app/widgets/input_field.dart';
 
@@ -23,6 +24,18 @@ class _IncidentChatroomPageState extends State<IncidentChatroomPage> {
       return;
     }
 
+    UserModel model = new UserModel();
+    Map<String, dynamic>? userDetails =
+        await model.getUserDetails(FirebaseAuth.instance.currentUser!.uid);
+
+    if (userDetails != null &&
+        userDetails['chatroom_count'] != null &&
+        userDetails['chatroom_count'] > 40) {
+      Utilities.showSnackBar(
+          "You can only send 40 messages in demo version!", Colors.red);
+      return;
+    }
+
     try {
       await FirebaseFirestore.instance
           .collection('incidents')
@@ -34,6 +47,14 @@ class _IncidentChatroomPageState extends State<IncidentChatroomPage> {
         'timestamp': FieldValue.serverTimestamp(),
         'type': 'text',
       });
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .update({
+        'chatroom_count': FieldValue.increment(1),
+      });
+
       setState(() {
         _messageController.text = "";
       });

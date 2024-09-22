@@ -193,6 +193,8 @@ class _SignupPageState extends State<SignupPage> {
         photoUrl,
       );
 
+      //Phone Verification Code
+      /*
       await FirebaseAuth.instance.verifyPhoneNumber(
         verificationCompleted: (PhoneAuthCredential credential) async {},
         verificationFailed: (FirebaseAuthException ex) {
@@ -209,6 +211,9 @@ class _SignupPageState extends State<SignupPage> {
         codeAutoRetrievalTimeout: (String verificationId) {},
         phoneNumber: _contactNoController.text.toString(),
       );
+      */
+      await FirebaseAuth.instance.signOut();
+      context.go('/login');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
         Utilities.showSnackBar(
@@ -257,7 +262,16 @@ class _SignupPageState extends State<SignupPage> {
       'profile_path':
           "https://firebasestorage.googleapis.com/v0/b/irs-capstone.appspot.com/o/default_profile.png?alt=media&token=10c91862-f50a-416c-adce-001a51b64985",
       'verification_photo': verification_photo,
-      'passwordLastUpdated' : FieldValue.serverTimestamp(),
+      'passwordLastUpdated': FieldValue.serverTimestamp(),
+      'incident_count': 0,
+      'sos_count': 0,
+      'comment_count': 0,
+      'like_count': 0,
+      'update_profile_count': 0,
+      'complaint_count': 0,
+      'ticket_count': 0,
+      'witness_count': 0,
+      'chatroom_count': 0,
     });
   }
 

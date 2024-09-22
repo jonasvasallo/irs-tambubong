@@ -30,6 +30,18 @@ class UserModel {
     }
   }
 
+  Future<Map<String, dynamic>?> getUserDetails(String userId) async {
+    DocumentSnapshot userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+
+    if (userDoc.exists) {
+      print(userDoc.data());
+      return userDoc.data() as Map<String, dynamic>;
+    } else {
+      print('Document does not exist');
+    }
+  }
+
   Future<void> updateUserDetails(
     String docID,
     String first_name,
@@ -127,7 +139,7 @@ class UserModel {
     try {
       await users.doc(docID).update({
         'fcmToken': token,
-        'fcmLastFetched' : FieldValue.serverTimestamp(),
+        'fcmLastFetched': FieldValue.serverTimestamp(),
       });
       print('FCM Token updated successfully.');
     } catch (e) {

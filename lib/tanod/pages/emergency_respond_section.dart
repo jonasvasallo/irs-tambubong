@@ -83,15 +83,28 @@ class _EmergencyRespondSectionState extends State<EmergencyRespondSection> {
         urlDownload = await snapshot.ref.getDownloadURL();
       }
 
-      DocumentSnapshot emergencyDoc = await FirebaseFirestore.instance.collection('sos').doc(widget.id).get();
-      Map<String, dynamic>? emergencyData = emergencyDoc.data() as Map<String, dynamic>;
+      DocumentSnapshot emergencyDoc = await FirebaseFirestore.instance
+          .collection('sos')
+          .doc(widget.id)
+          .get();
+      Map<String, dynamic>? emergencyData =
+          emergencyDoc.data() as Map<String, dynamic>;
 
-      if(emergencyData.isNotEmpty && (emergencyData['status'] != 'Resolved' || emergencyData['status'] != 'Closed')){
-        await FirebaseFirestore.instance.collection('sos').doc(widget.id).update({
+      if (emergencyData.isNotEmpty &&
+          (emergencyData['status'] != 'Resolved' ||
+              emergencyData['status'] != 'Closed')) {
+        await FirebaseFirestore.instance
+            .collection('sos')
+            .doc(widget.id)
+            .update({
           'status': 'Resolved',
         });
       }
-      
+
+      await FirebaseFirestore.instance.collection('sos').doc(widget.id).update({
+        'responders': FirebaseAuth.instance.currentUser!.uid,
+      });
+
       await FirebaseFirestore.instance
           .collection('sos')
           .doc(widget.id)

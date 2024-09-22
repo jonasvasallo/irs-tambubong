@@ -78,6 +78,15 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
         return;
       }
 
+      if (user_Details['complaint_count'] != null &&
+          user_Details['complaint_count'] > 5) {
+        Navigator.of(dialogContext).pop();
+        Utilities.showSnackBar(
+            "You can only file a complaint 5 times in demo version!",
+            Colors.red);
+        return;
+      }
+
       if (filePickerUtil.pickedImagesInBytes.length > 0) {
         imageUrls = await filePickerUtil.uploadMultipleFiles(
             "${user_Details['first_name']}-${user_Details['last_name']}_${FirebaseAuth.instance.currentUser!.uid}");
@@ -108,6 +117,12 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
         'status': "Open",
       });
       Utilities.showSnackBar("Successfully filed complaint", Colors.green);
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .update({
+        'complaint_count': FieldValue.increment(1),
+      });
       Navigator.of(dialogContext).pop();
       context.go('/profile');
     } catch (ex) {
@@ -317,13 +332,21 @@ class _SearchUserPageState extends State<SearchUserPage> {
   getUserStream() async {
     var data = await FirebaseFirestore.instance
         .collection('users')
-        .where('user_type', isEqualTo: 'resident')
+        .where('user_type', whereIn: ['resident', 'tanod', 'moderator'])
         .orderBy('first_name')
         .get();
 
+    // Exclude the logged-in user from the results
+    List filteredResults = data.docs.where((userSnapshot) {
+      return userSnapshot.id !=
+          FirebaseAuth.instance.currentUser!.uid; // Exclude current user by UID
+    }).toList();
+
     setState(() {
-      _allResults = data.docs;
+      _allResults =
+          filteredResults; // Update the result list without current user
     });
+
     searchResultList();
   }
 

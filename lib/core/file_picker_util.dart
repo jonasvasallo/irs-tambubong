@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:irs_app/core/utilities.dart';
 
 class FilePickerUtil {
   int imageCounts = 0;
@@ -26,6 +27,14 @@ class FilePickerUtil {
     );
 
     if (fileResult != null) {
+      if (fileResult != null) {
+        if (fileResult.files.length > 2) {
+          Utilities.showSnackBar(
+              "You can only select 2 files to be uploaded in demo version!",
+              Colors.red);
+          return;
+        }
+      }
       selectFile = fileResult.files.first.name;
       setStateCallback();
       fileResult.files.forEach((element) {

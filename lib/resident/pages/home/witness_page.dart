@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:irs_app/core/input_validator.dart';
 import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
 import 'package:irs_app/widgets/input_field.dart';
 
@@ -51,6 +52,20 @@ class _WitnessPageState extends State<WitnessPage> {
       Utilities.showSnackBar("Please provide details", Colors.red);
       return;
     }
+
+    UserModel model = new UserModel();
+    Map<String, dynamic>? userDetails =
+        await model.getUserDetails(FirebaseAuth.instance.currentUser!.uid);
+
+    if (userDetails != null &&
+        userDetails['witness_count'] != null &&
+        userDetails['witness_count'] > 5) {
+      Utilities.showSnackBar(
+          "You can only send witness proof 5 times in demo version!",
+          Colors.red);
+      return;
+    }
+
     try {
       var urlDownload = "";
       if (selectedImage != null) {
@@ -69,6 +84,13 @@ class _WitnessPageState extends State<WitnessPage> {
         'user_id': FirebaseAuth.instance.currentUser?.uid,
         'details': _detailsController.text.trim(),
         'media_attachment': urlDownload,
+      });
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .update({
+        'witness_count': FieldValue.increment(1),
       });
 
       Utilities.showSnackBar(

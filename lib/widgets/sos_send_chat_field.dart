@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:irs_app/core/input_validator.dart';
 import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
 import 'package:irs_app/widgets/input_field.dart';
 
@@ -22,6 +23,17 @@ class _SosSendChatFieldState extends State<SosSendChatField> {
       Utilities.showSnackBar("Please enter a message", Colors.red);
       return;
     }
+    UserModel model = new UserModel();
+    Map<String, dynamic>? userDetails =
+        await model.getUserDetails(FirebaseAuth.instance.currentUser!.uid);
+
+    if (userDetails != null &&
+        userDetails['chatroom_count'] != null &&
+        userDetails['chatroom_count'] > 40) {
+      Utilities.showSnackBar(
+          "You can only send 40 messages in demo version!", Colors.red);
+      return;
+    }
 
     try {
       await FirebaseFirestore.instance
@@ -33,6 +45,12 @@ class _SosSendChatFieldState extends State<SosSendChatField> {
         'sent_by': FirebaseAuth.instance.currentUser?.uid,
         'timestamp': FieldValue.serverTimestamp(),
         'type': 'text',
+      });
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .update({
+        'chatroom_count': FieldValue.increment(1),
       });
       _messageController.clear();
     } catch (ex) {
