@@ -194,12 +194,13 @@ class _SignupPageState extends State<SignupPage> {
       );
 
       //Phone Verification Code
-      /*
+      
       await FirebaseAuth.instance.verifyPhoneNumber(
         verificationCompleted: (PhoneAuthCredential credential) async {},
         verificationFailed: (FirebaseAuthException ex) {
           print(ex);
           Utilities.showSnackBar("Phone verification failed: ${ex}", Colors.red);
+          FirebaseAuth.instance.signOut();
           context.go('/login');
           return;
         },
@@ -211,9 +212,7 @@ class _SignupPageState extends State<SignupPage> {
         codeAutoRetrievalTimeout: (String verificationId) {},
         phoneNumber: _contactNoController.text.toString(),
       );
-      */
-      await FirebaseAuth.instance.signOut();
-      context.go('/login');
+      
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
         Utilities.showSnackBar(
