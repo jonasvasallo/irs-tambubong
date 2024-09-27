@@ -5,6 +5,7 @@ import "package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart";
 import "package:go_router/go_router.dart";
 import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:irs_app/constants.dart";
+import "package:irs_app/core/utilities.dart";
 import "package:irs_app/widgets/input_button.dart";
 
 class TanodEmergencyDetailsPage extends StatefulWidget {
@@ -138,6 +139,69 @@ class _TanodEmergencyDetailsPageState extends State<TanodEmergencyDetailsPage> {
                                         Text(
                                           "${userDetails?['contact_no']}",
                                           style: CustomTextStyle.regular_minor,
+                                        ),
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Container(
+                                              padding: padding4,
+                                              decoration: BoxDecoration(
+                                                color:
+                                                    (userDetails?['verified'])
+                                                        ? Color.fromARGB(
+                                                            255, 224, 255, 225)
+                                                        : Color.fromARGB(
+                                                            255, 255, 224, 224),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                "${(userDetails?['verified']) ? 'Verified' : 'Not Verified'}",
+                                                style: TextStyle(
+                                                  color:
+                                                      (userDetails?['verified'])
+                                                          ? Color.fromARGB(
+                                                              255, 35, 255, 42)
+                                                          : Color.fromARGB(
+                                                              255, 184, 0, 0),
+                                                ),
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              width: 8,
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                if (userDetails?[
+                                                        'verification_photo'] ==
+                                                    null) {
+                                                  Utilities.showSnackBar(
+                                                      "This user does not have an ID attached!",
+                                                      Colors.red);
+                                                  return;
+                                                }
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (context) {
+                                                    return AlertDialog(
+                                                      content: Padding(
+                                                        padding: padding16,
+                                                        child: SizedBox(
+                                                          width: 200,
+                                                          height: 300,
+                                                          child: Image.network(
+                                                              userDetails?[
+                                                                  'verification_photo']),
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                );
+                                              },
+                                              child: Text("View ID"),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),

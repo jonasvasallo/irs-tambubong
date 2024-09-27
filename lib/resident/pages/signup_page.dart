@@ -86,6 +86,21 @@ class _SignupPageState extends State<SignupPage> {
   final String? Function(String?)? requiredValidator = (value) =>
       (value != null && value.length <= 0) ? 'This field is required' : null;
 
+  final String? Function(String?)? houseNoValidator = (value) {
+    if (value == null || value.isEmpty) {
+      return 'This field is required. Write "Purok" if none.';
+    }
+
+    final purokRegExp = RegExp(r'^[Pp]urok$');
+    final numberRegExp = RegExp(r'^\d+$');
+
+    if (!purokRegExp.hasMatch(value) && !numberRegExp.hasMatch(value)) {
+      return 'Please enter a valid house number.';
+    }
+
+    return null;
+  };
+
   String currentOption = sex_options[0];
 
   Future<bool> checkPhoneNumberExists(String phoneNumber) async {
@@ -194,12 +209,13 @@ class _SignupPageState extends State<SignupPage> {
       );
 
       //Phone Verification Code
-      
+
       await FirebaseAuth.instance.verifyPhoneNumber(
         verificationCompleted: (PhoneAuthCredential credential) async {},
         verificationFailed: (FirebaseAuthException ex) {
           print(ex);
-          Utilities.showSnackBar("Phone verification failed: ${ex}", Colors.red);
+          Utilities.showSnackBar(
+              "Phone verification failed: ${ex}", Colors.red);
           FirebaseAuth.instance.signOut();
           context.go('/login');
           return;
@@ -212,7 +228,6 @@ class _SignupPageState extends State<SignupPage> {
         codeAutoRetrievalTimeout: (String verificationId) {},
         phoneNumber: _contactNoController.text.toString(),
       );
-      
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
         Utilities.showSnackBar(
@@ -421,7 +436,7 @@ class _SignupPageState extends State<SignupPage> {
                     placeholder: "e.g. 1084",
                     label: "House/Unit No.",
                     controller: _addressHouseController,
-                    validator: requiredValidator,
+                    validator: houseNoValidator,
                   ),
                   StreamBuilder(
                     stream: streetsStream,

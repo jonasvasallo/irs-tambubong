@@ -210,6 +210,73 @@ class _TanodIncidentDetailsPageState extends State<TanodIncidentDetailsPage> {
                                       "${incidentDetails['user_details']['contact_no']}",
                                       style: CustomTextStyle.regular_minor,
                                     ),
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          padding: padding4,
+                                          decoration: BoxDecoration(
+                                            color:
+                                                (incidentDetails['user_details']
+                                                        ['verified'])
+                                                    ? Color.fromARGB(
+                                                        255, 224, 255, 225)
+                                                    : Color.fromARGB(
+                                                        255, 255, 224, 224),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            "${(incidentDetails['user_details']['verified']) ? 'Verified' : 'Not Verified'}",
+                                            style: TextStyle(
+                                              color: (incidentDetails[
+                                                          'user_details']
+                                                      ['verified'])
+                                                  ? Color.fromARGB(
+                                                      255, 35, 255, 42)
+                                                  : Color.fromARGB(
+                                                      255, 184, 0, 0),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: 8,
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            if (incidentDetails['user_details']
+                                                    ['verification_photo'] ==
+                                                null) {
+                                              Utilities.showSnackBar(
+                                                  "This user does not have an ID attached!",
+                                                  Colors.red);
+                                              return;
+                                            }
+                                            showDialog(
+                                              context: context,
+                                              builder: (context) {
+                                                return AlertDialog(
+                                                  content: Padding(
+                                                    padding: padding16,
+                                                    child: SizedBox(
+                                                      width: 200,
+                                                      height: 300,
+                                                      child: Image.network(
+                                                          incidentDetails[
+                                                                  'user_details']
+                                                              [
+                                                              'verification_photo']),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            );
+                                          },
+                                          child: Text("View ID"),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),
