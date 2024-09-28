@@ -308,7 +308,12 @@ class _TanodIncidentDetailsPageState extends State<TanodIncidentDetailsPage> {
                     InputButton(
                       label: "Respond",
                       function: () async {
-                        incident.update({'status': 'Handling'});
+                        incident.update({
+                          'status': 'Handling',
+                          'responders': FieldValue.arrayUnion(
+                              [FirebaseAuth.instance.currentUser!.uid]),
+                        });
+
                         await FirebaseFirestore.instance
                             .collection('incidents')
                             .doc(widget.id)

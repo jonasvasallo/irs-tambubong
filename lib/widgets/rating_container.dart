@@ -74,7 +74,7 @@ class _RatingContainerState extends State<RatingContainer> {
                         ),
                       ),
                       Text(
-                        "Response Time: ${widget.responseTime} mins",
+                        "Response Time: ${widget.responseTime}",
                       ),
                     ],
                   ),

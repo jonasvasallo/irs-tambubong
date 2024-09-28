@@ -248,7 +248,12 @@ class _TanodEmergencyDetailsPageState extends State<TanodEmergencyDetailsPage> {
                         await FirebaseFirestore.instance
                             .collection('sos')
                             .doc(widget.id)
-                            .update({'status': 'Handling'});
+                            .update({
+                          'status': 'Handling',
+                          'responders': FieldValue.arrayUnion(
+                              [FirebaseAuth.instance.currentUser!.uid]),
+                        });
+
                         await FirebaseFirestore.instance
                             .collection('sos')
                             .doc(widget.id)
