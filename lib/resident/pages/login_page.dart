@@ -165,12 +165,14 @@ class _LoginPageState extends State<LoginPage> {
 
                 if (_isMounted) {
                   print("working 4");
-                  if (userDetails['user_type'] == 'resident' ||
-                      userDetails['user_type'] == 'moderator' ||
-                      userDetails['user_type'] == 'admin') {
+                  if (userDetails['user_type'] == 'resident') {
                     print("working 5");
                     AppRouter.initR = "/home";
                     context.go('/home');
+                  } else if (userDetails['user_type'] == 'admin' ||
+                      userDetails['user_type'] == 'moderator') {
+                    AppRouter.initR = "/admin_home";
+                    context.go('/admin_home');
                   } else if (userDetails['user_type'] == 'tanod') {
                     AppRouter.initR = "/tanod_home";
                     context.go('/tanod_home');

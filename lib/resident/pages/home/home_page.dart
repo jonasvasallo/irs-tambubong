@@ -90,10 +90,12 @@ class _HomePageState extends State<HomePage> {
         context.go('/login');
         return;
       }
-      if (userDetails['user_type'] == 'resident' ||
-          userDetails['user_type'] == 'moderator' ||
-          userDetails['user_type'] == 'admin') {
+      if (userDetails['user_type'] == 'resident') {
         AppRouter.initR = "/home";
+      } else if (userDetails['user_type'] == 'moderator' ||
+          userDetails['user_type'] == 'admin') {
+        AppRouter.initR = "/admin_home";
+        context.go("/admin_home");
       } else {
         AppRouter.initR = "/tanod_home";
         context.go('/tanod_home');
@@ -276,7 +278,8 @@ class _HomePageState extends State<HomePage> {
                   .collection('incidents')
                   .where('timestamp',
                       isGreaterThanOrEqualTo: Timestamp.fromDate(oneWeekAgo))
-                  .snapshots(),
+                  .where('status',
+                      whereNotIn: ['Rejected', 'Verifying']).snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   return FutureBuilder<Set<Marker>>(

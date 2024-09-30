@@ -14,16 +14,16 @@ import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
 import 'package:irs_app/widgets/input_field.dart';
 
-class UpdateProfilePage extends StatefulWidget {
-  const UpdateProfilePage({Key? key}) : super(key: key);
+class AdminUpdateProfilePage extends StatefulWidget {
+  const AdminUpdateProfilePage({Key? key}) : super(key: key);
 
   @override
-  State<UpdateProfilePage> createState() => _UpdateProfilePageState();
+  State<AdminUpdateProfilePage> createState() => _AdminUpdateProfilePageState();
 }
 
 List<String> sex_options = ["Male", "Female"];
 
-class _UpdateProfilePageState extends State<UpdateProfilePage> {
+class _AdminUpdateProfilePageState extends State<AdminUpdateProfilePage> {
   UserModel model = new UserModel();
   final formKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
@@ -178,12 +178,6 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
       Utilities.showSnackBar("You must select the street first", Colors.red);
       return;
     }
-    if (lastUpdate != null && !checkIfSixMonthsPassed(lastUpdate!)) {
-      Utilities.showSnackBar(
-          "You can only update your profile every six months for security purposes. Submit a ticket if you think this is a problem.",
-          Colors.red);
-      return;
-    }
     InputValidator.checkFormValidity(formKey, context);
     BuildContext dialogContext = context;
     showDialog(
@@ -249,7 +243,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
       Utilities.showSnackBar("$ex", Colors.red);
     } finally {
       Navigator.pop(dialogContext);
-      context.go('/profile/true');
+      context.go('/admin_profile/true');
     }
   }
 
@@ -537,10 +531,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                     Text(_contactNoController.text.trim()),
                     TextButton(
                       onPressed: () {
-                        Utilities.showSnackBar(
-                            "This is currently disabled in the demo version",
-                            Colors.red);
-                        //context.go('/profile/update/phone');
+                        context.go('/admin_profile/update/phone');
                       },
                       child: Text("Change"),
                     ),
@@ -552,7 +543,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                     TextButton(
                       onPressed: () {
                         context.go(
-                            '/profile/update/email/${_emailAddressController.text}');
+                            '/admin_profile/update/email/${_emailAddressController.text}');
                       },
                       child: Text("Change"),
                     ),

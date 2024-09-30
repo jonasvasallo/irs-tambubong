@@ -2,6 +2,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:irs_app/admin/admin_map_screen.dart';
+import 'package:irs_app/admin/profile/admin_profile_page.dart';
+import 'package:irs_app/admin/emergency_details_page.dart';
+import 'package:irs_app/admin/emergency_requests_screen.dart';
+import 'package:irs_app/admin/profile/update_profile/change_email_page.dart';
+import 'package:irs_app/admin/profile/update_profile/change_password_page.dart';
+import 'package:irs_app/admin/profile/update_profile/change_phone_page.dart';
+import 'package:irs_app/admin/profile/update_profile/update_profile_page.dart';
+import 'package:irs_app/admin/profile/update_profile/verify_change_page.dart';
+import 'package:irs_app/admin_navigation_menu.dart';
 import 'package:irs_app/navigation_menu.dart';
 import 'package:irs_app/resident/mfa_phone_page.dart';
 import 'package:irs_app/resident/mfa_page.dart';
@@ -71,6 +81,15 @@ class AppRouter {
   static final _rootNavigatorTanodHome =
       GlobalKey<NavigatorState>(debugLabel: "shellTanodHome");
 
+  static final _rootNavigatorAdminHome =
+      GlobalKey<NavigatorState>(debugLabel: "shellAdminHome");
+
+  static final _rootNavigatorAdminEmergency =
+      GlobalKey<NavigatorState>(debugLabel: "shellAdminEmergency");
+
+  static final _rootNavigatorAdminProfile =
+      GlobalKey<NavigatorState>(debugLabel: "shellAdminProfile");
+
   static GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     redirect: (context, state) async {
@@ -92,12 +111,14 @@ class AppRouter {
         builder: (context, state) => LoginPage(),
       ),
       GoRoute(
-        path: '/signup',
-        builder: (context, state) => SignupPage(),
-        routes: [
-          GoRoute(path: 'tos', builder: (context, state) => TosPage(),)
-        ]
-      ),
+          path: '/signup',
+          builder: (context, state) => SignupPage(),
+          routes: [
+            GoRoute(
+              path: 'tos',
+              builder: (context, state) => TosPage(),
+            )
+          ]),
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => ForgotPasswordPage(),
@@ -123,6 +144,74 @@ class AppRouter {
         builder: (context, state) => VerifyPhonePage(
             verificationId: state.pathParameters["verificationId"]!,
             phoneNumber: state.pathParameters["phoneNumber"]!),
+      ),
+      StatefulShellRoute.indexedStack(
+        branches: <StatefulShellBranch>[
+          StatefulShellBranch(
+            navigatorKey: _rootNavigatorAdminHome,
+            routes: [
+              GoRoute(
+                path: '/admin_home',
+                name: 'Admin Home',
+                builder: (context, state) => AdminMapScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'emergency/:id',
+                    builder: (context, state) => EmergencyDetailsPage(
+                        id: state.pathParameters['id'] ?? ''),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _rootNavigatorAdminProfile,
+            routes: [
+              GoRoute(
+                path: '/admin_profile',
+                name: 'Admin Profile',
+                builder: (context, state) => AdminProfilePage(),
+                routes: [
+                  GoRoute(
+                    path: 'update',
+                    builder: (context, state) => AdminUpdateProfilePage(),
+                    routes: [
+                      GoRoute(
+                        path: 'email/:email',
+                        builder: (context, state) => AdminChangeEmailPage(
+                            email: state.pathParameters['email']!),
+                      ),
+                      GoRoute(
+                        path: 'phone',
+                        builder: (context, state) => AdminChangePhonePage(),
+                      ),
+                      GoRoute(
+                        path: 'change-auth/:type',
+                        builder: (context, state) => AdminVerifyChangePage(
+                            type: state.pathParameters["type"]!),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'change-password',
+                    builder: (context, state) => AdminChangePasswordPage(),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: '/admin_profile/:reload', // Parameterized route
+                builder: (context, state) {
+                  final String reloadParam =
+                      state.pathParameters['reload'] ?? '';
+                  final bool reload = reloadParam.toLowerCase() == 'true';
+                  return AdminProfilePage(reload: reload);
+                },
+              ),
+            ],
+          ),
+        ],
+        builder: (context, state, navigationShell) =>
+            AdminNavigationMenu(navigationShell: navigationShell),
       ),
       StatefulShellRoute.indexedStack(
         branches: <StatefulShellBranch>[
