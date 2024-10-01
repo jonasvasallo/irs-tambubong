@@ -171,6 +171,7 @@ class _LoginPageState extends State<LoginPage> {
                     context.go('/home');
                   } else if (userDetails['user_type'] == 'admin' ||
                       userDetails['user_type'] == 'moderator') {
+                        await FirebaseApi().initSOSNotification();
                     AppRouter.initR = "/admin_home";
                     context.go('/admin_home');
                   } else if (userDetails['user_type'] == 'tanod') {

@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -226,6 +227,8 @@ class _TanodHomePageState extends State<TanodHomePage> {
               leading: Icon(Icons.logout_outlined),
               title: Text("Logout"),
               onTap: () {
+                FirebaseMessaging.instance.unsubscribeFromTopic('incident-alert');
+                FirebaseMessaging.instance.unsubscribeFromTopic('sos-alert');
                 FirebaseAuth.instance.signOut();
                 context.go('/login');
               },

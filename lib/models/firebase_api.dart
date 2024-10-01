@@ -18,4 +18,14 @@ class FirebaseApi {
       return '';
     }
   }
+
+  Future<int> initSOSNotification() async{
+    if(Platform.isAndroid){
+      await _firebaseMessaging.requestPermission();
+      await _firebaseMessaging.subscribeToTopic("sos-alert");
+      return 1;
+    }
+
+    return 0;
+  }
 }

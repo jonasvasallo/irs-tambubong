@@ -94,6 +94,7 @@ class _HomePageState extends State<HomePage> {
         AppRouter.initR = "/home";
       } else if (userDetails['user_type'] == 'moderator' ||
           userDetails['user_type'] == 'admin') {
+        await FirebaseApi().initSOSNotification();
         AppRouter.initR = "/admin_home";
         context.go("/admin_home");
       } else {

@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irs_app/constants.dart';
@@ -136,6 +137,8 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
                 icon: Icon(Icons.logout_outlined),
                 iconColor: Colors.white,
                 action: () {
+                  FirebaseMessaging.instance.unsubscribeFromTopic('incident-alert');
+                  FirebaseMessaging.instance.unsubscribeFromTopic('sos-alert');
                   FirebaseAuth.instance.signOut();
 
                   context.go('/login');
