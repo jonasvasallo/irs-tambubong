@@ -355,11 +355,12 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
         await model.getUserDetails(FirebaseAuth.instance.currentUser!.uid);
 
     if (userDetails != null &&
+        userDetails['verified'] == false &&
         userDetails['incident_count'] != null &&
-        userDetails['incident_count'] > 5) {
+        userDetails['incident_count'] >= 1) {
       Navigator.pop(dialogContext);
       Utilities.showSnackBar(
-          "You can only report five incidents in demo version!", Colors.red);
+          "You can only report once while being unverified!", Colors.red);
       return;
     }
     if (!await checkIfIncidentIsHandled(user_loc)) {

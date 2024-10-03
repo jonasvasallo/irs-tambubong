@@ -83,17 +83,6 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               GestureDetector(
                 onTap: () async {
-                  SharedPreferences prefs =
-                      await SharedPreferences.getInstance();
-                  final int checkProfile = prefs.getInt("checkProfile") ?? 0;
-
-                  if (checkProfile > 100) {
-                    Utilities.showSnackBar(
-                        "You are only limited to check your profile 100 times in demo version!",
-                        Colors.red);
-                    return;
-                  }
-                  prefs.setInt("checkProfile", checkProfile + 1);
                   context.go('/profile/update');
                 },
                 child: Row(
@@ -173,7 +162,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 icon: Icon(Icons.logout_outlined),
                 iconColor: Colors.white,
                 action: () {
-                  FirebaseMessaging.instance.unsubscribeFromTopic('incident-alert');
+                  FirebaseMessaging.instance
+                      .unsubscribeFromTopic('incident-alert');
                   FirebaseMessaging.instance.unsubscribeFromTopic('sos-alert');
                   FirebaseAuth.instance.signOut();
 

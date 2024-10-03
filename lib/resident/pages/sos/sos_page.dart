@@ -128,11 +128,12 @@ class _SosPageState extends State<SosPage> {
       },
     );
 
-    // if(!await checkIfEmergencyIsHandled(user_loc)){
-    //   Navigator.pop(dialogContext);
-    //   Utilities.showSnackBar("This incident is already being handled!", Colors.red);
-    //   return;
-    // }
+    if (!await checkIfEmergencyIsHandled(user_loc)) {
+      Navigator.pop(dialogContext);
+      Utilities.showSnackBar(
+          "This incident is already being handled!", Colors.red);
+      return;
+    }
 
     try {
       var urlDownload = "";
@@ -164,6 +165,13 @@ class _SosPageState extends State<SosPage> {
           'longitude': longitude,
         },
         'rated': false,
+      });
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .update({
+        'sos_count': FieldValue.increment(1),
       });
 
       await sendAlertNotification();
@@ -376,6 +384,22 @@ class _SosPageState extends State<SosPage> {
                                     TextButton(
                                       onPressed: () async {
                                         Navigator.pop(context);
+
+                                        UserModel model = new UserModel();
+                                        Map<String, dynamic>? userDetails =
+                                            await model.getUserDetails(
+                                                FirebaseAuth
+                                                    .instance.currentUser!.uid);
+
+                                        if (userDetails != null &&
+                                            userDetails['verified'] == false &&
+                                            userDetails['sos_count'] != null &&
+                                            userDetails['sos_count'] >= 1) {
+                                          Utilities.showSnackBar(
+                                              "You already used your free report! Create a ticket to inquire about your verification.",
+                                              Colors.red);
+                                          return;
+                                        }
 
                                         if (!await pickVideoFromCamera()) {
                                           Utilities.showSnackBar(

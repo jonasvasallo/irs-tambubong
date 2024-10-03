@@ -43,19 +43,6 @@ class _HelpPageState extends State<HelpPage> {
       },
     );
 
-    UserModel model = new UserModel();
-    Map<String, dynamic>? userDetails =
-        await model.getUserDetails(FirebaseAuth.instance.currentUser!.uid);
-
-    if (userDetails != null &&
-        userDetails['ticket_count'] != null &&
-        userDetails['ticket_count'] > 5) {
-      Navigator.pop(dialogContext);
-      Utilities.showSnackBar(
-          "You can only file 5 tickets in demo version!", Colors.red);
-      return;
-    }
-
     try {
       await FirebaseFirestore.instance.collection('help').add({
         'title': _titleController.text.trim(),
@@ -63,13 +50,6 @@ class _HelpPageState extends State<HelpPage> {
         'timestamp': FieldValue.serverTimestamp(),
         'created_by': FirebaseAuth.instance.currentUser!.uid,
         'status': 'Open',
-      });
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(FirebaseAuth.instance.currentUser!.uid)
-          .update({
-        'ticket_count': FieldValue.increment(1),
       });
 
       Utilities.showSnackBar("Successfully submitted ticket", Colors.green);

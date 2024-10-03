@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/utilities.dart';
+import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/comment_widget.dart';
 import 'package:irs_app/widgets/custom_appbar.dart';
 import 'package:irs_app/widgets/input_button.dart';
@@ -48,6 +49,15 @@ class NewsPartSection extends StatefulWidget {
 class _NewsPartSectionState extends State<NewsPartSection> {
   void likeNews() async {
     try {
+      UserModel model = new UserModel();
+      Map<String, dynamic>? userDetails =
+          await model.getUserDetails(FirebaseAuth.instance.currentUser!.uid);
+
+      if (userDetails != null && userDetails['verified'] == false) {
+        Utilities.showSnackBar("You must be verified to do this!", Colors.red);
+        return;
+      }
+
       await FirebaseFirestore.instance
           .collection('news')
           .doc(widget.id)
@@ -197,9 +207,7 @@ class _NewsPartSectionState extends State<NewsPartSection> {
                           );
                         }
                         if (!snapshot.hasData || snapshot.data == null) {
-                          return Center(
-                            
-                          );
+                          return Center();
                         }
                         final likes = snapshot.data!.docs;
 
@@ -262,9 +270,7 @@ class _NewsPartSectionState extends State<NewsPartSection> {
                         );
                       }
                       if (!snapshot.hasData || snapshot.data == null) {
-                        return Center(
-                          
-                        );
+                        return Center();
                       }
                       List<Widget> commentWidgets = [];
                       final comments = snapshot.data!.docs.toList();
@@ -306,12 +312,14 @@ class _SendCommentSectionState extends State<SendCommentSection> {
     }
 
     try {
-      await FirebaseFirestore.instance
-          .collection('news')
-          .doc(widget.id)
-          .update({
-        'comment_count': FieldValue.increment(1),
-      });
+      UserModel model = new UserModel();
+      Map<String, dynamic>? userDetails =
+          await model.getUserDetails(FirebaseAuth.instance.currentUser!.uid);
+
+      if (userDetails != null && userDetails['verified'] == false) {
+        Utilities.showSnackBar("You must be verified to do this!", Colors.red);
+        return;
+      }
       await FirebaseFirestore.instance
           .collection('news')
           .doc(widget.id)

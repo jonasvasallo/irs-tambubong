@@ -198,19 +198,6 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
         );
       },
     );
-    UserModel model = new UserModel();
-    Map<String, dynamic>? userDetails =
-        await model.getUserDetails(FirebaseAuth.instance.currentUser!.uid);
-
-    if (userDetails != null &&
-        userDetails['update_profile_count'] != null &&
-        userDetails['update_profile_count'] > 5) {
-      Navigator.pop(dialogContext);
-      Utilities.showSnackBar(
-          "You can only update your profile 5 times in demo version!",
-          Colors.red);
-      return;
-    }
     try {
       var urlDownload = profile_path;
 
@@ -537,10 +524,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                     Text(_contactNoController.text.trim()),
                     TextButton(
                       onPressed: () {
-                        Utilities.showSnackBar(
-                            "This is currently disabled in the demo version",
-                            Colors.red);
-                        //context.go('/profile/update/phone');
+                        context.go('/profile/update/phone');
                       },
                       child: Text("Change"),
                     ),

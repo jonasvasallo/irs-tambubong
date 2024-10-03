@@ -29,10 +29,11 @@ class _IncidentChatroomPageState extends State<IncidentChatroomPage> {
         await model.getUserDetails(FirebaseAuth.instance.currentUser!.uid);
 
     if (userDetails != null &&
+        userDetails['verified'] == false &&
         userDetails['chatroom_count'] != null &&
         userDetails['chatroom_count'] > 40) {
       Utilities.showSnackBar(
-          "You can only send 40 messages in demo version!", Colors.red);
+          "You can only send 40 messages while being unverified!", Colors.red);
       return;
     }
 

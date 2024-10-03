@@ -74,12 +74,10 @@ class _UnknownComplaintPageState extends State<UnknownComplaintPage> {
         return;
       }
 
-      if (user_Details['complaint_count'] != null &&
-          user_Details['complaint_count'] > 5) {
+      if (user_Details['verified'] == false) {
         Navigator.of(dialogContext).pop();
         Utilities.showSnackBar(
-            "You can only file a complaint 5 times in demo version!",
-            Colors.red);
+            "You can only file a complaint once you are verified!", Colors.red);
         return;
       }
 

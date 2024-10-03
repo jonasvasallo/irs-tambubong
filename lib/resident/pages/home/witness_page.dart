@@ -58,10 +58,11 @@ class _WitnessPageState extends State<WitnessPage> {
         await model.getUserDetails(FirebaseAuth.instance.currentUser!.uid);
 
     if (userDetails != null &&
+        userDetails['verified'] == false &&
         userDetails['witness_count'] != null &&
         userDetails['witness_count'] > 5) {
       Utilities.showSnackBar(
-          "You can only send witness proof 5 times in demo version!",
+          "You can only send witness proof 5 times while being unverified!",
           Colors.red);
       return;
     }
