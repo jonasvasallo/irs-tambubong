@@ -155,47 +155,115 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
   String selectFile = "";
   List<Uint8List> pickedImagesInBytes = [];
 
-  _selectFile(bool imageFrom) async {
-    double _sizeKbs = 0;
-    final int maxSizeKbs = 1024;
+  _selectFile() async {
+    print(pickedImagesInBytes.length);
+    if (pickedImagesInBytes.length >= 3) {
+      Utilities.showSnackBar(
+          "You can only have 3 photos attached!", Colors.red);
+      return;
+    }
 
-    FilePickerResult? fileResult = await FilePicker.platform.pickFiles(
-      withData: true,
-      allowMultiple: true,
-      type: FileType.image,
+    // Show dialog to choose between camera or gallery
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Wrap(
+          children: [
+            ListTile(
+              leading: Icon(Icons.camera_alt),
+              title: Text('Take a photo'),
+              onTap: () async {
+                Navigator.of(context).pop();
+                await _pickFromCamera();
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_library),
+              title: Text('Pick from gallery'),
+              onTap: () async {
+                Navigator.of(context).pop();
+                await _pickFromGallery();
+              },
+            ),
+          ],
+        );
+      },
     );
+  }
 
-    if (fileResult != null) {
-      if (fileResult.files.length > 2) {
+  _pickFromCamera() async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+
+    if (image != null) {
+      if (pickedImagesInBytes.length >= 3) {
         Utilities.showSnackBar(
-            "You can only select 2 files to be uploaded in demo version!",
-            Colors.red);
+            "You can only have 3 photos attached!", Colors.red);
         return;
       }
-      setState(() {
-        selectFile = fileResult.files.first.name;
-        fileResult.files.forEach((element) {
-          setState(() {
-            pickedImagesInBytes.add(element.bytes!);
-            media_photos.add(
-              Padding(
-                padding: const EdgeInsets.only(right: 8, left: 8),
-                child: Container(
-                  width: 300,
-                  height: 150,
-                  color: Colors.black,
-                  child: Image.memory(element.bytes!),
-                ),
+
+      image.readAsBytes().then((bytes) {
+        setState(() {
+          pickedImagesInBytes.add(bytes);
+          media_photos.add(
+            Padding(
+              padding: const EdgeInsets.only(right: 8, left: 8),
+              child: Container(
+                width: 300,
+                height: 150,
+                color: Colors.black,
+                child: Image.memory(bytes),
               ),
-            );
-            imageCounts++;
-          });
+            ),
+          );
+          imageCounts++;
         });
       });
     } else {
-      print("test");
+      print("No image selected from camera.");
     }
-    print(selectFile);
+  }
+
+  _pickFromGallery() async {
+    final ImagePicker _picker = ImagePicker();
+    final List<XFile>? images = await _picker.pickMultiImage();
+
+    if (images != null && images.length > 3) {
+      Utilities.showSnackBar("You can only select up to 3 files!", Colors.red);
+      return;
+    }
+
+    if (images != null) {
+      setState(() {
+        for (var image in images) {
+          if (pickedImagesInBytes.length >= 3) {
+            Utilities.showSnackBar(
+                "You can only have 3 photos attached!", Colors.red);
+            return;
+          }
+
+          image.readAsBytes().then((bytes) {
+            setState(() {
+              pickedImagesInBytes.add(bytes);
+              media_photos.add(
+                Padding(
+                  padding: const EdgeInsets.only(right: 8, left: 8),
+                  child: Container(
+                    width: 300,
+                    height: 150,
+                    color: Colors.black,
+                    child: Image.memory(bytes),
+                  ),
+                ),
+              );
+              imageCounts++;
+            });
+          });
+        }
+      });
+    } else {
+      print("No image selected from gallery.");
+    }
   }
 
   Future<List<String>> _uploadMultipleFiles(String itemName) async {
@@ -260,15 +328,13 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
     }
 
     checkLocation(user_loc);
-    print(user_loc);
-    print(isInSelectedArea);
-    /*if (!isInSelectedArea) {
+    if (!isInSelectedArea) {
       Utilities.showSnackBar(
         "You are not within the boundaries of Brgy. Tambubong!",
         Colors.red,
       );
       return;
-    }*/
+    }
 
     BuildContext dialogContext = context;
     showDialog(
@@ -527,7 +593,7 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
                 ),
                 TextButton(
                   onPressed: () {
-                    _selectFile(true);
+                    _selectFile();
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

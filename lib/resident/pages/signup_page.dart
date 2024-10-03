@@ -432,7 +432,7 @@ class _SignupPageState extends State<SignupPage> {
                     height: 16,
                   ),
                   InputField(
-                    inputType: "number",
+                    inputType: "text",
                     placeholder: "e.g. 1084",
                     label: "House/Unit No.",
                     controller: _addressHouseController,

@@ -7,6 +7,8 @@ import "package:google_maps_flutter/google_maps_flutter.dart";
 import "package:irs_app/constants.dart";
 import "package:irs_app/core/utilities.dart";
 import "package:irs_app/widgets/input_button.dart";
+import 'package:http/http.dart' as http;
+import "dart:convert";
 
 class TanodEmergencyDetailsPage extends StatefulWidget {
   final String id;
@@ -19,6 +21,20 @@ class TanodEmergencyDetailsPage extends StatefulWidget {
 }
 
 class _TanodEmergencyDetailsPageState extends State<TanodEmergencyDetailsPage> {
+  Future<DateTime> fetchWorldTime() async {
+    final url = Uri.parse('http://worldtimeapi.org/api/timezone/Asia/Manila');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final datetime = DateTime.parse(data['datetime']);
+      print("fetched time");
+      return datetime;
+    } else {
+      throw Exception('Failed to load time');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -245,6 +261,54 @@ class _TanodEmergencyDetailsPageState extends State<TanodEmergencyDetailsPage> {
                     InputButton(
                       label: "Respond",
                       function: () async {
+                        BuildContext dialogContext = context;
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (BuildContext context) {
+                            dialogContext = context;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                color: accentColor,
+                              ),
+                            );
+                          },
+                        );
+                        // Get the current user UID
+                        String currentUserId =
+                            FirebaseAuth.instance.currentUser!.uid;
+
+                        // Fetch the incident document
+                        DocumentSnapshot incidentSnapshot =
+                            await FirebaseFirestore.instance
+                                .collection('sos')
+                                .doc(widget.id)
+                                .get();
+                        if (!incidentSnapshot.exists) {
+                          Utilities.showSnackBar(
+                              "Incident does not exist!", Colors.red);
+                          Navigator.pop(dialogContext);
+                          return;
+                        }
+
+                        List<dynamic> responders =
+                            incidentSnapshot['responders'] ?? [];
+
+                        if (!responders.contains(currentUserId)) {
+                          DateTime worldTime =
+                              await fetchWorldTime() as DateTime;
+                          final sixPM = DateTime(worldTime.year,
+                              worldTime.month, worldTime.day, 18, 0);
+
+                          if (worldTime.isBefore(sixPM)) {
+                            Utilities.showSnackBar(
+                                "You may have been removed as a responder.",
+                                Colors.red);
+                            Navigator.pop(dialogContext);
+                            return;
+                          }
+                        }
+
                         await FirebaseFirestore.instance
                             .collection('sos')
                             .doc(widget.id)
@@ -263,6 +327,7 @@ class _TanodEmergencyDetailsPageState extends State<TanodEmergencyDetailsPage> {
                           'status': 'Responding',
                           'response_start': FieldValue.serverTimestamp(),
                         });
+                        Navigator.pop(dialogContext);
                         context.go(
                             '/tanod_home/emergency-details/${widget.id}/respond/${widget.id}/${emergencyDetails?['location']['latitude']}/${emergencyDetails?['location']['longitude']}');
                       },

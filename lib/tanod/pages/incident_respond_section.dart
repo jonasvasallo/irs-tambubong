@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
-
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -50,6 +51,20 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
     });
   }
 
+  Future<DateTime> fetchWorldTime() async {
+    final url = Uri.parse('http://worldtimeapi.org/api/timezone/Asia/Manila');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final datetime = DateTime.parse(data['datetime']);
+      print("fetched time");
+      return datetime;
+    } else {
+      throw Exception('Failed to load time');
+    }
+  }
+
   endResponse(reported_by) async {
     if (selectedImage == null) {
       Utilities.showSnackBar("You must attach a photo first", Colors.red);
@@ -67,6 +82,35 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
             ),
           );
         });
+    // Get the current user UID
+    String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+    // Fetch the incident document
+    DocumentSnapshot incidentSnapshot = await FirebaseFirestore.instance
+        .collection('incidents')
+        .doc(widget.id)
+        .get();
+    if (!incidentSnapshot.exists) {
+      Utilities.showSnackBar("Incident does not exist!", Colors.red);
+      Navigator.pop(dialogContext);
+      return;
+    }
+
+    List<dynamic> responders = incidentSnapshot['responders'] ?? [];
+
+    if (!responders.contains(currentUserId)) {
+      DateTime worldTime = await fetchWorldTime() as DateTime;
+      final sixPM =
+          DateTime(worldTime.year, worldTime.month, worldTime.day, 18, 0);
+
+      if (worldTime.isBefore(sixPM)) {
+        Utilities.showSnackBar(
+            "You may have been removed as a responder.", Colors.red);
+        Navigator.pop(dialogContext);
+        return;
+      }
+    }
+
     try {
       var urlDownload = "";
 
@@ -133,7 +177,6 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
                             'response_end': FieldValue.serverTimestamp(),
                             'response_photo': urlDownload,
                           });
-                          
                         }
                         Navigator.of(dialogContext).pop();
                         context.go('/tanod_home');

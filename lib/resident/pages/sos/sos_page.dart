@@ -1,9 +1,10 @@
 import 'dart:io';
-
+import 'package:path_provider/path_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -12,6 +13,9 @@ import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
+import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
+import 'package:maps_toolkit/maps_toolkit.dart' as map_tool;
 
 class SosPage extends StatefulWidget {
   const SosPage({Key? key}) : super(key: key);
@@ -23,17 +27,47 @@ class SosPage extends StatefulWidget {
 class _SosPageState extends State<SosPage> {
   File? recordedVideo;
   final picker = ImagePicker();
+  final FlutterFFmpeg _flutterFFmpeg = FlutterFFmpeg();
+
   Future<bool> pickVideoFromCamera() async {
     final video = await picker.pickVideo(
       source: ImageSource.camera,
-      maxDuration: Duration(
-        seconds: 30,
-      ),
+      maxDuration: Duration(seconds: 30),
     );
+
     if (video == null) return false;
 
     recordedVideo = File(video.path);
-    return true;
+
+    // Compress the video to 25MB or less
+    final compressedVideoPath = await _compressVideo(recordedVideo!);
+
+    if (compressedVideoPath != null) {
+      recordedVideo = File(compressedVideoPath);
+      return true;
+    } else {
+      print('Video compression failed');
+      return false;
+    }
+  }
+
+  Future<String?> _compressVideo(File videoFile) async {
+    final Directory tempDir = await getTemporaryDirectory();
+
+    final outputPath =
+        '${tempDir.path}compressed_video.mp4'; // Set your output path
+
+    // Use ffmpeg to compress the video with a target bitrate
+    final int rc = await _flutterFFmpeg.execute(
+        '-y -i ${videoFile.path} -vcodec h264 -b:v 500k -vf "scale=1280:-2" $outputPath');
+
+    if (rc == 0) {
+      print('Compression succeeded');
+      return outputPath;
+    } else {
+      print('Compression failed with return code $rc');
+      return null;
+    }
   }
 
   late String lat;
@@ -61,6 +95,24 @@ class _SosPageState extends State<SosPage> {
     return await Geolocator.getCurrentPosition();
   }
 
+  Future<void> sendAlertNotification() async {
+    final url = Uri.parse(
+        'https://us-central1-irs-capstone.cloudfunctions.net/sendSOSNotification');
+
+    try {
+      print("Running cloud function...");
+      final response = await http.post(url);
+
+      if (response.statusCode == 200) {
+        print('Notification sent successfully');
+      } else {
+        print('Failed to send notification');
+      }
+    } catch (error) {
+      print('Error: $error');
+    }
+  }
+
   Future<void> addSOS(double latitude, double longitude) async {
     BuildContext dialogContext = context;
     showDialog(
@@ -86,13 +138,16 @@ class _SosPageState extends State<SosPage> {
       var urlDownload = "";
 
       if (recordedVideo != null) {
-        final path = '/sos_attachments/${recordedVideo!.path.split('/').last}';
+        // Generate a unique file name using UUID or timestamp
+        String uniqueFileName = const Uuid()
+            .v4(); // Or you can use DateTime.now().millisecondsSinceEpoch
+
+        final path = '/sos_attachments/$uniqueFileName.mp4'; // Unique file path
 
         final ref = FirebaseStorage.instance.ref().child(path);
         UploadTask? uploadTask = ref.putFile(recordedVideo!);
 
         final snapshot = await uploadTask!.whenComplete(() => null);
-
         urlDownload = await snapshot.ref.getDownloadURL();
       }
       CollectionReference sosCollection =
@@ -110,6 +165,8 @@ class _SosPageState extends State<SosPage> {
         },
         'rated': false,
       });
+
+      await sendAlertNotification();
       Navigator.of(dialogContext).pop();
       context.go('/sos/ongoing/${newDocument.id}');
     } catch (ex) {
@@ -191,6 +248,39 @@ class _SosPageState extends State<SosPage> {
       print("Error fetching nearby incidents: $err");
       return false;
     }
+  }
+
+  List<LatLng> polygonPoints = [
+    LatLng(14.969637, 120.917670),
+    LatLng(14.964579, 120.921189),
+    LatLng(14.967647, 120.927970),
+    LatLng(14.961635, 120.930717),
+    LatLng(14.962464, 120.932905),
+    LatLng(14.967108, 120.931918),
+    LatLng(14.971430, 120.932714),
+    LatLng(14.972561, 120.932388),
+    LatLng(14.973032, 120.933756),
+    LatLng(14.978738, 120.931606),
+    LatLng(14.974131, 120.925472),
+    LatLng(14.974780, 120.924209),
+    LatLng(14.973415, 120.923533),
+    LatLng(14.974256, 120.922145),
+    LatLng(14.969767, 120.919456),
+    LatLng(14.970210, 120.918637),
+    LatLng(14.969637, 120.917670),
+  ];
+
+  bool isInSelectedArea = false;
+  LatLng user_loc = LatLng(14.970254, 120.925633);
+
+  Future<bool> checkLocation(LatLng pointLatLng) async {
+    return map_tool.PolygonUtil.containsLocation(
+      map_tool.LatLng(pointLatLng.latitude, pointLatLng.longitude),
+      polygonPoints
+          .map((point) => map_tool.LatLng(point.latitude, point.longitude))
+          .toList(),
+      false,
+    );
   }
 
   @override
@@ -293,9 +383,19 @@ class _SosPageState extends State<SosPage> {
                                           return;
                                         }
 
-                                        _getCurrentLocation().then((value) {
+                                        _getCurrentLocation()
+                                            .then((value) async {
                                           lat = "${value.latitude}";
                                           long = "${value.longitude}";
+
+                                          if (!await checkLocation(LatLng(
+                                              value.latitude,
+                                              value.longitude))) {
+                                            Utilities.showSnackBar(
+                                                "You must be in the vicinity of Barangay Tambubong to report!",
+                                                Colors.red);
+                                            return;
+                                          }
                                           addSOS(
                                               value.latitude, value.longitude);
                                           print("happening");

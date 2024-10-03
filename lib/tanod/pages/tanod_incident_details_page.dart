@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +9,7 @@ import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/models/incident_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
+import 'package:http/http.dart' as http;
 
 class TanodIncidentDetailsPage extends StatefulWidget {
   final String id;
@@ -70,6 +73,20 @@ class _TanodIncidentDetailsPageState extends State<TanodIncidentDetailsPage> {
     }
 
     return incidentDetails;
+  }
+
+  Future<DateTime> fetchWorldTime() async {
+    final url = Uri.parse('http://worldtimeapi.org/api/timezone/Asia/Manila');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final datetime = DateTime.parse(data['datetime']);
+      print("fetched time");
+      return datetime;
+    } else {
+      throw Exception('Failed to load time');
+    }
   }
 
   @override
@@ -308,6 +325,54 @@ class _TanodIncidentDetailsPageState extends State<TanodIncidentDetailsPage> {
                     InputButton(
                       label: "Respond",
                       function: () async {
+                        BuildContext dialogContext = context;
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (BuildContext context) {
+                            dialogContext = context;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                color: accentColor,
+                              ),
+                            );
+                          },
+                        );
+                        // Get the current user UID
+                        String currentUserId =
+                            FirebaseAuth.instance.currentUser!.uid;
+
+                        // Fetch the incident document
+                        DocumentSnapshot incidentSnapshot =
+                            await FirebaseFirestore.instance
+                                .collection('incidents')
+                                .doc(widget.id)
+                                .get();
+                        if (!incidentSnapshot.exists) {
+                          Utilities.showSnackBar(
+                              "Incident does not exist!", Colors.red);
+                          Navigator.pop(dialogContext);
+                          return;
+                        }
+
+                        List<dynamic> responders =
+                            incidentSnapshot['responders'] ?? [];
+
+                        if (!responders.contains(currentUserId)) {
+                          DateTime worldTime =
+                              await fetchWorldTime() as DateTime;
+                          final sixPM = DateTime(worldTime.year,
+                              worldTime.month, worldTime.day, 18, 0);
+
+                          if (worldTime.isBefore(sixPM)) {
+                            Utilities.showSnackBar(
+                                "You may have been removed as a responder.",
+                                Colors.red);
+                            Navigator.pop(dialogContext);
+                            return;
+                          }
+                        }
+
                         incident.update({
                           'status': 'Handling',
                           'responders': FieldValue.arrayUnion(
@@ -323,6 +388,7 @@ class _TanodIncidentDetailsPageState extends State<TanodIncidentDetailsPage> {
                           'status': 'Responding',
                           'response_start': FieldValue.serverTimestamp(),
                         });
+                        Navigator.pop(dialogContext);
                         context.go(
                             '/tanod_home/incident-details/${widget.id}/respond/${widget.id}/${incidentDetails['coordinates']['latitude']}/${incidentDetails['coordinates']['longitude']}');
                       },

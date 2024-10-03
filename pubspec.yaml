@@ -65,6 +65,7 @@ dependencies:
   firebase_app_check: ^0.2.2+7
   syncfusion_flutter_pdfviewer: ^27.1.48
   video_player: ^2.9.1
+  flutter_ffmpeg: ^0.4.2
   
 
 dev_dependencies:
