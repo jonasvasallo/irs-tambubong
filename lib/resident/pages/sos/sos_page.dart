@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:path_provider/path_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,13 +30,17 @@ class _SosPageState extends State<SosPage> {
   final picker = ImagePicker();
   final FlutterFFmpeg _flutterFFmpeg = FlutterFFmpeg();
 
-  Future<bool> pickVideoFromCamera() async {
+Future<bool> pickVideoFromCamera() async {
+  try {
     final video = await picker.pickVideo(
       source: ImageSource.camera,
       maxDuration: Duration(seconds: 30),
     );
 
-    if (video == null) return false;
+    if (video == null) {
+      Utilities.showSnackBar("No video was selected.", Colors.red);
+      return false;
+    }
 
     recordedVideo = File(video.path);
 
@@ -46,28 +51,37 @@ class _SosPageState extends State<SosPage> {
       recordedVideo = File(compressedVideoPath);
       return true;
     } else {
-      print('Video compression failed');
+      
       return false;
     }
+  } catch (error) {
+    Utilities.showSnackBar("Error picking video: $error", Colors.red);
+    return false;
   }
+}
 
   Future<String?> _compressVideo(File videoFile) async {
     final Directory tempDir = await getTemporaryDirectory();
 
     final outputPath =
         '${tempDir.path}compressed_video.mp4'; // Set your output path
+    
+    try{
+  final int rc = await _flutterFFmpeg.execute(
+      '-y -i ${videoFile.path} -vcodec h264 -b:v 500k -vf "scale=1280:-2" $outputPath');
 
-    // Use ffmpeg to compress the video with a target bitrate
-    final int rc = await _flutterFFmpeg.execute(
-        '-y -i ${videoFile.path} -vcodec h264 -b:v 500k -vf "scale=1280:-2" $outputPath');
-
-    if (rc == 0) {
-      print('Compression succeeded');
-      return outputPath;
-    } else {
-      print('Compression failed with return code $rc');
+      if (rc == 0) {
+        print('Compression succeeded');
+        return outputPath;
+      } else {
+        print('Compression failed with return code $rc');
+        return null;
+      }
+    } catch(err){
+      Utilities.showSnackBar("$err", Colors.red);
       return null;
     }
+
   }
 
   late String lat;
@@ -402,8 +416,8 @@ class _SosPageState extends State<SosPage> {
                                         }
 
                                         if (!await pickVideoFromCamera()) {
-                                          Utilities.showSnackBar(
-                                              "Please try again.", Colors.red);
+                                          // Utilities.showSnackBar(
+                                          //     "Please try again.", Colors.red);
                                           return;
                                         }
 
