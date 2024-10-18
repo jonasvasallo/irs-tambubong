@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:irs_app/constants.dart';
+import 'package:irs_app/core/rate_limiter.dart';
 import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/comment_widget.dart';
@@ -49,6 +50,11 @@ class NewsPartSection extends StatefulWidget {
 class _NewsPartSectionState extends State<NewsPartSection> {
   void likeNews() async {
     try {
+      final RateLimiter _rateLimiter = RateLimiter(userId: FirebaseAuth.instance.currentUser!.uid, keyPrefix: 'like', cooldownDuration: Duration(seconds: 5),);
+      if (!await _rateLimiter.isActionAllowed()) {
+        Utilities.showSnackBar("You must wait before doing this action again!", Colors.red);
+        return;
+      }
       UserModel model = new UserModel();
       Map<String, dynamic>? userDetails =
           await model.getUserDetails(FirebaseAuth.instance.currentUser!.uid);
@@ -73,6 +79,7 @@ class _NewsPartSectionState extends State<NewsPartSection> {
           .update({
         'like_count': FieldValue.increment(1),
       });
+      await _rateLimiter.updateLastActionTime();
     } catch (ex) {
       Utilities.showSnackBar("$ex", Colors.red);
     }
@@ -81,6 +88,11 @@ class _NewsPartSectionState extends State<NewsPartSection> {
 
   void unlikeNews() async {
     try {
+      final RateLimiter _rateLimiter = RateLimiter(userId: FirebaseAuth.instance.currentUser!.uid, keyPrefix: 'like', cooldownDuration: Duration(seconds: 5),);
+      if (!await _rateLimiter.isActionAllowed()) {
+        Utilities.showSnackBar("You must wait before doing this action again!", Colors.red);
+        return;
+      }
       await FirebaseFirestore.instance
           .collection('news')
           .doc(widget.id)
@@ -93,6 +105,7 @@ class _NewsPartSectionState extends State<NewsPartSection> {
           .update({
         'like_count': FieldValue.increment(-1),
       });
+      await _rateLimiter.updateLastActionTime();
     } catch (ex) {
       Utilities.showSnackBar("$ex", Colors.red);
     }
@@ -310,6 +323,11 @@ class _SendCommentSectionState extends State<SendCommentSection> {
       Utilities.showSnackBar("Please enter a message first", Colors.red);
       return;
     }
+    final RateLimiter _rateLimiter = RateLimiter(userId: FirebaseAuth.instance.currentUser!.uid, keyPrefix: 'comment', cooldownDuration: Duration(seconds: 5),);
+    if (!await _rateLimiter.isActionAllowed()) {
+      Utilities.showSnackBar("You must wait before doing this action again!", Colors.red);
+      return;
+    }
 
     try {
       UserModel model = new UserModel();
@@ -329,6 +347,13 @@ class _SendCommentSectionState extends State<SendCommentSection> {
         'comment_by': FirebaseAuth.instance.currentUser!.uid,
         'sent_at': FieldValue.serverTimestamp(),
       });
+      await FirebaseFirestore.instance
+          .collection('news')
+          .doc(widget.id)
+          .update({
+        'comment_count': FieldValue.increment(1),
+      });
+      await _rateLimiter.updateLastActionTime();
 
       setState(() {
         _commentController.text = "";

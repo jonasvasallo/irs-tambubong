@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/input_validator.dart';
+import 'package:irs_app/core/rate_limiter.dart';
+import 'package:irs_app/core/status_checker.dart';
 import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
@@ -29,6 +31,12 @@ class _HelpPageState extends State<HelpPage> {
       return;
     }
 
+    final RateLimiter _rateLimiter = RateLimiter(userId: FirebaseAuth.instance.currentUser!.uid, keyPrefix: 'action', cooldownDuration: Duration(seconds: 5),);
+    if (!await _rateLimiter.isActionAllowed()) {
+      Utilities.showSnackBar("You are doing this action way too quickly!", Colors.red);
+      return;
+    }
+
     BuildContext dialogContext = context;
     showDialog(
       context: context,
@@ -42,6 +50,23 @@ class _HelpPageState extends State<HelpPage> {
         );
       },
     );
+
+    await _rateLimiter.updateLastActionTime();
+
+    final status_checker = StatusChecker();
+    final hasActiveIncident = await status_checker.hasActiveDocument(
+      collectionName: 'help',         // Collection to search
+      userIdField: 'created_by',               // Field in the document that matches the user
+      userId: FirebaseAuth.instance.currentUser!.uid,                      // Current logged-in user's ID
+      statusField: 'status',               // Field to check the status
+      activeStatuses: ['Open'],  // List of active statuses
+    );
+
+    if(hasActiveIncident){
+      Navigator.pop(dialogContext);
+      Utilities.showSnackBar("You currently have an active ticket!", Colors.red);
+      return;
+    }
 
     try {
       await FirebaseFirestore.instance.collection('help').add({
@@ -82,6 +107,9 @@ class _HelpPageState extends State<HelpPage> {
               ),
             ],
           ),
+          actions: [
+            IconButton(onPressed: () => Utilities.launchURL(Uri.parse("https://youtu.be/BAhbqZeUmhc?si=Gsx0UkbY1e9WLQu9&t=366"), true), icon: Icon(Icons.help_outline_rounded),),
+          ],
         ),
         body: TabBarView(
           children: [

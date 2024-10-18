@@ -310,6 +310,9 @@ Future<bool> pickVideoFromCamera() async {
     return Scaffold(
       appBar: AppBar(
         title: Text("Emergency SOS"),
+        actions: [
+          IconButton(onPressed: () => Utilities.launchURL(Uri.parse("https://youtu.be/BAhbqZeUmhc?si=v1SiMeyZO1z_jA0w&t=150"), true), icon: Icon(Icons.help_outline_rounded),),
+        ],
       ),
       body: SafeArea(
         child: Center(

@@ -4,6 +4,7 @@ import "package:flutter/material.dart";
 import "package:intl/intl.dart";
 import "package:irs_app/constants.dart";
 import "package:irs_app/core/input_validator.dart";
+import "package:irs_app/core/rate_limiter.dart";
 import "package:irs_app/core/utilities.dart";
 import "package:irs_app/widgets/input_button.dart";
 import "package:irs_app/widgets/input_field.dart";
@@ -26,6 +27,12 @@ class _CaseDetailsPageState extends State<CaseDetailsPage> {
       return;
     }
 
+    final RateLimiter _rateLimiter = RateLimiter(userId: FirebaseAuth.instance.currentUser!.uid, keyPrefix: 'action', cooldownDuration: Duration(seconds: 5),);
+    if (!await _rateLimiter.isActionAllowed()) {
+      Utilities.showSnackBar("You are doing this action way too quickly!", Colors.red);
+      return;
+    }
+
     BuildContext dialogContext = context;
     showDialog(
       context: context,
@@ -39,6 +46,8 @@ class _CaseDetailsPageState extends State<CaseDetailsPage> {
         );
       },
     );
+
+    await _rateLimiter.updateLastActionTime();
 
     try {
       await FirebaseFirestore.instance

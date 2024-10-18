@@ -157,6 +157,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   context.go('/profile/help');
                 },
               ),
+                            ProfileButton(
+                name: "Manual",
+                icon: Icon(Icons.help_center_outlined),
+                iconColor: Colors.white,
+                action: () {
+                  context.go('/profile/manual');
+                },
+              ),
               ProfileButton(
                 name: "Logout",
                 icon: Icon(Icons.logout_outlined),

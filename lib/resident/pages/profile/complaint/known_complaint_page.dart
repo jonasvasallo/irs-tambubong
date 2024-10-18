@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/file_picker_util.dart';
 import 'package:irs_app/core/input_validator.dart';
+import 'package:irs_app/core/rate_limiter.dart';
+import 'package:irs_app/core/status_checker.dart';
 import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/widgets/input_button.dart';
 import 'package:irs_app/widgets/input_field.dart';
@@ -47,6 +49,12 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
       return;
     }
 
+    final RateLimiter _rateLimiter = RateLimiter(userId: FirebaseAuth.instance.currentUser!.uid, keyPrefix: 'action', cooldownDuration: Duration(seconds: 5),);
+    if (!await _rateLimiter.isActionAllowed()) {
+      Utilities.showSnackBar("You are doing this action way too quickly!", Colors.red);
+      return;
+    }
+
     BuildContext dialogContext = context;
     showDialog(
       context: context,
@@ -60,6 +68,23 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
         );
       },
     );
+
+    await _rateLimiter.updateLastActionTime();
+
+    final status_checker = StatusChecker();
+    final hasActiveIncident = await status_checker.hasActiveDocument(
+      collectionName: 'complaints',         // Collection to search
+      userIdField: 'issued_by',               // Field in the document that matches the user
+      userId: FirebaseAuth.instance.currentUser!.uid,                      // Current logged-in user's ID
+      statusField: 'status',               // Field to check the status
+      activeStatuses: ['Open', 'In Progress'],  // List of active statuses
+    );
+
+    if(hasActiveIncident){
+      Navigator.pop(dialogContext);
+      Utilities.showSnackBar("You currently have an active complaint!", Colors.red);
+      return;
+    }
 
     try {
       List<String> imageUrls = [];
@@ -179,6 +204,9 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("File a Complaint"),
+        actions: [
+          IconButton(onPressed: () => Utilities.launchURL(Uri.parse("https://youtu.be/BAhbqZeUmhc?si=VU4Y8ykjn4ynjSSL&t=332"), true), icon: Icon(Icons.help_outline_rounded),),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(

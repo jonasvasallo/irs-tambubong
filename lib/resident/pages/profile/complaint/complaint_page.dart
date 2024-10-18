@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/input_validator.dart';
+import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/widgets/input_button.dart';
 import 'package:irs_app/widgets/input_field.dart';
 
@@ -84,6 +85,9 @@ class _ComplaintPageState extends State<ComplaintPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("File a Complaint"),
+        actions: [
+          IconButton(onPressed: () => Utilities.launchURL(Uri.parse("https://youtu.be/BAhbqZeUmhc?si=VU4Y8ykjn4ynjSSL&t=332"), true), icon: Icon(Icons.help_outline_rounded),),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

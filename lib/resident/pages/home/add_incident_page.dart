@@ -13,6 +13,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/input_validator.dart';
+import 'package:irs_app/core/rate_limiter.dart';
 import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
@@ -336,6 +337,12 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
       return;
     }
 
+    final RateLimiter _rateLimiter = RateLimiter(userId: FirebaseAuth.instance.currentUser!.uid, keyPrefix: 'action', cooldownDuration: Duration(seconds: 5),);
+    if (!await _rateLimiter.isActionAllowed()) {
+      Utilities.showSnackBar("You are doing this action way too quickly!", Colors.red);
+      return;
+    }
+
     BuildContext dialogContext = context;
     showDialog(
       context: context,
@@ -349,6 +356,8 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
         );
       },
     );
+
+    await _rateLimiter.updateLastActionTime();
 
     UserModel model = new UserModel();
     Map<String, dynamic>? userDetails =
@@ -488,6 +497,9 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Add Incident"),
+        actions: [
+          IconButton(onPressed: () => Utilities.launchURL(Uri.parse("https://youtu.be/BAhbqZeUmhc?si=DEl-GqvKng5eSlxC&t=119"), true), icon: Icon(Icons.help_outline_rounded),),
+        ],
       ),
       body: Form(
         key: formKey,

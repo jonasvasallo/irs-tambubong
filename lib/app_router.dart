@@ -29,6 +29,7 @@ import 'package:irs_app/resident/pages/profile/incidents/user_emergency_history_
 import 'package:irs_app/resident/pages/profile/incidents/user_emergency_review_page.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_incident_history_page.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_incident_review_page.dart';
+import 'package:irs_app/resident/pages/profile/manual_page.dart';
 import 'package:irs_app/resident/pages/tos_page.dart';
 import 'package:irs_app/resident/password_expiration_page.dart';
 import 'package:irs_app/tanod/pages/history/tanod_response_details_page.dart';
@@ -525,6 +526,10 @@ class AppRouter {
                             CaseDetailsPage(id: state.pathParameters['id']!),
                       ),
                     ],
+                  ),
+                  GoRoute(
+                    path: 'manual',
+                    builder: (context, state) => ManualPage(),
                   ),
                 ],
               ),

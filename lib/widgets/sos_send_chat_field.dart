@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:irs_app/core/input_validator.dart';
+import 'package:irs_app/core/rate_limiter.dart';
 import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
@@ -21,6 +22,11 @@ class _SosSendChatFieldState extends State<SosSendChatField> {
   void sendMessage() async {
     if (_messageController.text.isEmpty) {
       Utilities.showSnackBar("Please enter a message", Colors.red);
+      return;
+    }
+    final RateLimiter _rateLimiter = RateLimiter(userId: FirebaseAuth.instance.currentUser!.uid, keyPrefix: 'chat', cooldownDuration: Duration(seconds: 5),);
+    if (!await _rateLimiter.isActionAllowed()) {
+      Utilities.showSnackBar("You are chatting too frequently. Please wait before submitting another message.", Colors.red);
       return;
     }
     UserModel model = new UserModel();
@@ -52,6 +58,7 @@ class _SosSendChatFieldState extends State<SosSendChatField> {
           .update({
         'chatroom_count': FieldValue.increment(1),
       });
+      await _rateLimiter.updateLastActionTime();
       _messageController.clear();
     } catch (ex) {
       Utilities.showSnackBar("$ex", Colors.red);
