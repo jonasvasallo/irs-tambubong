@@ -75,7 +75,6 @@ class _TanodHomePageState extends State<TanodHomePage> {
     if (!await getLocationPermissions()) return;
 
     location.changeSettings(interval: 15000, distanceFilter: 10);
-    location.enableBackgroundMode(enable: true);
     locationSubscription =
         location.onLocationChanged.listen((LocationData currentLocation) {
       print(

@@ -90,7 +90,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:718420727642:android:4a28c497d5a522f3b24563",
         "android_client_info": {
-          "package_name": "com.example.irs_app"
+          "package_name": "com.gitguddev.irs_app"
         }
       },
       "oauth_client": [
@@ -98,7 +98,7 @@
           "client_id": "718420727642-c1b4nr4v6gf6r5cs7t3th6i66por7s2m.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.irs_app",
+            "package_name": "com.gitguddev.irs_app",
             "certificate_hash": "bf435bbaa96c5c8301c9ba1c749d75189aa5c766"
           }
         },
@@ -106,7 +106,7 @@
           "client_id": "718420727642-mut6lnim8bgpl5401l3edri8uitpkjh0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.irs_app",
+            "package_name": "com.gitguddev.irs_app",
             "certificate_hash": "27269a5808f1c82e7a4a45b94f47dd2c9f8f0f25"
           }
         },
