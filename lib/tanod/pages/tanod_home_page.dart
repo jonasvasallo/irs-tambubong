@@ -63,6 +63,7 @@ class _TanodHomePageState extends State<TanodHomePage> {
           'latitude': new_loc.latitude,
           'longitude': new_loc.longitude,
         },
+        'lastLocationFetched': FieldValue.serverTimestamp(),
       });
       print("updated tanod location");
     } catch (err) {
@@ -74,7 +75,7 @@ class _TanodHomePageState extends State<TanodHomePage> {
     print("function called");
     if (!await getLocationPermissions()) return;
 
-    location.changeSettings(interval: 15000, distanceFilter: 10);
+    location.changeSettings(interval: 15000, distanceFilter: 100);
     locationSubscription =
         location.onLocationChanged.listen((LocationData currentLocation) {
       print(
@@ -226,7 +227,8 @@ class _TanodHomePageState extends State<TanodHomePage> {
               leading: Icon(Icons.logout_outlined),
               title: Text("Logout"),
               onTap: () {
-                FirebaseMessaging.instance.unsubscribeFromTopic('incident-alert');
+                FirebaseMessaging.instance
+                    .unsubscribeFromTopic('incident-alert');
                 FirebaseMessaging.instance.unsubscribeFromTopic('sos-alert');
                 FirebaseAuth.instance.signOut();
                 context.go('/login');
@@ -289,21 +291,13 @@ class _TanodHomePageState extends State<TanodHomePage> {
                       },
                       large: true,
                     ),
-                    FutureBuilder(
-                      future: fetchWorldTime(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return CircularProgressIndicator(); // Placeholder for loading state
-                        }
-                        if (snapshot.hasError) {
-                          return Text(
-                              'Could not validate time. Please check your internet connection or try restarting the app. Error Message: (${snapshot.error})'); // Placeholder for error state
-                        }
-
-                        final worldTime = snapshot.data as DateTime;
-                        final sixPM = DateTime(worldTime.year, worldTime.month,
-                            worldTime.day, 18, 0);
+                    Builder(
+                      builder: (context) {
+                        final localTime = DateTime.now();
+                        final today6PM = DateTime(localTime.year,
+                            localTime.month, localTime.day, 18, 0);
+                        final today6AM = DateTime(localTime.year,
+                            localTime.month, localTime.day, 6, 0);
 
                         Query query = FirebaseFirestore.instance
                             .collection('sos')
@@ -314,8 +308,9 @@ class _TanodHomePageState extends State<TanodHomePage> {
                           'Cancelled',
                         ]);
 
-                        if (worldTime.isBefore(sixPM)) {
-                          print("it is before 6 pm");
+                        if (localTime.isAfter(today6AM) &&
+                            localTime.isBefore(today6PM)) {
+                          print("it is before 6 pm sos");
                           query = query.where('responders',
                               arrayContains:
                                   FirebaseAuth.instance.currentUser!.uid);
@@ -431,22 +426,13 @@ class _TanodHomePageState extends State<TanodHomePage> {
                         );
                       },
                     ),
-                    FutureBuilder(
-                      future: fetchWorldTime(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return CircularProgressIndicator(); // Placeholder for loading state
-                        }
-                        if (snapshot.hasError) {
-                          print("${snapshot.error}");
-                          return Text(
-                              'Error: ${snapshot.error}'); // Placeholder for error state
-                        }
-
-                        final worldTime = snapshot.data as DateTime;
-                        final sixPM = DateTime(worldTime.year, worldTime.month,
-                            worldTime.day, 18, 0);
+                    Builder(
+                      builder: (context) {
+                        final localTime = DateTime.now();
+                        final today6PM = DateTime(localTime.year,
+                            localTime.month, localTime.day, 18, 0);
+                        final today6AM = DateTime(localTime.year,
+                            localTime.month, localTime.day, 6, 0);
 
                         // Query for the 'incidents' collection
                         Query incidentsQuery = FirebaseFirestore.instance
@@ -454,7 +440,8 @@ class _TanodHomePageState extends State<TanodHomePage> {
                             .where('status',
                                 whereNotIn: ['Resolved', 'Closed', 'Rejected']);
 
-                        if (worldTime.isBefore(sixPM)) {
+                        if (localTime.isAfter(today6AM) &&
+                            localTime.isBefore(today6PM)) {
                           print("it is before 6 pm");
                           incidentsQuery = incidentsQuery.where('responders',
                               arrayContains:

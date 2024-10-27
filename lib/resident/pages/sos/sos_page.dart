@@ -30,58 +30,72 @@ class _SosPageState extends State<SosPage> {
   final picker = ImagePicker();
   final FlutterFFmpeg _flutterFFmpeg = FlutterFFmpeg();
 
-Future<bool> pickVideoFromCamera() async {
-  try {
-    final video = await picker.pickVideo(
-      source: ImageSource.camera,
-      maxDuration: Duration(seconds: 30),
-    );
+  Future<bool> pickVideoFromCamera() async {
+    try {
+      final video = await picker.pickVideo(
+        source: ImageSource.camera,
+        maxDuration: Duration(seconds: 30),
+      );
 
-    if (video == null) {
-      Utilities.showSnackBar("No video was selected.", Colors.red);
+      if (video == null) {
+        Utilities.showSnackBar("No video was selected.", Colors.red);
+        return false;
+      }
+
+      recordedVideo = File(video.path);
+
+      // Compress the video to 25MB or less
+      final compressedVideoPath = await _compressVideo(recordedVideo!);
+
+      if (compressedVideoPath != null) {
+        recordedVideo = File(compressedVideoPath);
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      Utilities.showSnackBar("Error picking video: $error", Colors.red);
       return false;
     }
-
-    recordedVideo = File(video.path);
-
-    // Compress the video to 25MB or less
-    final compressedVideoPath = await _compressVideo(recordedVideo!);
-
-    if (compressedVideoPath != null) {
-      recordedVideo = File(compressedVideoPath);
-      return true;
-    } else {
-      
-      return false;
-    }
-  } catch (error) {
-    Utilities.showSnackBar("Error picking video: $error", Colors.red);
-    return false;
   }
-}
 
   Future<String?> _compressVideo(File videoFile) async {
+    BuildContext dialogContext = context;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        dialogContext = context;
+        return Center(
+          child: CircularProgressIndicator(
+            color: accentColor,
+          ),
+        );
+      },
+    );
     final Directory tempDir = await getTemporaryDirectory();
 
     final outputPath =
         '${tempDir.path}compressed_video.mp4'; // Set your output path
-    
-    try{
-  final int rc = await _flutterFFmpeg.execute(
-      '-y -i ${videoFile.path} -vcodec h264 -b:v 500k -vf "scale=1280:-2" $outputPath');
+
+    try {
+      final int rc = await _flutterFFmpeg.execute(
+          '-y -i ${videoFile.path} -vcodec h264 -b:v 500k -vf "scale=1280:-2" $outputPath');
 
       if (rc == 0) {
         print('Compression succeeded');
+        Navigator.pop(dialogContext);
         return outputPath;
       } else {
         print('Compression failed with return code $rc');
+        Navigator.pop(dialogContext);
         return null;
       }
-    } catch(err){
+    } catch (err) {
       Utilities.showSnackBar("$err", Colors.red);
+      Navigator.pop(dialogContext);
       return null;
     }
-
   }
 
   late String lat;
@@ -311,7 +325,13 @@ Future<bool> pickVideoFromCamera() async {
       appBar: AppBar(
         title: Text("Emergency SOS"),
         actions: [
-          IconButton(onPressed: () => Utilities.launchURL(Uri.parse("https://youtu.be/BAhbqZeUmhc?si=v1SiMeyZO1z_jA0w&t=150"), true), icon: Icon(Icons.help_outline_rounded),),
+          IconButton(
+            onPressed: () => Utilities.launchURL(
+                Uri.parse(
+                    "https://youtu.be/BAhbqZeUmhc?si=v1SiMeyZO1z_jA0w&t=150"),
+                true),
+            icon: Icon(Icons.help_outline_rounded),
+          ),
         ],
       ),
       body: SafeArea(
