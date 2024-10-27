@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/input_validator.dart';
 import 'package:irs_app/core/utilities.dart';
@@ -82,53 +84,128 @@ class _ComplaintPageState extends State<ComplaintPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("File a Complaint"),
-        actions: [
-          IconButton(onPressed: () => Utilities.launchURL(Uri.parse("https://youtu.be/BAhbqZeUmhc?si=VU4Y8ykjn4ynjSSL&t=332"), true), icon: Icon(Icons.help_outline_rounded),),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Do you know the name of the individual?",
-              style: CustomTextStyle.subheading,
-              textAlign: TextAlign.center,
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("File a Complaint"),
+          actions: [
+            IconButton(
+              onPressed: () => Utilities.launchURL(
+                  Uri.parse(
+                      "https://youtu.be/BAhbqZeUmhc?si=VU4Y8ykjn4ynjSSL&t=332"),
+                  true),
+              icon: Icon(Icons.help_outline_rounded),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    context.go('/profile/complaint/known');
-                  },
-                  child: Text(
-                    "Yes",
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+          ],
+          bottom: const TabBar(tabs: [
+            Tab(
+              text: "File a Complaint",
+            ),
+            Tab(
+              text: "My Complaints",
+            ),
+          ]),
+        ),
+        body: TabBarView(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Do you know the name of the individual?",
+                    style: CustomTextStyle.subheading,
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    context.go('/profile/complaint/unknown');
-                  },
-                  child: Text(
-                    "No",
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          context.go('/profile/complaint/known');
+                        },
+                        child: Text(
+                          "Yes",
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          context.go('/profile/complaint/unknown');
+                        },
+                        child: Text(
+                          "No",
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
+            SingleChildScrollView(
+              padding: padding16,
+              child: FutureBuilder(
+                future: FirebaseFirestore.instance
+                    .collection('complaints')
+                    .where('issued_by',
+                        isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+                    .get(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return Center(child: Text("No complaints yet."));
+                  }
+
+                  // Sort the documents manually based on `issued_at`
+                  final docs = snapshot.data!.docs;
+                  docs.sort((a, b) {
+                    final aTimestamp = a['issued_at'] as Timestamp?;
+                    final bTimestamp = b['issued_at'] as Timestamp?;
+                    return bTimestamp
+                            ?.compareTo(aTimestamp ?? Timestamp(0, 0)) ??
+                        0;
+                  });
+
+                  List<Widget> complaintsWidgets = docs.map((complaintDoc) {
+                    String formattedDate = "Unknown date";
+
+                    if (complaintDoc['issued_at'] != null) {
+                      Timestamp t = complaintDoc['issued_at'] as Timestamp;
+                      DateTime date = t.toDate();
+                      formattedDate = DateFormat('MMMM dd, y').format(date);
+                    }
+
+                    return ListTile(
+                      onTap: () => context
+                          .go('/profile/complaint/details/${complaintDoc.id}'),
+                      title: Text(
+                        "${complaintDoc['description']}",
+                        style: CustomTextStyle.subheading,
+                      ),
+                      subtitle: Text("${complaintDoc['status']}"),
+                      trailing: Text(formattedDate),
+                    );
+                  }).toList();
+
+                  return Column(
+                    children: complaintsWidgets,
+                  );
+                },
+              ),
             )
           ],
         ),

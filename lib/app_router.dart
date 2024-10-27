@@ -23,6 +23,7 @@ import 'package:irs_app/resident/pages/home/incident_details_page.dart';
 import 'package:irs_app/resident/pages/news/news_details_page.dart';
 import 'package:irs_app/resident/pages/notifications/notification_detail_page.dart';
 import 'package:irs_app/resident/pages/notifications/notification_page.dart';
+import 'package:irs_app/resident/pages/profile/complaint/complaint_details_page.dart';
 import 'package:irs_app/resident/pages/profile/help/CaseDetailsPage.dart';
 import 'package:irs_app/resident/pages/profile/help/HelpPage.dart';
 import 'package:irs_app/resident/pages/profile/incidents/user_emergency_history_page.dart';
@@ -513,6 +514,11 @@ class AppRouter {
                       GoRoute(
                         path: 'unknown',
                         builder: (context, state) => UnknownComplaintPage(),
+                      ),
+                      GoRoute(
+                        path: 'details/:id',
+                        builder: (context, state) => ComplaintDetailsPage(
+                            id: state.pathParameters['id'] ?? ''),
                       ),
                     ],
                   ),
