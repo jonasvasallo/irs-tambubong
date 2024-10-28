@@ -449,14 +449,14 @@ class _SosPageState extends State<SosPage> {
                                           lat = "${value.latitude}";
                                           long = "${value.longitude}";
 
-                                          if (!await checkLocation(LatLng(
-                                              value.latitude,
-                                              value.longitude))) {
-                                            Utilities.showSnackBar(
-                                                "You must be in the vicinity of Barangay Tambubong to report!",
-                                                Colors.red);
-                                            return;
-                                          }
+                                          // if (!await checkLocation(LatLng(
+                                          //     value.latitude,
+                                          //     value.longitude))) {
+                                          //   Utilities.showSnackBar(
+                                          //       "You must be in the vicinity of Barangay Tambubong to report!",
+                                          //       Colors.red);
+                                          //   return;
+                                          // }
                                           addSOS(
                                               value.latitude, value.longitude);
                                           print("happening");

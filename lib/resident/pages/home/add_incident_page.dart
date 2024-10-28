@@ -329,17 +329,22 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
     }
 
     checkLocation(user_loc);
-    if (!isInSelectedArea) {
-      Utilities.showSnackBar(
-        "You are not within the boundaries of Brgy. Tambubong!",
-        Colors.red,
-      );
-      return;
-    }
+    // if (!isInSelectedArea) {
+    //   Utilities.showSnackBar(
+    //     "You are not within the boundaries of Brgy. Tambubong!",
+    //     Colors.red,
+    //   );
+    //   return;
+    // }
 
-    final RateLimiter _rateLimiter = RateLimiter(userId: FirebaseAuth.instance.currentUser!.uid, keyPrefix: 'action', cooldownDuration: Duration(seconds: 5),);
+    final RateLimiter _rateLimiter = RateLimiter(
+      userId: FirebaseAuth.instance.currentUser!.uid,
+      keyPrefix: 'action',
+      cooldownDuration: Duration(seconds: 5),
+    );
     if (!await _rateLimiter.isActionAllowed()) {
-      Utilities.showSnackBar("You are doing this action way too quickly!", Colors.red);
+      Utilities.showSnackBar(
+          "You are doing this action way too quickly!", Colors.red);
       return;
     }
 
@@ -498,7 +503,13 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
       appBar: AppBar(
         title: Text("Add Incident"),
         actions: [
-          IconButton(onPressed: () => Utilities.launchURL(Uri.parse("https://youtu.be/BAhbqZeUmhc?si=DEl-GqvKng5eSlxC&t=119"), true), icon: Icon(Icons.help_outline_rounded),),
+          IconButton(
+            onPressed: () => Utilities.launchURL(
+                Uri.parse(
+                    "https://youtu.be/BAhbqZeUmhc?si=DEl-GqvKng5eSlxC&t=119"),
+                true),
+            icon: Icon(Icons.help_outline_rounded),
+          ),
         ],
       ),
       body: Form(
