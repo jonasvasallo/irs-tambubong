@@ -26,6 +26,7 @@ class _UnknownComplaintPageState extends State<UnknownComplaintPage> {
   late FilePickerUtil filePickerUtil;
   final _descriptionController = TextEditingController();
   final _natureController = TextEditingController();
+  final _reliefController = TextEditingController();
 
   late StreamController<List<Map<String, dynamic>>> _streetsStreamController;
   late List<Map<String, dynamic>> _streets;
@@ -45,9 +46,14 @@ class _UnknownComplaintPageState extends State<UnknownComplaintPage> {
       return;
     }
 
-    final RateLimiter _rateLimiter = RateLimiter(userId: FirebaseAuth.instance.currentUser!.uid, keyPrefix: 'action', cooldownDuration: Duration(seconds: 5),);
+    final RateLimiter _rateLimiter = RateLimiter(
+      userId: FirebaseAuth.instance.currentUser!.uid,
+      keyPrefix: 'action',
+      cooldownDuration: Duration(seconds: 5),
+    );
     if (!await _rateLimiter.isActionAllowed()) {
-      Utilities.showSnackBar("You are doing this action way too quickly!", Colors.red);
+      Utilities.showSnackBar(
+          "You are doing this action way too quickly!", Colors.red);
       return;
     }
 
@@ -69,16 +75,18 @@ class _UnknownComplaintPageState extends State<UnknownComplaintPage> {
 
     final status_checker = StatusChecker();
     final hasActiveIncident = await status_checker.hasActiveDocument(
-      collectionName: 'complaints',         // Collection to search
-      userIdField: 'issued_by',               // Field in the document that matches the user
-      userId: FirebaseAuth.instance.currentUser!.uid,                      // Current logged-in user's ID
-      statusField: 'status',               // Field to check the status
-      activeStatuses: ['Open', 'In Progress'],  // List of active statuses
+      collectionName: 'complaints', // Collection to search
+      userIdField: 'issued_by', // Field in the document that matches the user
+      userId:
+          FirebaseAuth.instance.currentUser!.uid, // Current logged-in user's ID
+      statusField: 'status', // Field to check the status
+      activeStatuses: ['Open', 'In Progress'], // List of active statuses
     );
 
-    if(hasActiveIncident){
+    if (hasActiveIncident) {
       Navigator.pop(dialogContext);
-      Utilities.showSnackBar("You currently have an active complaint!", Colors.red);
+      Utilities.showSnackBar(
+          "You currently have an active complaint!", Colors.red);
       return;
     }
 
@@ -130,6 +138,7 @@ class _UnknownComplaintPageState extends State<UnknownComplaintPage> {
         'respondent_id': user_id,
         'respondent_description': _descriptionController.text.trim(),
         "description": _natureController.text.trim(),
+        "relief_manner": _reliefController.text.trim(),
         'supporting_docs': imageUrls,
         'issued_at': FieldValue.serverTimestamp(),
         'issued_by': FirebaseAuth.instance.currentUser!.uid,
@@ -141,7 +150,7 @@ class _UnknownComplaintPageState extends State<UnknownComplaintPage> {
           .update({
         'complaint_count': FieldValue.increment(1),
       });
-      
+
       Utilities.showSnackBar("Successfully filed complaint", Colors.green);
       Navigator.of(dialogContext).pop();
       context.go('/profile');
@@ -201,7 +210,13 @@ class _UnknownComplaintPageState extends State<UnknownComplaintPage> {
       appBar: AppBar(
         title: Text("File a Complaint"),
         actions: [
-          IconButton(onPressed: () => Utilities.launchURL(Uri.parse("https://youtu.be/BAhbqZeUmhc?si=VU4Y8ykjn4ynjSSL&t=332"), true), icon: Icon(Icons.help_outline_rounded),),
+          IconButton(
+            onPressed: () => Utilities.launchURL(
+                Uri.parse(
+                    "https://youtu.be/BAhbqZeUmhc?si=VU4Y8ykjn4ynjSSL&t=332"),
+                true),
+            icon: Icon(Icons.help_outline_rounded),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -273,6 +288,14 @@ class _UnknownComplaintPageState extends State<UnknownComplaintPage> {
                   "Please provide a concise and precise description of your complaint.",
                   style: CustomTextStyle.regular_minor,
                   textAlign: TextAlign.left,
+                ),
+                InputField(
+                  placeholder:
+                      "The following relief/s shall be granted to me...",
+                  inputType: "message",
+                  controller: _reliefController,
+                  label: "Relief Manner",
+                  validator: InputValidator.requiredValidator,
                 ),
                 TextButton(
                   onPressed: () {

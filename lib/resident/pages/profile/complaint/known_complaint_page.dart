@@ -27,6 +27,7 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
 
   final _fullNameController = TextEditingController();
   final _natureController = TextEditingController();
+  final _reliefController = TextEditingController();
 
   late StreamController<List<Map<String, dynamic>>> _streetsStreamController;
   late List<Map<String, dynamic>> _streets;
@@ -49,9 +50,14 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
       return;
     }
 
-    final RateLimiter _rateLimiter = RateLimiter(userId: FirebaseAuth.instance.currentUser!.uid, keyPrefix: 'action', cooldownDuration: Duration(seconds: 5),);
+    final RateLimiter _rateLimiter = RateLimiter(
+      userId: FirebaseAuth.instance.currentUser!.uid,
+      keyPrefix: 'action',
+      cooldownDuration: Duration(seconds: 5),
+    );
     if (!await _rateLimiter.isActionAllowed()) {
-      Utilities.showSnackBar("You are doing this action way too quickly!", Colors.red);
+      Utilities.showSnackBar(
+          "You are doing this action way too quickly!", Colors.red);
       return;
     }
 
@@ -73,16 +79,18 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
 
     final status_checker = StatusChecker();
     final hasActiveIncident = await status_checker.hasActiveDocument(
-      collectionName: 'complaints',         // Collection to search
-      userIdField: 'issued_by',               // Field in the document that matches the user
-      userId: FirebaseAuth.instance.currentUser!.uid,                      // Current logged-in user's ID
-      statusField: 'status',               // Field to check the status
-      activeStatuses: ['Open', 'In Progress'],  // List of active statuses
+      collectionName: 'complaints', // Collection to search
+      userIdField: 'issued_by', // Field in the document that matches the user
+      userId:
+          FirebaseAuth.instance.currentUser!.uid, // Current logged-in user's ID
+      statusField: 'status', // Field to check the status
+      activeStatuses: ['Open', 'In Progress'], // List of active statuses
     );
 
-    if(hasActiveIncident){
+    if (hasActiveIncident) {
       Navigator.pop(dialogContext);
-      Utilities.showSnackBar("You currently have an active complaint!", Colors.red);
+      Utilities.showSnackBar(
+          "You currently have an active complaint!", Colors.red);
       return;
     }
 
@@ -134,6 +142,7 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
         'respondent_id': user_id,
         'respondent_description': "",
         "description": _natureController.text.trim(),
+        "relief_manner": _reliefController.text.trim(),
         'supporting_docs': imageUrls,
         'issued_at': FieldValue.serverTimestamp(),
         'issued_by': FirebaseAuth.instance.currentUser!.uid,
@@ -205,7 +214,13 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
       appBar: AppBar(
         title: Text("File a Complaint"),
         actions: [
-          IconButton(onPressed: () => Utilities.launchURL(Uri.parse("https://youtu.be/BAhbqZeUmhc?si=VU4Y8ykjn4ynjSSL&t=332"), true), icon: Icon(Icons.help_outline_rounded),),
+          IconButton(
+            onPressed: () => Utilities.launchURL(
+                Uri.parse(
+                    "https://youtu.be/BAhbqZeUmhc?si=VU4Y8ykjn4ynjSSL&t=332"),
+                true),
+            icon: Icon(Icons.help_outline_rounded),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -298,6 +313,14 @@ class _KnownComplaintPageState extends State<KnownComplaintPage> {
                   "Please provide a concise and precise description of your complaint.",
                   style: CustomTextStyle.regular_minor,
                   textAlign: TextAlign.left,
+                ),
+                InputField(
+                  placeholder:
+                      "The following relief/s shall be granted to me...",
+                  inputType: "message",
+                  controller: _reliefController,
+                  label: "Relief Manner",
+                  validator: InputValidator.requiredValidator,
                 ),
                 TextButton(
                   onPressed: () {
