@@ -295,12 +295,14 @@ class _TanodEmergencyDetailsPageState extends State<TanodEmergencyDetailsPage> {
                             incidentSnapshot['responders'] ?? [];
 
                         if (!responders.contains(currentUserId)) {
-                          DateTime worldTime =
-                              await fetchWorldTime() as DateTime;
-                          final sixPM = DateTime(worldTime.year,
-                              worldTime.month, worldTime.day, 18, 0);
+                          final localTime = DateTime.now();
+                          final today6PM = DateTime(localTime.year,
+                              localTime.month, localTime.day, 18, 0);
+                          final today6AM = DateTime(localTime.year,
+                              localTime.month, localTime.day, 6, 0);
 
-                          if (worldTime.isBefore(sixPM)) {
+                          if (localTime.isAfter(today6AM) &&
+                              localTime.isBefore(today6PM)) {
                             Utilities.showSnackBar(
                                 "You may have been removed as a responder.",
                                 Colors.red);

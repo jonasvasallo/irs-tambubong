@@ -99,11 +99,13 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
     List<dynamic> responders = incidentSnapshot['responders'] ?? [];
 
     if (!responders.contains(currentUserId)) {
-      DateTime worldTime = await fetchWorldTime() as DateTime;
-      final sixPM =
-          DateTime(worldTime.year, worldTime.month, worldTime.day, 18, 0);
+      final localTime = DateTime.now();
+      final today6PM =
+          DateTime(localTime.year, localTime.month, localTime.day, 18, 0);
+      final today6AM =
+          DateTime(localTime.year, localTime.month, localTime.day, 6, 0);
 
-      if (worldTime.isBefore(sixPM)) {
+      if (localTime.isAfter(today6AM) && localTime.isBefore(today6PM)) {
         Utilities.showSnackBar(
             "You may have been removed as a responder.", Colors.red);
         Navigator.pop(dialogContext);
@@ -425,7 +427,7 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
                       children: [
                         Flexible(
                           child: Text(
-                            incidentDetails['location_address'],
+                            incidentDetails['location_address'] ?? 'UNKNOWN',
                             style: CustomTextStyle.subheading,
                             textAlign: TextAlign.left,
                           ),
@@ -482,11 +484,12 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "${incidentDetails['user_details']['first_name']} ${incidentDetails['user_details']['middle_name'].toString()[0]}. ${incidentDetails['user_details']['last_name']}",
+                              "${incidentDetails['user_details']['first_name'] ?? 'UNKNOWN'} ${incidentDetails['user_details']['last_name'] ?? 'UNKNOWN'}",
                               style: CustomTextStyle.subheading,
                             ),
                             Text(
-                              incidentDetails['user_details']['contact_no'],
+                              incidentDetails['user_details']['contact_no'] ??
+                                  'UNKNOWN',
                               style: CustomTextStyle.regular_minor,
                             ),
                           ],
@@ -496,7 +499,7 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
                             IconButton.filled(
                               onPressed: () async {
                                 await FlutterPhoneDirectCaller.callNumber(
-                                    "${incidentDetails['user_details']['contact_no']}");
+                                    "${incidentDetails['user_details']['contact_no'] ?? 'UNKNOWN'}");
                               },
                               icon: Icon(
                                 Icons.call,
@@ -529,15 +532,16 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
                       height: 16,
                     ),
                     Text(
-                      incidentDetails['title'],
+                      incidentDetails['title'] ?? 'UNKNOWN',
                       style: CustomTextStyle.subheading,
                     ),
                     Text(
-                      Utilities.convertDate(incidentDetails['timestamp']),
+                      Utilities.convertDate(
+                          incidentDetails['timestamp'] ?? 'UNKNOWN'),
                       style: CustomTextStyle.regular_minor,
                     ),
                     Text(
-                      incidentDetails['details'],
+                      incidentDetails['details'] ?? 'UNKNOWN',
                       style: CustomTextStyle.regular,
                       textAlign: TextAlign.center,
                     ),
@@ -591,8 +595,8 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
                     ),
                     InputButton(
                       label: "End Response",
-                      function: () =>
-                          endResponse(incidentDetails['reported_by']),
+                      function: () => endResponse(
+                          incidentDetails['reported_by'] ?? 'UNKNOWN'),
                       large: true,
                     ),
                   ],

@@ -281,35 +281,48 @@ class _TanodProfilePageState extends State<TanodProfilePage> {
 
   Future<int> checkIncidents() async {
     try {
+      // Fetch documents in the 'incidents' collection
       QuerySnapshot incidentQuerySnapshot = await FirebaseFirestore.instance
           .collection('incidents')
           .where('responders',
               arrayContains: FirebaseAuth.instance.currentUser!.uid)
           .get();
 
+      // Fetch documents in the 'sos' collection
+      QuerySnapshot sosQuerySnapshot = await FirebaseFirestore.instance
+          .collection('sos')
+          .where('responders',
+              arrayContains: FirebaseAuth.instance.currentUser!.uid)
+          .get();
+
       int incidentsResponded = 0;
 
-      for (QueryDocumentSnapshot incidentDoc in incidentQuerySnapshot.docs) {
-        DocumentSnapshot respondersDocSnapshot = await FirebaseFirestore
-            .instance
-            .collection('incidents')
-            .doc(incidentDoc.id)
-            .collection('responders')
-            .doc(FirebaseAuth.instance.currentUser!.uid)
-            .get();
+      // Function to process each document in a collection
+      Future<void> processDocuments(QuerySnapshot querySnapshot) async {
+        for (QueryDocumentSnapshot doc in querySnapshot.docs) {
+          DocumentSnapshot respondersDocSnapshot = await FirebaseFirestore
+              .instance
+              .collection(
+                  doc.reference.parent.id) // Dynamically get collection name
+              .doc(doc.id)
+              .collection('responders')
+              .doc(FirebaseAuth.instance.currentUser!.uid)
+              .get();
 
-        if (respondersDocSnapshot.exists &&
-            respondersDocSnapshot.data() != null) {
-          Map<String, dynamic> respondersData =
-              respondersDocSnapshot.data() as Map<String, dynamic>;
-          if (respondersDocSnapshot.id ==
-              FirebaseAuth.instance.currentUser!.uid) {
+          if (respondersDocSnapshot.exists &&
+              respondersDocSnapshot.data() != null) {
+            Map<String, dynamic> respondersData =
+                respondersDocSnapshot.data() as Map<String, dynamic>;
             if (respondersData['status'] == 'Responded') {
               incidentsResponded++;
             }
           }
         }
       }
+
+      // Process both 'incidents' and 'sos' collections
+      await processDocuments(incidentQuerySnapshot);
+      await processDocuments(sosQuerySnapshot);
 
       return incidentsResponded;
     } catch (e) {
