@@ -19,6 +19,7 @@ import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
 import 'package:irs_app/widgets/input_field.dart';
 import 'package:maps_toolkit/maps_toolkit.dart' as map_tool;
+import 'package:native_exif/native_exif.dart';
 
 class AddIncidentPage extends StatefulWidget {
   const AddIncidentPage({Key? key}) : super(key: key);
@@ -34,11 +35,36 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
 
   late LatLng _center = LatLng(14.970254, 120.925633);
 
-  LatLng user_loc = LatLng(14.970254, 120.925633);
+  LatLng? user_loc;
 
   bool isInSelectedArea = false;
 
   String address_str = "";
+
+  bool thirdPartyReport = false;
+
+  LatLng? imageLocation;
+
+  Future<void> fetchImageLocation(String imagePath) async {
+    try {
+      final exif = await Exif.fromPath(imagePath);
+
+      final latLong = await exif.getLatLong();
+
+      if (latLong != null) {
+        imageLocation = LatLng(latLong.latitude, latLong.longitude);
+        print(imageLocation);
+      } else {
+        print('No location data available in the image EXIF.');
+        Utilities.showSnackBar(
+            "Uploaded image does not contain location data.", Colors.red);
+      }
+
+      exif.close();
+    } catch (e) {
+      print('Failed to read EXIF data: $e');
+    }
+  }
 
   Future<Position> getCurrentLocation() async {
     /*
@@ -72,6 +98,36 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        useSafeArea: true,
+        barrierDismissible: false,
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Type of Report"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("Report for yourself"),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    thirdPartyReport = true;
+                  });
+                  Navigator.of(context).pop();
+                },
+                child: Text("Report for somebody else"),
+              ),
+            ],
+          );
+        },
+      );
+    });
 
     _tagsStreamController = StreamController<List<Map<String, dynamic>>>();
     _incidentTags = [];
@@ -110,7 +166,6 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
           incidentTags.add({
             'tag_id': tagDocument.id,
             'tag_name': tagData['tag_name'],
-            // Add more fields if needed
           });
         }
       } else {
@@ -164,32 +219,11 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
       return;
     }
 
-    // Show dialog to choose between camera or gallery
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Wrap(
-          children: [
-            ListTile(
-              leading: Icon(Icons.camera_alt),
-              title: Text('Take a photo'),
-              onTap: () async {
-                Navigator.of(context).pop();
-                await _pickFromCamera();
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.photo_library),
-              title: Text('Pick from gallery'),
-              onTap: () async {
-                Navigator.of(context).pop();
-                await _pickFromGallery();
-              },
-            ),
-          ],
-        );
-      },
-    );
+    if (thirdPartyReport) {
+      await _pickFromGallery();
+    } else {
+      await _pickFromCamera();
+    }
   }
 
   _pickFromCamera() async {
@@ -242,6 +276,9 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
                 "You can only have 3 photos attached!", Colors.red);
             return;
           }
+
+          thirdPartyReport = true;
+          fetchImageLocation(image.path);
 
           image.readAsBytes().then((bytes) {
             setState(() {
@@ -328,14 +365,29 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
       return;
     }
 
-    checkLocation(user_loc);
-    // if (!isInSelectedArea) {
-    //   Utilities.showSnackBar(
-    //     "You are not within the boundaries of Brgy. Tambubong!",
-    //     Colors.red,
-    //   );
-    //   return;
-    // }
+    LatLng? lastLocation;
+
+    if (thirdPartyReport) {
+      lastLocation = imageLocation;
+    } else {
+      if (user_loc != null) {
+        lastLocation = user_loc;
+      }
+    }
+
+    if (lastLocation == null) {
+      Utilities.showSnackBar("Cannot determine your location", Colors.red);
+      return;
+    }
+
+    checkLocation(lastLocation);
+    if (!isInSelectedArea) {
+      Utilities.showSnackBar(
+        "You are not within the boundaries of Brgy. Tambubong!",
+        Colors.red,
+      );
+      return;
+    }
 
     final RateLimiter _rateLimiter = RateLimiter(
       userId: FirebaseAuth.instance.currentUser!.uid,
@@ -377,7 +429,7 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
           "You can only report once while being unverified!", Colors.red);
       return;
     }
-    if (!await checkIfIncidentIsHandled(user_loc)) {
+    if (!await checkIfIncidentIsHandled(lastLocation)) {
       Navigator.pop(dialogContext);
       Utilities.showSnackBar(
           "This incident is already being handled!", Colors.red);
@@ -395,7 +447,7 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
       CollectionReference incidentsCollection =
           FirebaseFirestore.instance.collection('incidents');
 
-      final address = await getLocationAddress(user_loc);
+      final address = await getLocationAddress(lastLocation);
 
       final DocumentReference newDocumentRef = await incidentsCollection.add({
         'title': titleController.text.trim(),
@@ -408,8 +460,8 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
         'incident_tag': _dropdownValue,
         'details': detailsController.text.trim(),
         'coordinates': {
-          'latitude': user_loc.latitude,
-          'longitude': user_loc.longitude,
+          'latitude': lastLocation.latitude,
+          'longitude': lastLocation.longitude,
         },
         'rated': false,
       });
@@ -519,50 +571,60 @@ class _AddIncidentPageState extends State<AddIncidentPage> {
             padding: EdgeInsets.all(16),
             child: Column(
               children: [
-                FutureBuilder(
-                    future: getCurrentLocation(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState != ConnectionState.done) {
-                        return Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
+                (!thirdPartyReport)
+                    ? FutureBuilder(
+                        future: getCurrentLocation(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState !=
+                              ConnectionState.done) {
+                            return Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
 
-                      Position center = snapshot.data!;
-                      LatLng position =
-                          LatLng(center.latitude, center.longitude);
+                          if (snapshot.data == null) {
+                            return Center(
+                              child: Text(
+                                  "Please enable location services in your device."),
+                            );
+                          }
 
-                      user_loc = position;
+                          Position center = snapshot.data!;
+                          LatLng position =
+                              LatLng(center.latitude, center.longitude);
 
-                      return Container(
-                        height: 200,
-                        width: MediaQuery.of(context).size.width,
-                        color: Colors.grey,
-                        child: GoogleMap(
-                          myLocationButtonEnabled: false,
-                          zoomControlsEnabled: true,
-                          initialCameraPosition: CameraPosition(
-                            target: position,
-                            zoom: 17,
-                          ),
-                          polygons: {
-                            Polygon(
-                              polygonId: PolygonId("1"),
-                              points: polygonPoints,
-                              fillColor: Color(0xFF006491).withOpacity(0.2),
-                              strokeWidth: 2,
-                            )
-                          },
-                          markers: {
-                            Marker(
-                              markerId: MarkerId('1'),
-                              icon: BitmapDescriptor.defaultMarker,
-                              position: position,
+                          user_loc = position;
+
+                          return Container(
+                            height: 200,
+                            width: MediaQuery.of(context).size.width,
+                            color: Colors.grey,
+                            child: GoogleMap(
+                              myLocationButtonEnabled: false,
+                              zoomControlsEnabled: true,
+                              initialCameraPosition: CameraPosition(
+                                target: position,
+                                zoom: 17,
+                              ),
+                              polygons: {
+                                Polygon(
+                                  polygonId: PolygonId("1"),
+                                  points: polygonPoints,
+                                  fillColor: Color(0xFF006491).withOpacity(0.2),
+                                  strokeWidth: 2,
+                                )
+                              },
+                              markers: {
+                                Marker(
+                                  markerId: MarkerId('1'),
+                                  icon: BitmapDescriptor.defaultMarker,
+                                  position: position,
+                                ),
+                              },
                             ),
-                          },
-                        ),
-                      );
-                    }),
+                          );
+                        })
+                    : SizedBox(),
                 SizedBox(
                   height: 16,
                 ),

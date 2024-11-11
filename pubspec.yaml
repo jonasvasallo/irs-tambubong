@@ -66,6 +66,7 @@ dependencies:
   syncfusion_flutter_pdfviewer: ^27.1.48
   video_player: ^2.9.1
   flutter_ffmpeg: ^0.4.2
+  native_exif: ^0.6.0
   
 
 dev_dependencies:
