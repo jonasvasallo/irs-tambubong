@@ -13,6 +13,7 @@ import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/models/user_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
 import 'package:irs_app/widgets/input_field.dart';
+import 'package:irs_app/widgets/temporary_residence_popup.dart';
 
 class UpdateProfilePage extends StatefulWidget {
   const UpdateProfilePage({Key? key}) : super(key: key);
@@ -38,6 +39,8 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
   String profile_path =
       "https://firebasestorage.googleapis.com/v0/b/irs-capstone.appspot.com/o/default_profile.png?alt=media&token=10c91862-f50a-416c-adce-001a51b64985";
   String verification_id = "";
+  String temporary_proof = "";
+  bool? isTemporary;
   Timestamp? lastUpdate;
 
   bool verified = false;
@@ -69,7 +72,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
 
   Future _uploadID() async {
     final returnedImage =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
+        await ImagePicker().pickImage(source: ImageSource.camera);
     if (returnedImage == null) return;
 
     final image = File(returnedImage.path);
@@ -148,6 +151,8 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
           fit: BoxFit.cover,
         );
         verification_id = userDetails['verification_photo'] ?? '';
+        temporary_proof = userDetails['temporary_proof'] ?? '';
+        isTemporary = userDetails['isTemporary'] ?? false;
         verified = userDetails['verified'] ?? false;
         sms_verified = userDetails['sms_verified'] ?? false;
         lastUpdate = (userDetails['lastUpdated'] != null)
@@ -504,6 +509,9 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                         children: [
                           Text(
                             "Upload an ID to verify your account",
+                            style: TextStyle(
+                              color: Colors.red,
+                            ),
                           ),
                           SizedBox(
                             height: 8,
@@ -516,6 +524,56 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
                           ),
                         ],
                       ),
+                SizedBox(
+                  height: 16,
+                ),
+                (isTemporary != null && isTemporary == true)
+                    ? (temporary_proof.isNotEmpty)
+                        ? Column(
+                            children: [
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  (verified)
+                                      ? "Temporary Residence (Verified)"
+                                      : "Temporary Residence (Pending verification)",
+                                  style: CustomTextStyle.subheading,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 8,
+                              ),
+                              Container(
+                                width: MediaQuery.of(context).size.width - 32,
+                                height: 150,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    temporary_proof,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : TextButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return TemporaryResidencePopup();
+                                },
+                              );
+                            },
+                            child: Text(
+                              "Residency verification needed! Click here.",
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                    : SizedBox(),
                 SizedBox(
                   height: 16,
                 ),

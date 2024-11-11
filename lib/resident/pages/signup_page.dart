@@ -23,6 +23,7 @@ class SignupPage extends StatefulWidget {
 }
 
 List<String> sex_options = ["Male", "Female"];
+List<String> resident_options = ["Permanent", "Temporary"];
 
 class _SignupPageState extends State<SignupPage> {
   /* Text Controllers */
@@ -38,6 +39,9 @@ class _SignupPageState extends State<SignupPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+  final _landlordNameController = TextEditingController();
+  final _landlordContactController = TextEditingController();
+
   final formKey = GlobalKey<FormState>();
 
   File? selectedImage;
@@ -47,27 +51,32 @@ class _SignupPageState extends State<SignupPage> {
     fit: BoxFit.contain,
   );
 
-  Future _pickImageFromGallery() async {
+  File? proofImageFile;
+
+  Image proofImageShown = Image.network(
+    "https://i.pinimg.com/originals/2e/60/07/2e60079f1e36b5c7681f0996a79e8af4.jpg",
+    fit: BoxFit.contain,
+  );
+
+  Future<void> _pickImageFromGallery(ValueSetter<File?> onFilePicked) async {
     final returnedImage =
         await ImagePicker().pickImage(source: ImageSource.camera);
     if (returnedImage == null) return;
+
+    final pickedFile = File(returnedImage.path);
+
     setState(() {
-      selectedImage = File(returnedImage!.path);
-      imageShown = Image.file(
-        selectedImage!,
-        fit: BoxFit.cover,
-      );
+      onFilePicked(pickedFile); // Update the image
     });
   }
 
-  Future<String> uploadImageToFirebase() async {
+  Future<String> uploadImageToFirebase(File? givenImage) async {
     try {
-      if (selectedImage != null) {
-        final path =
-            'user_verifications/${selectedImage!.path.split('/').last}';
+      if (givenImage != null) {
+        final path = 'user_verifications/${givenImage!.path.split('/').last}';
 
         final ref = FirebaseStorage.instance.ref().child(path);
-        UploadTask? uploadTask = ref.putFile(selectedImage!);
+        UploadTask? uploadTask = ref.putFile(givenImage!);
 
         final snapshot = await uploadTask!.whenComplete(() => null);
 
@@ -102,6 +111,7 @@ class _SignupPageState extends State<SignupPage> {
   };
 
   String currentOption = sex_options[0];
+  String residentCurrentOption = resident_options[0];
 
   Future<bool> checkPhoneNumberExists(String phoneNumber) async {
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
@@ -154,6 +164,11 @@ class _SignupPageState extends State<SignupPage> {
       Utilities.showSnackBar("You must select the street first", Colors.red);
       return;
     }
+    if (residentCurrentOption == 'Temporary' && proofImageFile == null) {
+      Utilities.showSnackBar(
+          "Please upload your proof of temporary residency first", Colors.red);
+      return;
+    }
 
     final isValid = formKey.currentState!.validate();
     if (!isValid) {
@@ -176,7 +191,7 @@ class _SignupPageState extends State<SignupPage> {
       /* Handles case where given phone number is already in the system */
       bool phoneNumberExists =
           await checkPhoneNumberExists(_contactNoController.text.trim());
-      var photoUrl = await uploadImageToFirebase();
+      var photoUrl = await uploadImageToFirebase(selectedImage);
 
       if (phoneNumberExists) {
         Utilities.showSnackBar(
@@ -208,6 +223,18 @@ class _SignupPageState extends State<SignupPage> {
         photoUrl,
       );
 
+      if (residentCurrentOption == "Temporary") {
+        var proofUrl = await uploadImageToFirebase(proofImageFile);
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .update({
+          'isTemporary': true,
+          'temporary_proof': proofUrl,
+          'landlord_name': _landlordNameController.text.trim(),
+          'landlord_contact': _landlordContactController.text.trim(),
+        });
+      }
       //Phone Verification Code
 
       await FirebaseAuth.instance.verifyPhoneNumber(
@@ -302,6 +329,8 @@ class _SignupPageState extends State<SignupPage> {
     _emailAddressController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _landlordNameController.dispose();
+    _landlordContactController.dispose();
     super.dispose();
   }
 
@@ -474,12 +503,51 @@ class _SignupPageState extends State<SignupPage> {
                     height: 16,
                   ),
                   Text(
+                    "Residency Type",
+                    style: CustomTextStyle.regular,
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Flexible(
+                        child: ListTile(
+                          contentPadding: EdgeInsets.all(8),
+                          title: const Text("Permanent"),
+                          leading: Radio(
+                            value: resident_options[0],
+                            groupValue: residentCurrentOption,
+                            onChanged: (value) {
+                              setState(() {
+                                residentCurrentOption = value.toString();
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      Flexible(
+                        child: ListTile(
+                          contentPadding: EdgeInsets.all(8),
+                          title: const Text("Temporary"),
+                          leading: Radio(
+                            value: resident_options[1],
+                            groupValue: residentCurrentOption,
+                            onChanged: (value) {
+                              setState(() {
+                                residentCurrentOption = value.toString();
+                              });
+                            },
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                  Text(
                     "In order to verify you are a legitimate resident, please upload a photo of any ID that matches the address you have provided",
                     style: CustomTextStyle.regular_minor,
                   ),
                   OutlinedButton(
                     onPressed: () {
-                      _pickImageFromGallery();
+                      _pickImageFromGallery((file) => selectedImage = file);
                     },
                     child: IntrinsicWidth(
                       child: Row(
@@ -511,6 +579,66 @@ class _SignupPageState extends State<SignupPage> {
                             selectedImage!,
                             fit: BoxFit.contain,
                           ),
+                        )
+                      : SizedBox(),
+                  SizedBox(
+                    height: 8,
+                  ),
+                  (residentCurrentOption == "Temporary")
+                      ? Column(
+                          children: [
+                            Text(
+                                "As a renter or temporary resident, your ID may have a different address, please provide one or more of the following documents to verify your local residency:"),
+                            Text(
+                                "1. A recent utility bill\n2. A rental agreement\n3. Official Mail\n4. Certification from your homeowner or landlord"),
+                            SizedBox(
+                              height: 8,
+                            ),
+                            Text(
+                                "Note: The document must be showing your name and barangay address"),
+                            SizedBox(
+                              height: 8,
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                _pickImageFromGallery(
+                                    (file) => proofImageFile = file);
+                              },
+                              child: Text(
+                                "Upload Document Here",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            (proofImageFile != null)
+                                ? Container(
+                                    width: 393,
+                                    height: 150,
+                                    child: Image.file(
+                                      proofImageFile!,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  )
+                                : SizedBox(),
+                            SizedBox(
+                              height: 8,
+                            ),
+                            InputField(
+                              label: "Landlord Name",
+                              placeholder: "Landlord Name",
+                              inputType: "text",
+                              controller: _landlordNameController,
+                              validator: InputValidator.requiredValidator,
+                            ),
+                            InputField(
+                              label: "Landlord Contact No.",
+                              placeholder: "Landlord Contact Number",
+                              inputType: "phone",
+                              controller: _landlordContactController,
+                              validator: InputValidator.phoneValidator,
+                            ),
+                          ],
                         )
                       : SizedBox(),
                   InputField(
