@@ -18,6 +18,7 @@ import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/models/incident_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
+import 'package:native_exif/native_exif.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:location/location.dart' as loc;
 import 'package:url_launcher/url_launcher.dart';
@@ -34,23 +35,62 @@ class EmergencyRespondSection extends StatefulWidget {
 }
 
 class _EmergencyRespondSectionState extends State<EmergencyRespondSection> {
+  bool thirdPartyReport = false;
+  DateTime? imageDateTime;
   File? selectedImage;
   Image imageShown = Image.network(
     "https://i.stack.imgur.com/l60Hf.png",
     fit: BoxFit.cover,
   );
-  Future _pickImageFromGallery() async {
-    final returnedImage =
-        await ImagePicker().pickImage(source: ImageSource.camera);
+  Future _pickImage(ImageSource image_source) async {
+    final returnedImage = await ImagePicker().pickImage(source: image_source);
     if (returnedImage == null) return;
 
     setState(() {
+      thirdPartyReport = false;
       selectedImage = File(returnedImage.path);
       imageShown = Image.file(
         selectedImage!,
         fit: BoxFit.cover,
       );
     });
+  }
+
+  Future _pickImageFromGallery(ImageSource image_source) async {
+    final returnedImage = await ImagePicker().pickImage(source: image_source);
+    if (returnedImage == null) return;
+
+    fetchImageDateTime(returnedImage.path);
+
+    setState(() {
+      thirdPartyReport = true;
+      selectedImage = File(returnedImage.path);
+      imageShown = Image.file(
+        selectedImage!,
+        fit: BoxFit.cover,
+      );
+    });
+  }
+
+  Future<void> fetchImageDateTime(String imagePath) async {
+    try {
+      final exif = await Exif.fromPath(imagePath);
+
+      final dateInfo = await exif.getOriginalDate();
+
+      if (dateInfo != null) {
+        imageDateTime = dateInfo;
+        print(imageDateTime);
+      } else {
+        print('No date data available in the image EXIF.');
+        Utilities.showSnackBar(
+            "Uploaded image does not contain date and time data.", Colors.red);
+      }
+
+      exif.close();
+    } catch (e) {
+      print('Failed to read EXIF data: $e');
+    }
   }
 
   Future<DateTime> fetchWorldTime() async {
@@ -70,6 +110,11 @@ class _EmergencyRespondSectionState extends State<EmergencyRespondSection> {
   endResponse() async {
     if (selectedImage == null) {
       Utilities.showSnackBar("You must attach a photo first", Colors.red);
+      return;
+    }
+    if (thirdPartyReport == true && imageDateTime == null) {
+      Utilities.showSnackBar(
+          "Provided image does not contain date and time!", Colors.red);
       return;
     }
     BuildContext dialogContext = context;
@@ -134,6 +179,28 @@ class _EmergencyRespondSectionState extends State<EmergencyRespondSection> {
       Map<String, dynamic>? emergencyData =
           emergencyDoc.data() as Map<String, dynamic>;
 
+      DocumentSnapshot sosResponderDoc = await FirebaseFirestore.instance
+          .collection('sos')
+          .doc(widget.id)
+          .collection('responders')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .get();
+
+      Map<String, dynamic> sosResponderData =
+          sosResponderDoc.data() as Map<String, dynamic>;
+
+      Timestamp responseStartTimestamp = sosResponderData['response_start'];
+      DateTime responseStartDateTime = responseStartTimestamp.toDate();
+
+      if (thirdPartyReport == true &&
+          imageDateTime!.isBefore(responseStartDateTime)) {
+        Utilities.showSnackBar(
+            "Your picture's date and time is behind of that of the start of your response!",
+            Colors.red);
+        Navigator.of(dialogContext).pop();
+        return;
+      }
+
       if (emergencyData.isNotEmpty &&
           (emergencyData['status'] != 'Resolved' ||
               emergencyData['status'] != 'Closed')) {
@@ -152,7 +219,9 @@ class _EmergencyRespondSectionState extends State<EmergencyRespondSection> {
           .doc(FirebaseAuth.instance.currentUser!.uid)
           .update({
         'status': 'Responded',
-        'response_end': FieldValue.serverTimestamp(),
+        'response_end': (thirdPartyReport == true)
+            ? Timestamp.fromDate(imageDateTime!)
+            : FieldValue.serverTimestamp(),
         'response_photo': urlDownload,
       });
       Navigator.of(dialogContext).pop();
@@ -380,7 +449,29 @@ class _EmergencyRespondSectionState extends State<EmergencyRespondSection> {
                       child: TextButton(
                         onPressed: () {
                           print("working");
-                          _pickImageFromGallery();
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Text("Choose an option"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      _pickImage(ImageSource.camera);
+                                    },
+                                    child: Text("Take from camera"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      _pickImageFromGallery(
+                                          ImageSource.gallery);
+                                    },
+                                    child: Text("Take from gallery"),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,

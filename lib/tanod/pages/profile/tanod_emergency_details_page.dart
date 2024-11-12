@@ -294,13 +294,13 @@ class _TanodEmergencyDetailsPageState extends State<TanodEmergencyDetailsPage> {
                         List<dynamic> responders =
                             incidentSnapshot['responders'] ?? [];
 
-                        if (!responders.contains(currentUserId)) {
-                          final localTime = DateTime.now();
-                          final today6PM = DateTime(localTime.year,
-                              localTime.month, localTime.day, 18, 0);
-                          final today6AM = DateTime(localTime.year,
-                              localTime.month, localTime.day, 6, 0);
+                        final localTime = DateTime.now();
+                        final today6PM = DateTime(localTime.year,
+                            localTime.month, localTime.day, 18, 0);
+                        final today6AM = DateTime(localTime.year,
+                            localTime.month, localTime.day, 6, 0);
 
+                        if (!responders.contains(currentUserId)) {
                           if (localTime.isAfter(today6AM) &&
                               localTime.isBefore(today6PM)) {
                             Utilities.showSnackBar(
@@ -309,6 +309,43 @@ class _TanodEmergencyDetailsPageState extends State<TanodEmergencyDetailsPage> {
                             Navigator.pop(dialogContext);
                             return;
                           }
+                        }
+
+                        DocumentSnapshot responderSnapshot =
+                            await FirebaseFirestore.instance
+                                .collection('sos')
+                                .doc(widget.id)
+                                .collection('responders')
+                                .doc(FirebaseAuth.instance.currentUser!.uid)
+                                .get();
+
+                        if (!responderSnapshot.exists) {
+                          await FirebaseFirestore.instance
+                              .collection('sos')
+                              .doc(widget.id)
+                              .collection('responders')
+                              .doc(FirebaseAuth.instance.currentUser!.uid)
+                              .set({
+                            'status': 'Assigned',
+                            'response_start': FieldValue.serverTimestamp(),
+                          });
+
+                          responderSnapshot = await FirebaseFirestore.instance
+                              .collection('sos')
+                              .doc(widget.id)
+                              .collection('responders')
+                              .doc(FirebaseAuth.instance.currentUser!.uid)
+                              .get();
+                        }
+
+                        Map<String, dynamic> responderDataDetails =
+                            responderSnapshot.data() as Map<String, dynamic>;
+
+                        if (responderDataDetails['status'] == "Responded") {
+                          Utilities.showSnackBar(
+                              "You already responded to this!", Colors.red);
+                          Navigator.pop(dialogContext);
+                          return;
                         }
 
                         await FirebaseFirestore.instance
@@ -320,15 +357,27 @@ class _TanodEmergencyDetailsPageState extends State<TanodEmergencyDetailsPage> {
                               [FirebaseAuth.instance.currentUser!.uid]),
                         });
 
-                        await FirebaseFirestore.instance
-                            .collection('sos')
-                            .doc(widget.id)
-                            .collection('responders')
-                            .doc(FirebaseAuth.instance.currentUser!.uid)
-                            .set({
-                          'status': 'Responding',
-                          'response_start': FieldValue.serverTimestamp(),
-                        });
+                        if (responderDataDetails['response_start'] == null) {
+                          await FirebaseFirestore.instance
+                              .collection('sos')
+                              .doc(widget.id)
+                              .collection('responders')
+                              .doc(FirebaseAuth.instance.currentUser!.uid)
+                              .set({
+                            'status': 'Responding',
+                            'response_start': FieldValue.serverTimestamp(),
+                          });
+                        } else {
+                          await FirebaseFirestore.instance
+                              .collection('sos')
+                              .doc(widget.id)
+                              .collection('responders')
+                              .doc(FirebaseAuth.instance.currentUser!.uid)
+                              .update({
+                            'status': 'Responding',
+                          });
+                        }
+
                         Navigator.pop(dialogContext);
                         context.go(
                             '/tanod_home/emergency-details/${widget.id}/respond/${widget.id}/${emergencyDetails?['location']['latitude']}/${emergencyDetails?['location']['longitude']}');

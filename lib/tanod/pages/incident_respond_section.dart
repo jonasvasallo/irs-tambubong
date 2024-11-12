@@ -19,6 +19,7 @@ import 'package:irs_app/constants.dart';
 import 'package:irs_app/core/utilities.dart';
 import 'package:irs_app/models/incident_model.dart';
 import 'package:irs_app/widgets/input_button.dart';
+import 'package:native_exif/native_exif.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:location/location.dart' as loc;
 import 'package:url_launcher/url_launcher.dart';
@@ -32,23 +33,85 @@ class IncidentRespondSection extends StatefulWidget {
 }
 
 class _IncidentRespondSectionState extends State<IncidentRespondSection> {
+  bool thirdPartyReport = false;
+  DateTime? imageDateTime;
+  LatLng? imageLocation;
   File? selectedImage;
   Image imageShown = Image.network(
     "https://i.stack.imgur.com/l60Hf.png",
     fit: BoxFit.cover,
   );
-  Future _pickImageFromGallery() async {
-    final returnedImage =
-        await ImagePicker().pickImage(source: ImageSource.camera);
+  Future _pickImage(ImageSource image_source) async {
+    final returnedImage = await ImagePicker().pickImage(source: image_source);
     if (returnedImage == null) return;
 
     setState(() {
+      thirdPartyReport = false;
       selectedImage = File(returnedImage.path);
       imageShown = Image.file(
         selectedImage!,
         fit: BoxFit.cover,
       );
     });
+  }
+
+  Future _pickImageFromGallery(ImageSource image_source) async {
+    final returnedImage = await ImagePicker().pickImage(source: image_source);
+    if (returnedImage == null) return;
+
+    fetchImageLocation(returnedImage.path);
+    fetchImageDateTime(returnedImage.path);
+
+    setState(() {
+      thirdPartyReport = true;
+      selectedImage = File(returnedImage.path);
+      imageShown = Image.file(
+        selectedImage!,
+        fit: BoxFit.cover,
+      );
+    });
+  }
+
+  Future<void> fetchImageLocation(String imagePath) async {
+    try {
+      final exif = await Exif.fromPath(imagePath);
+
+      final latLong = await exif.getLatLong();
+
+      if (latLong != null) {
+        imageLocation = LatLng(latLong.latitude, latLong.longitude);
+        print(imageLocation);
+      } else {
+        print('No location data available in the image EXIF.');
+        Utilities.showSnackBar(
+            "Uploaded image does not contain location data.", Colors.red);
+      }
+
+      exif.close();
+    } catch (e) {
+      print('Failed to read EXIF data: $e');
+    }
+  }
+
+  Future<void> fetchImageDateTime(String imagePath) async {
+    try {
+      final exif = await Exif.fromPath(imagePath);
+
+      final dateInfo = await exif.getOriginalDate();
+
+      if (dateInfo != null) {
+        imageDateTime = dateInfo;
+        print(imageDateTime);
+      } else {
+        print('No date data available in the image EXIF.');
+        Utilities.showSnackBar(
+            "Uploaded image does not contain date and time data.", Colors.red);
+      }
+
+      exif.close();
+    } catch (e) {
+      print('Failed to read EXIF data: $e');
+    }
   }
 
   Future<DateTime> fetchWorldTime() async {
@@ -68,6 +131,11 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
   endResponse(reported_by) async {
     if (selectedImage == null) {
       Utilities.showSnackBar("You must attach a photo first", Colors.red);
+      return;
+    }
+    if (thirdPartyReport == true && imageDateTime == null) {
+      Utilities.showSnackBar(
+          "Provided image does not contain date and time!", Colors.red);
       return;
     }
     BuildContext dialogContext = context;
@@ -146,6 +214,18 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
               incidentResponderDoc.data() as Map<String, dynamic>?;
           if (incidentResponderData != null &&
               incidentResponderData['response_start'] != null) {
+            Timestamp responseStartTimestamp =
+                incidentResponderData['response_start'];
+            DateTime responseStartDateTime = responseStartTimestamp.toDate();
+
+            if (thirdPartyReport == true &&
+                imageDateTime!.isBefore(responseStartDateTime)) {
+              Utilities.showSnackBar(
+                  "Your picture's date and time is behind of that of the start of your response!",
+                  Colors.red);
+              Navigator.of(dialogContext).pop();
+              return;
+            }
             Map<String, dynamic>? incidentData =
                 incidentDoc.data() as Map<String, dynamic>?;
             if (incidentData != null &&
@@ -176,7 +256,9 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
                             'status': 'Responded',
                             'response_start':
                                 incidentResponderData['response_start'],
-                            'response_end': FieldValue.serverTimestamp(),
+                            'response_end': (thirdPartyReport == true)
+                                ? Timestamp.fromDate(imageDateTime!)
+                                : FieldValue.serverTimestamp(),
                             'response_photo': urlDownload,
                           });
                         }
@@ -218,7 +300,9 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
                                 'status': 'Responded',
                                 'response_start':
                                     incidentResponderData['response_start'],
-                                'response_end': FieldValue.serverTimestamp(),
+                                'response_end': (thirdPartyReport == true)
+                                    ? Timestamp.fromDate(imageDateTime!)
+                                    : FieldValue.serverTimestamp(),
                                 'response_photo': urlDownload,
                               });
 
@@ -231,7 +315,9 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
                                     "Incident No. ${incident_in_group} marked as Resolved",
                                 'content':
                                     "You may send your feedback through the My Incidents section of the Profile Page so that we may be able to improve our service quality.",
-                                'timestamp': FieldValue.serverTimestamp(),
+                                'timestamp': (thirdPartyReport == true)
+                                    ? Timestamp.fromDate(imageDateTime!)
+                                    : FieldValue.serverTimestamp(),
                               });
                             }
                           }
@@ -254,7 +340,9 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
                     .doc(FirebaseAuth.instance.currentUser!.uid)
                     .update({
                   'status': 'Responded',
-                  'response_end': FieldValue.serverTimestamp(),
+                  'response_end': (thirdPartyReport == true)
+                      ? Timestamp.fromDate(imageDateTime!)
+                      : FieldValue.serverTimestamp(),
                   'response_photo': urlDownload,
                 });
                 Navigator.of(dialogContext).pop();
@@ -274,7 +362,9 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
                     .doc(FirebaseAuth.instance.currentUser!.uid)
                     .update({
                   'status': 'Responded',
-                  'response_end': FieldValue.serverTimestamp(),
+                  'response_end': (thirdPartyReport == true)
+                      ? Timestamp.fromDate(imageDateTime!)
+                      : FieldValue.serverTimestamp(),
                   'response_photo': urlDownload,
                 });
                 await FirebaseFirestore.instance
@@ -553,7 +643,30 @@ class _IncidentRespondSectionState extends State<IncidentRespondSection> {
                       child: TextButton(
                         onPressed: () {
                           print("working");
-                          _pickImageFromGallery();
+
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Text("Choose an option"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      _pickImage(ImageSource.camera);
+                                    },
+                                    child: Text("Take from camera"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      _pickImageFromGallery(
+                                          ImageSource.gallery);
+                                    },
+                                    child: Text("Take from gallery"),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
