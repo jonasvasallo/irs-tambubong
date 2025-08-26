@@ -1,16 +1,26 @@
-# irs_app
+# Tambubong Incident Reporting System - Mobile Application
 
-A new Flutter project.
+The **Tambubong Incident Reporting Mobile App** is a mobile application built with **Flutter** that allows residents of Tambubong to quickly report community incidents.  
+It integrates with **Firebase** for authentication, data storage, media uploads, and notifications.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## Features
+- 📝 **Report Incidents** – Submit reports with description, type, and location  
+- 📸 **Attach Evidence** – Upload photos or videos to support reports  
+- 🔍 **Track Reports** – View the status of submitted incidents (Pending, In Progress, Resolved)  
+- 🔔 **Push Notifications** – Receive real-time updates on your reports via FCM (Firebase Cloud Messagging)  
+- 👤 **User Accounts** – Register and log in securely using Firebase Authentication  
 
-A few resources to get you started if this is your first Flutter project:
+---
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Tech Stack
+- **Frontend:** Flutter (Dart)  
+- **Backend:** Firebase (Serverless)  
+  - **Authentication** – Email/Password login  
+  - **Cloud Firestore** – Stores incident reports and user info  
+  - **Cloud Storage** – Stores uploaded media files (photos/videos)  
+  - **Cloud Functions** – Notifications, audit logging, role management  
+  - **Firebase Cloud Messaging (FCM)** – Push notifications  
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
